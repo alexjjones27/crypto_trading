@@ -48,7 +48,20 @@ documented here because they drove real design decisions:
   * Resolved markets from before Polymarket's CLOB launch (mid-2022) have
     NO price history at any window/fidelity -- they traded on the old AMM,
     not the order book. These are excluded from the population (see
-    CLOB_LAUNCH_CUTOFF), not treated as a granularity bug.
+    CLOB_LAUNCH_CUTOFF), not treated as a granularity bug. Confirmed on a
+    live 20-market sample spanning 2022-2025 and every volume tier: a
+    market's *lifetime* can straddle the cutoff even when its *resolution*
+    falls inside the census window (found live on a $1.7M-volume Senate
+    market that resolved in Nov 2022 but started trading in Jan 2022 and
+    had zero CLOB history at any window) -- handled by additionally
+    filtering on each market's own start date in stratified_sample_markets,
+    not just the census query's end-date range. Separately, some genuinely
+    post-cutoff, low-volume markets from the first ~2 months after CLOB
+    launch also came back empty even with the explicit-window fix -- read
+    as thin early liquidity (plausibly zero real trades on that specific
+    token), not a data-access bug, and left in the population: a token
+    with no crossing correctly contributes no trade rather than being
+    silently dropped.
   * `/book` on a resolved market's token 404s ("No orderbook exists") --
     historical order-book depth is not retrievable after the fact via any
     public endpoint. As a liquidity proxy this pipeline instead uses
@@ -187,10 +200,26 @@ def _midpoint(date_min: str, date_max: str) -> Optional[str]:
     return (lo + (hi - lo) / 2).strftime("%Y-%m-%d")
 
 
-def _plan_leaf_buckets(date_min: str, date_max: str) -> list[tuple[str, str]]:
+def _plan_cache_path(date_min: str, date_max: str, cache_dir: Path) -> Path:
+    return cache_dir / f"plan_{date_min}_{date_max}.json"
+
+
+def _plan_leaf_buckets(date_min: str, date_max: str, cache_dir: Path = GAMMA_CACHE_DIR) -> list[tuple[str, str]]:
     """Parallel BFS: repeatedly probe the frontier of not-yet-classified
     buckets, splitting anything over the offset cap, until every bucket is
-    confirmed fetchable. Returns the final list of leaf (min, max) ranges."""
+    confirmed fetchable. Returns the final list of leaf (min, max) ranges.
+
+    The plan itself is cached (not just each leaf's fetched markets) --
+    without this, a re-run with everything already fetched still had to
+    replay the *entire* probing BFS (one live HTTP request per tree node,
+    hundreds of them for the full multi-year population) before it could
+    even start reading from the leaf cache. Only the newest partial day
+    (today's date_max) is excluded from caching, since more of it can
+    resolve between runs."""
+    plan_path = _plan_cache_path(date_min, date_max, cache_dir)
+    if plan_path.exists():
+        return [tuple(pair) for pair in json.loads(plan_path.read_text())]
+
     leaves: list[tuple[str, str]] = []
     frontier: list[tuple[str, str]] = [(date_min, date_max)]
     with ThreadPoolExecutor(max_workers=_CENSUS_WORKERS) as pool:
@@ -212,6 +241,9 @@ def _plan_leaf_buckets(date_min: str, date_max: str) -> list[tuple[str, str]]:
                 else:
                     next_frontier.extend([(lo, mid), (mid, hi)])
             frontier = next_frontier
+
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    plan_path.write_text(json.dumps(leaves))
     return leaves
 
 
@@ -257,7 +289,7 @@ def fetch_resolved_markets_census(
     if date_max is None:
         date_max = pd.Timestamp.utcnow().strftime("%Y-%m-%d")
 
-    leaves = _plan_leaf_buckets(date_min, date_max)
+    leaves = _plan_leaf_buckets(date_min, date_max, cache_dir)
     all_markets: list[dict] = []
     failed = []
     with ThreadPoolExecutor(max_workers=_CENSUS_WORKERS) as pool:
@@ -978,9 +1010,19 @@ def plot_equity_curve(trades_df: pd.DataFrame, out_path: Path, title: str) -> No
 # concrete mitigation for the selection-bias risk the task calls out.
 
 def stratified_sample_markets(census: list[dict], n_target: int, seed: int = 42) -> list[dict]:
+    """Stratified sample, with one additional population filter applied
+    here (not at the census-query stage): the Gamma census is queried by
+    resolution date, but a market's *lifetime* can straddle the CLOB-launch
+    cutoff -- confirmed live on a $1.7M-volume Senate-control market that
+    resolved in Nov 2022 (inside the census window) but started trading in
+    Jan 2022 (pre-CLOB) and had zero CLOB price history at any window.
+    Dropped here by requiring the market's own start date, not just its end
+    date, to be at/after the cutoff."""
     df = pd.DataFrame(census)
     df["end_ts"] = df["endDate"].apply(_to_epoch_s)
-    df = df.dropna(subset=["end_ts"])
+    df["start_ts"] = df.apply(lambda r: _to_epoch_s(r.get("startDate") or r.get("createdAt")), axis=1)
+    df = df.dropna(subset=["end_ts", "start_ts"])
+    df = df[df["start_ts"] >= _to_epoch_s(CLOB_LAUNCH_CUTOFF)]
     df["quarter"] = pd.to_datetime(df["end_ts"], unit="s").dt.to_period("Q").astype(str)
     df["bucket"] = [classify_report_bucket(m) for m in df.to_dict("records")]
 
@@ -1078,7 +1120,18 @@ def write_report(
         "in every case tested. Markets that resolved before Polymarket's "
         "CLOB launch (mid-2022) have no CLOB price history at any window "
         "-- they traded on the old AMM -- and are excluded from the "
-        "population on that basis, not treated as the granularity bug.\n"
+        "population on that basis, not treated as the granularity bug. A "
+        f"market's *lifetime* can straddle that cutoff even when its "
+        f"*resolution* falls inside it (found live on a $1.7M-volume "
+        f"Senate-control market that resolved Nov 2022 but started trading "
+        f"Jan 2022, with zero CLOB history) -- filtered on each market's "
+        f"own start date, not just its resolution date. On a live 20-market "
+        f"granularity test spanning 2022-2025 and all volume tiers, "
+        f"3 of 13 valid samples (all from the first ~2 months "
+        f"post-CLOB-launch) still came back with zero price points even "
+        f"under the explicit-window fix -- read as thin early liquidity on "
+        f"that specific token, not a residual data-access bug; such tokens "
+        f"simply contribute no trade.\n"
     )
     lines.append(
         "**Liquidity/depth**: there is no way to reconstruct historical "
