@@ -3,3 +3,10 @@ __pycache__/
 .pytest_cache/
 *.egg-info/
 .ipynb_checkpoints/
+
+# Polymarket raw cache: the full resolved-market census + per-token price
+# history runs into multiple GB (hundreds of thousands of small markets,
+# unlike the Hyperliquid funding cache). Kept out of git; re-fetch via
+# scripts/run_polymarket_final_pct.py (populates data/raw/polymarket/ from
+# the live public APIs, cached to disk for subsequent local runs).
+data/raw/polymarket/
