@@ -154,6 +154,22 @@ def _get(base: str, path: str, params: dict) -> object:
     return _request_json(url)
 
 
+def _safe_json_list(value) -> list:
+    """Parses a Gamma JSON-encoded-string field (clobTokenIds, outcomes,
+    outcomePrices, umaResolutionStatuses, ...) defensively. Needed because
+    market dicts that have been round-tripped through a pandas DataFrame
+    (stratified_sample_markets) turn a missing field into NaN -- a float,
+    truthy, and not a string -- which `value or "[]"` does not catch before
+    json.loads() would raise on it."""
+    if not isinstance(value, str):
+        return []
+    try:
+        parsed = json.loads(value)
+    except json.JSONDecodeError:
+        return []
+    return parsed if isinstance(parsed, list) else []
+
+
 # ---------------------------------------------------------------------------
 # 1a. DATA FETCH -- Gamma census of ALL resolved markets (no curation)
 # ---------------------------------------------------------------------------
@@ -426,10 +442,13 @@ _POLITICS_RE = re.compile(
 
 
 def classify_report_bucket(market: dict) -> str:
+    events = market.get("events")
+    if not isinstance(events, list):
+        events = []  # guards against pandas turning a missing field into NaN (which is truthy)
     text = " ".join(
         str(market.get(k, "")) for k in ("question", "slug")
     ) + " " + " ".join(
-        str(e.get("category", "")) for e in market.get("events", []) or []
+        str(e.get("category", "")) for e in events if isinstance(e, dict)
     )
     if _CRYPTO_PRICE_RE.search(text):
         return "crypto_price"
@@ -619,11 +638,8 @@ def find_market_crossings(
     signal-only (price path + timing), with NO resolution/outcome info --
     that is joined in afterwards by the backtest engine, never fed back
     here."""
-    try:
-        token_ids = json.loads(market.get("clobTokenIds") or "[]")
-        outcomes = json.loads(market.get("outcomes") or "[]")
-    except (json.JSONDecodeError, TypeError):
-        return []
+    token_ids = _safe_json_list(market.get("clobTokenIds"))
+    outcomes = _safe_json_list(market.get("outcomes"))
     if not token_ids:
         return []
 
@@ -675,8 +691,8 @@ def resolved_outcome_index(market: dict) -> Optional[int]:
     settlement (shouldn't happen for closed=true markets, but don't guess).
     This is read ONLY at payout time -- never passed into signal generation."""
     try:
-        prices = [float(x) for x in json.loads(market.get("outcomePrices") or "[]")]
-    except (json.JSONDecodeError, TypeError):
+        prices = [float(x) for x in _safe_json_list(market.get("outcomePrices"))]
+    except (ValueError, TypeError):
         return None
     if not prices or max(prices) < 0.5:
         return None
@@ -852,12 +868,9 @@ _DISPUTE_STATUS_RE = re.compile(r"dispute", re.IGNORECASE)
 
 
 def categorize_flip(market: dict) -> dict:
-    uma_status = market.get("umaResolutionStatus") or ""
-    uma_statuses_raw = market.get("umaResolutionStatuses") or "[]"
-    try:
-        uma_statuses = json.loads(uma_statuses_raw) if isinstance(uma_statuses_raw, str) else uma_statuses_raw
-    except json.JSONDecodeError:
-        uma_statuses = []
+    uma_status_raw = market.get("umaResolutionStatus")
+    uma_status = uma_status_raw if isinstance(uma_status_raw, str) else ""
+    uma_statuses = _safe_json_list(market.get("umaResolutionStatuses"))
     disputed = bool(_DISPUTE_STATUS_RE.search(uma_status)) or any(
         _DISPUTE_STATUS_RE.search(str(s)) for s in uma_statuses
     )
@@ -866,7 +879,7 @@ def categorize_flip(market: dict) -> dict:
         "market_id": market.get("id"),
         "question": market.get("question"),
         "slug": market.get("slug"),
-        "description": (market.get("description") or "")[:500],
+        "description": (market.get("description") if isinstance(market.get("description"), str) else "")[:500],
         "resolutionSource": market.get("resolutionSource"),
         "umaResolutionStatus": uma_status,
         "umaResolutionStatuses": uma_statuses,
@@ -1321,7 +1334,7 @@ def main() -> None:
 
     print(f"Drawing stratified random sample (target n={SAMPLE_SIZE}) ...")
     sample = stratified_sample_markets(census, n_target=SAMPLE_SIZE)
-    sample = [m for m in sample if m.get("clobTokenIds") and json.loads(m["clobTokenIds"])]
+    sample = [m for m in sample if _safe_json_list(m.get("clobTokenIds"))]
     print(f"  sample size (with CLOB token ids): {len(sample):,}")
 
     signal_cfg = SignalConfig(threshold=0.99, n_consecutive=3)
