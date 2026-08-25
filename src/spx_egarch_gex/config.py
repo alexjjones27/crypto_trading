@@ -60,3 +60,42 @@ SPLIT_HOLDOUT = ("2021-01-01", None)  # None = through latest available data
 # choice (Normal vs Student-t vs skew-t, residual diagnostics) on a longer
 # sample before the GEX-constrained backtest window is applied.
 EGARCH_DIAGNOSTIC_START = "1990-01-01"
+
+# --- Strategy parameters (checkpoint 4) ----------------------------------
+# Regime gate: lag applied to the sign(GEX) classifier before it can inform
+# a trading decision (see checkpoint 3 -- 1-day lag is our best estimate of
+# the free CSV's real-time availability, unverified beyond that).
+REGIME_LAG = 1
+
+# Vol targeting (shared by both sub-strategies): daily position size is
+# rescaled to target this annualized vol using that day's EGARCH forecast,
+# i.e. size_t = TARGET_VOL / cond_vol_forecast_t (annualized), capped at
+# MAX_LEVERAGE. 15% approximates SPX's long-run realized vol, so typical
+# exposure is close to 1x in "normal" conditions and shrinks/grows with the
+# vol forecast.
+TARGET_ANNUALIZED_VOL = 0.15
+MAX_LEVERAGE = 2.0
+
+# Mean-reversion sub-strategy (active only when regime == positive):
+# entry/exit on a vol-standardized z-score of trailing n-day cumulative
+# return.
+MR_LOOKBACK_DAYS = 5
+MR_ENTRY_Z = 1.5
+MR_EXIT_Z = 0.25
+MR_MAX_HOLD_DAYS = 10
+
+# Vol-breakout sub-strategy (active only when regime == negative): entry on
+# a realized-return breakout vs that day's EGARCH forecast vol, exit on a
+# vol-scaled trailing stop (payoff-convexity edge, NOT a directional-
+# persistence edge -- checkpoint 3 found no support for the latter).
+BRK_ENTRY_SIGMA = 1.0
+BRK_TRAILING_STOP_SIGMA = 1.5
+BRK_MAX_HOLD_DAYS = 5
+
+# Transaction costs: SPX itself isn't directly tradeable; assume execution
+# via ES futures (deep liquidity). All-in round-trip cost (commission +
+# half-spread + typical slippage) and an annualized financing spread
+# charged only on leverage beyond 1x notional (borrowing cost for the
+# levered portion of vol-targeted exposure).
+TRANSACTION_COST_BPS = 2.0  # per unit of turnover (i.e. per 100% notional traded)
+FINANCING_SPREAD_ANNUAL = 0.003  # 30bps/yr over the risk-free rate, on leverage > 1x

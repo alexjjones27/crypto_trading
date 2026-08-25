@@ -36,7 +36,7 @@ def classify_regime_sign(gex: pd.Series, threshold: float = 0.0) -> pd.Series:
     label = pd.Series(index=gex.index, dtype=object)
     label[gex > threshold] = "positive"
     label[gex <= threshold] = "negative"
-    label[gex.isna()] = pd.NA
+    label[gex.isna()] = None  # plain None, not pd.NA: keeps `label[i] == "positive"` a clean bool
     return label.rename("regime")
 
 
