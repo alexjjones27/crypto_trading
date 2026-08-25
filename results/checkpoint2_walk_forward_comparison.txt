@@ -2,18 +2,18 @@ Full series: 1990-01-03 -> 2026-08-24 (n=9227)
 Distribution: skewt, daily refit (refit_frequency=1), min_obs=500
 Rolling window size: 1260 trading days (~5y)
 
-[expanding fit time: 600.7s, rolling fit time: 404.1s]
+[expanding fit time: 599.6s, rolling fit time: 407.6s]
 
 --- expanding ---
-n_forecasts=8710  n_refits=8265  n_refits_rejected=462  n_nonfinite_dropped=17
-cond_vol (annualized %) mean=16.70 min=0.51 max=246.42
-QLIKE=-7.7750  MSE=7.843e-07  n=8705
-std_resid: mean=0.0301 std=1.2724 skew=-3.1307 exkurt=167.3134  (n=8710)
-Ljung-Box(20) levels p=0.0000  squared p=0.0000  ARCH-LM p=0.0000
+n_forecasts=8707  n_refits=8245  n_refits_rejected=482  n_nonfinite_dropped=20
+cond_vol (annualized %) mean=16.38 min=3.14 max=141.81
+QLIKE=-8.3651  MSE=2.360e-07  n=8702
+std_resid: mean=0.0329 std=1.0068 skew=-0.6056 exkurt=2.6180  (n=8707)
+Ljung-Box(20) levels p=0.0094  squared p=0.0135  ARCH-LM p=0.0015
 
 --- rolling (w=1260) ---
-n_forecasts=8690  n_refits=8207  n_refits_rejected=520  n_nonfinite_dropped=37
-cond_vol (annualized %) mean=17.21 min=0.51 max=244.92
-QLIKE=-7.8481  MSE=1.043e-06  n=8685
-std_resid: mean=0.0261 std=1.2345 skew=-5.2142 exkurt=139.8650  (n=8690)
-Ljung-Box(20) levels p=0.0000  squared p=0.0000  ARCH-LM p=0.0000
+n_forecasts=8686  n_refits=8179  n_refits_rejected=548  n_nonfinite_dropped=41
+cond_vol (annualized %) mean=16.70 min=3.14 max=148.54
+QLIKE=-8.3518  MSE=3.094e-07  n=8681
+std_resid: mean=0.0324 std=1.0086 skew=-0.5729 exkurt=2.5665  (n=8686)
+Ljung-Box(20) levels p=0.0084  squared p=0.0000  ARCH-LM p=0.0001
