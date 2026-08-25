@@ -101,7 +101,13 @@ def clustering_test(log: pd.DataFrame) -> str:
     expected = by_year["n_windows"] * overall_rate
     # merge sparse years to keep expected counts reasonable for chi-square validity
     valid = expected >= 1
-    chi2, pval = spstats.chisquare(by_year.loc[valid, "n_pinned"], expected[valid])
+    obs = by_year.loc[valid, "n_pinned"]
+    exp = expected[valid]
+    exp = exp * (obs.sum() / exp.sum())  # rescale: chisquare requires sum(obs)==sum(exp) exactly;
+    # dropping sparse years unavoidably desyncs the totals, so rescale the
+    # kept-years' expected counts to preserve their relative shape (still
+    # driven by each year's own window count) while matching sum(obs).
+    chi2, pval = spstats.chisquare(obs, exp)
 
     lines = []
     lines.append(f"Overall pin rate: {total_pinned}/{total_windows} = {overall_rate:.4%}")

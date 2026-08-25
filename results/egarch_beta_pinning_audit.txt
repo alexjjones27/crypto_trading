@@ -1,0 +1,72 @@
+=== Beta boundary-pinning diagnostic (expanding window, daily refit) ===
+pin threshold: beta >= 0.9999
+
+Overall pin rate: 78/8727 = 0.8938%
+
+Pin rate by year:
+      n_windows  n_pinned  pin_rate
+year                               
+1991          5         0  0.000000
+1992        254         9  0.035433
+1993        253        30  0.118577
+1994        252        27  0.107143
+1995        252        12  0.047619
+1996        254         0  0.000000
+1997        253         0  0.000000
+1998        252         0  0.000000
+1999        252         0  0.000000
+2000        252         0  0.000000
+2001        248         0  0.000000
+2002        252         0  0.000000
+2003        252         0  0.000000
+2004        252         0  0.000000
+2005        252         0  0.000000
+2006        251         0  0.000000
+2007        251         0  0.000000
+2008        253         0  0.000000
+2009        252         0  0.000000
+2010        252         0  0.000000
+2011        252         0  0.000000
+2012        250         0  0.000000
+2013        252         0  0.000000
+2014        252         0  0.000000
+2015        252         0  0.000000
+2016        252         0  0.000000
+2017        251         0  0.000000
+2018        251         0  0.000000
+2019        252         0  0.000000
+2020        253         0  0.000000
+2021        252         0  0.000000
+2022        251         0  0.000000
+2023        250         0  0.000000
+2024        252         0  0.000000
+2025        250         0  0.000000
+2026        161         0  0.000000
+
+Chi-square test (observed pins/year vs uniform-rate expectation): chi2=742.82  p=3.28e-134
+(p << 0.05 => pinning is NOT uniformly scattered across years; it is clustered in specific periods)
+
+Top-5 years by pin rate:
+      n_windows  n_pinned  pin_rate
+year                               
+1993        253        30  0.118577
+1994        252        27  0.107143
+1995        252        12  0.047619
+1992        254         9  0.035433
+1991          5         0  0.000000
+
+Total pinned windows: 78
+First pinned date: 1992-11-12   Last pinned date: 1995-06-02
+Years with >=1 pinned window: [np.int32(1992), np.int32(1993), np.int32(1994), np.int32(1995)]
+
+=== Window-length sensitivity on all 78 pinned dates ===
+Pin rate by requested window length:
+window_length_requested
+200     0.025641
+300     0.051282
+500     0.064103
+750     0.141026
+1000    0.564103
+1500    1.000000
+
+See results/egarch_beta_pinning_audit.md for full analysis and conclusion.
