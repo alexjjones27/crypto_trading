@@ -1,0 +1,72 @@
+=== Real-time availability of the GEX signal ===
+
+SqueezeMetrics' free DIX/GEX CSV (squeezemetrics.com/monitor/static/DIX.csv)
+is computed from that trading day's end-of-day dark-pool/options data, i.e.
+each row labeled date T reflects information only fully observable after
+T's close. We did NOT have access to a historical log of exact publish
+timestamps (no way to retroactively confirm, e.g., "row T appeared on the
+site at HH:MM on day T+1"). What we DID confirm directly: fetching the CSV
+on 2026-08-25 (a trading day) returned a last row dated 2026-08-24 (the
+prior close) -- consistent with same-evening-after-close or next-morning
+publication, i.e. a ~1-trading-day lag, and NOT same-day intraday
+availability.
+
+Working assumption used throughout this backtest (stated explicitly
+because it is load-bearing): GEX_T becomes usable for a trading decision
+made at T+1's open at the earliest -- i.e. a full 1-trading-day lag between
+the date a GEX row describes and the date it can inform a trade. This is
+enforced everywhere below via `lag_for_trading(regime, lag=1)`: the regime
+label driving day t's analysis is always built from GEX_{t-1}, never
+GEX_t. A lag=2 variant is also reported as a robustness check in case the
+true publish lag is longer than assumed (e.g. if the free tier is delayed
+an extra day relative to the paid feed) -- if the standalone result
+survives lag=2, the conclusion isn't fragile to getting the exact lag
+slightly wrong. It is NOT survivable if the true lag turns out to be
+*shorter* than we assume (that would only make our backtest more
+conservative, not less), but if it turns out GEX_T is NOT usable until
+T+2 or later, lag=1 results would themselves be look-ahead-biased --
+flagged here as the key unverified assumption in this checkpoint.
+
+Sample: 2011-05-02 -> 2026-08-24 (GEX-covered window)
+
+--- lag=1 (regime built from GEX known 1 day(s) before the decision day) ---
+Regime base rates: {'positive': np.int64(3502), 'negative': np.int64(348)}  (91.0% positive)
+Regime persistence: 209 runs, mean run length 18.4 trading days (positive mean 33.4, negative mean 3.3)
+
+Realized vol by regime (next-day |log return|, annualized):
+  positive: mean|r|=10.11%  std(r)=14.18%  n=3502
+  negative: mean|r|=24.30%  std(r)=35.82%  n=348
+  Welch t-test on |r|: t=-9.986 p=0.0000
+  Circular-shift permutation test (preserves autocorrelation): diff(pos-neg)=-0.008939  null_mean=-0.000019  p=0.0016
+  Circular-shift permutation test on std(r): diff(pos-neg)=-0.013630  p=0.0002
+
+Mean reversion: lag-1 autocorrelation of returns by regime
+  positive: corr(r_t, r_t-1) = -0.0522  (n=3502)
+  negative: corr(r_t, r_t-1) = -0.2344  (n=348)
+  (hypothesis: positive should be more NEGATIVE (reversal), negative should be more POSITIVE (trend))
+  Circular-shift permutation test on autocorr diff (pos-neg): observed=0.1822  null_mean=-0.0284  p=0.1874
+
+Variance ratio (VR<1 = mean-reverting, VR>1 = trending), on contiguous regime runs:
+  VR(5): positive=0.778 (n_runs=39, days=3249)   negative=0.648 (n_runs=1, days=15)
+  VR(10): positive=0.616 (n_runs=30, days=3032)   negative=nan (n_runs=0, days=0)
+
+--- lag=2 (regime built from GEX known 2 day(s) before the decision day) ---
+Regime base rates: {'positive': np.int64(3501), 'negative': np.int64(348)}  (91.0% positive)
+Regime persistence: 209 runs, mean run length 18.4 trading days (positive mean 33.3, negative mean 3.3)
+
+Realized vol by regime (next-day |log return|, annualized):
+  positive: mean|r|=10.12%  std(r)=14.33%  n=3501
+  negative: mean|r|=24.28%  std(r)=35.22%  n=348
+  Welch t-test on |r|: t=-10.253 p=0.0000
+  Circular-shift permutation test (preserves autocorrelation): diff(pos-neg)=-0.008922  null_mean=-0.000015  p=0.0018
+  Circular-shift permutation test on std(r): diff(pos-neg)=-0.013160  p=0.0006
+
+Mean reversion: lag-1 autocorrelation of returns by regime
+  positive: corr(r_t, r_t-1) = -0.0073  (n=3501)
+  negative: corr(r_t, r_t-1) = -0.2973  (n=348)
+  (hypothesis: positive should be more NEGATIVE (reversal), negative should be more POSITIVE (trend))
+  Circular-shift permutation test on autocorr diff (pos-neg): observed=0.2899  null_mean=-0.0284  p=0.0568
+
+Variance ratio (VR<1 = mean-reverting, VR>1 = trending), on contiguous regime runs:
+  VR(5): positive=0.807 (n_runs=39, days=3248)   negative=0.792 (n_runs=1, days=15)
+  VR(10): positive=0.635 (n_runs=30, days=3031)   negative=nan (n_runs=0, days=0)
