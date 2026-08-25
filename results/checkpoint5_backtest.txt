@@ -1,0 +1,49 @@
+=== Checkpoint 5: walk-forward backtest ===
+Rules locked in post-leakage-check: MR_LOOKBACK_DAYS=3, MR_ENTRY_Z=1.5, vol-breakout=momentum, BRK_ENTRY_SIGMA=1.0
+Costs: 2.0bps/turnover + 0.3%/yr financing on leverage>1x
+
+--- in_sample: 2011-05-02 -> 2017-12-29 (n=1679) ---
+  Buy & hold          : ann_ret=  10.11%  ann_vol= 14.31%  sharpe=  0.71  max_dd= -20.56%
+  Strategy (gross)    : ann_ret=   1.24%  ann_vol=  7.53%  sharpe=  0.16  max_dd= -14.72%
+  Strategy (net)      : ann_ret=   0.53%  ann_vol=  7.53%  sharpe=  0.07  max_dd= -15.22%
+  Regime-blind (net)  : ann_ret=  -0.34%  ann_vol=  7.48%  sharpe= -0.05  max_dd= -15.30%
+  HAC (Newey-West) t-stat on strategy net daily return: mean=0.0021%  t=0.189  p=0.8501  (lags=7)
+  Block-bootstrap on strategy net daily return: mean=0.0021%  95% CI=[-0.0181%, 0.0235%]  p=0.8728
+  Block-bootstrap on (regime-aware - regime-blind) daily return diff: mean=0.0034%  95% CI=[-0.0107%, 0.0201%]  p=0.6756
+  -> regime-gating ADDS value here; NOT statistically significant at 5%
+
+--- validation: 2018-01-02 -> 2020-12-31 (n=756) ---
+  Buy & hold          : ann_ret=  11.33%  ann_vol= 23.47%  sharpe=  0.48  max_dd= -36.10%
+  Strategy (gross)    : ann_ret=  -4.19%  ann_vol= 10.42%  sharpe= -0.40  max_dd= -22.69%
+  Strategy (net)      : ann_ret=  -5.01%  ann_vol= 10.43%  sharpe= -0.48  max_dd= -24.08%
+  Regime-blind (net)  : ann_ret=  -3.06%  ann_vol= 10.26%  sharpe= -0.30  max_dd= -23.11%
+  HAC (Newey-West) t-stat on strategy net daily return: mean=-0.0199%  t=-0.875  p=0.3816  (lags=6)
+  Block-bootstrap on strategy net daily return: mean=-0.0199%  95% CI=[-0.0637%, 0.0228%]  p=0.3544
+  Block-bootstrap on (regime-aware - regime-blind) daily return diff: mean=-0.0077%  95% CI=[-0.0496%, 0.0363%]  p=0.7072
+  -> regime-gating SUBTRACTS value here; NOT statistically significant at 5%
+
+--- holdout: 2021-01-04 -> 2026-08-24 (n=1416) ---
+  Buy & hold          : ann_ret=  12.67%  ann_vol= 16.60%  sharpe=  0.76  max_dd= -27.11%
+  Strategy (gross)    : ann_ret=  -0.01%  ann_vol=  9.09%  sharpe= -0.00  max_dd= -25.04%
+  Strategy (net)      : ann_ret=  -0.94%  ann_vol=  9.09%  sharpe= -0.10  max_dd= -25.97%
+  Regime-blind (net)  : ann_ret=   0.21%  ann_vol=  8.96%  sharpe=  0.02  max_dd= -25.68%
+  HAC (Newey-West) t-stat on strategy net daily return: mean=-0.0037%  t=-0.261  p=0.7941  (lags=7)
+  Block-bootstrap on strategy net daily return: mean=-0.0037%  95% CI=[-0.0346%, 0.0249%]  p=0.8052
+  Block-bootstrap on (regime-aware - regime-blind) daily return diff: mean=-0.0045%  95% CI=[-0.0226%, 0.0123%]  p=0.6048
+  -> regime-gating SUBTRACTS value here; NOT statistically significant at 5%
+
+--- full_sample: 2011-05-02 -> 2026-08-24 (n=3851) ---
+  Buy & hold          : ann_ret=  11.29%  ann_vol= 17.28%  sharpe=  0.65  max_dd= -36.10%
+  Strategy (gross)    : ann_ret=  -0.28%  ann_vol=  8.74%  sharpe= -0.03  max_dd= -30.60%
+  Strategy (net)      : ann_ret=  -1.10%  ann_vol=  8.74%  sharpe= -0.13  max_dd= -35.55%
+  Regime-blind (net)  : ann_ret=  -0.67%  ann_vol=  8.63%  sharpe= -0.08  max_dd= -34.13%
+  HAC (Newey-West) t-stat on strategy net daily return: mean=-0.0044%  t=-0.522  p=0.6019  (lags=9)
+  Block-bootstrap on strategy net daily return: mean=-0.0044%  95% CI=[-0.0208%, 0.0122%]  p=0.5988
+  Block-bootstrap on (regime-aware - regime-blind) daily return diff: mean=-0.0017%  95% CI=[-0.0144%, 0.0115%]  p=0.7820
+  -> regime-gating SUBTRACTS value here; NOT statistically significant at 5%
+
+=== In-sample -> validation -> holdout degradation ===
+Net Sharpe: in-sample=0.07  validation=-0.48  holdout=-0.10
+FLAG: material Sharpe degradation from in-sample to validation/holdout (>0.3 drop).
+FLAG: Sharpe sign flips between in-sample and holdout.
+

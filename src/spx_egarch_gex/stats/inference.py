@@ -13,6 +13,13 @@ which plain t-tests and i.i.d. bootstraps assume away.
   regime-vs-vol test (checkpoint 3) and later strategy-return tests
   (checkpoint 5), which have exactly this "is a persistent, autocorrelated
   label associated with a persistent, autocorrelated series" shape.
+- `circular_block_bootstrap_mean_test`: bootstrap CI/p-value for whether a
+  return series' mean is nonzero, resampling contiguous blocks (with
+  wraparound) rather than i.i.d. days, so within-block vol clustering and
+  short-range serial correlation survive into the resampled series. Used
+  both for a strategy's own returns and, by feeding in a return-difference
+  series, for whether one strategy variant beats another (e.g.
+  regime-aware minus regime-blind) -- a paired-difference test.
 """
 
 from __future__ import annotations
@@ -73,5 +80,54 @@ def circular_shift_permutation_test(
         "null_std": float(np.nanstd(null_stats)),
         "p_value": float(p_value),
         "n_perm": n_perm,
+        "n_obs": n,
+    }
+
+
+def circular_block_bootstrap_mean_test(
+    returns: pd.Series,
+    n_boot: int = 5000,
+    block_size: int = 20,
+    random_state: int | None = 0,
+) -> dict:
+    """H0: mean(returns) == 0, via a circular (wraparound) moving-block
+    bootstrap -- resample contiguous blocks of `block_size` consecutive
+    days (with replacement, wrapping past the series end) until the
+    resampled series reaches the original length, repeat `n_boot` times.
+
+    p-value is two-sided: 2x the smaller tail of the bootstrap distribution
+    on the side of zero opposite the observed mean (a standard bootstrap
+    p-value construction), capped at 1.0.
+    """
+    r = returns.dropna().to_numpy()
+    n = len(r)
+    n_blocks = int(np.ceil(n / block_size))
+
+    rng = np.random.default_rng(random_state)
+    boot_means = np.empty(n_boot)
+    for b in range(n_boot):
+        starts = rng.integers(0, n, size=n_blocks)
+        idx = (starts[:, None] + np.arange(block_size)[None, :]) % n
+        sample = r[idx.ravel()][:n]
+        boot_means[b] = sample.mean()
+
+    observed = r.mean()
+    lo, hi = np.percentile(boot_means, [2.5, 97.5])
+
+    # two-sided p-value: fraction of the bootstrap distribution on the
+    # far side of zero from `observed`, doubled
+    if observed >= 0:
+        tail = float(np.mean(boot_means <= 0))
+    else:
+        tail = float(np.mean(boot_means >= 0))
+    p_value = min(1.0, 2 * tail)
+
+    return {
+        "observed_mean": float(observed),
+        "ci_lo": float(lo),
+        "ci_hi": float(hi),
+        "p_value": p_value,
+        "n_boot": n_boot,
+        "block_size": block_size,
         "n_obs": n,
     }

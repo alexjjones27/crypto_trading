@@ -68,7 +68,17 @@ def _vol_target_size(vol_fcst_ann: float) -> float:
     return min(config.TARGET_ANNUALIZED_VOL / vol_fcst_ann, config.MAX_LEVERAGE)
 
 
-def generate_positions(df: pd.DataFrame) -> tuple[pd.Series, list[Trade]]:
+def generate_positions(df: pd.DataFrame, regime_blind: bool = False) -> tuple[pd.Series, list[Trade]]:
+    """`regime_blind=True` is checkpoint 5's benchmark: identical entry/exit
+    rules and sizing, but the regime gate is removed -- mean-reversion and
+    vol-breakout are both always eligible, regardless of what GEX says, and
+    a regime flip is no longer an exit trigger. Priority when both would
+    fire the same day: mean-reversion checked first (same evaluation order
+    as the regime-aware version's if/elif chain), vol-breakout only if
+    mean-reversion doesn't. This isolates the marginal effect of gating
+    entries by regime, holding the underlying signals and risk management
+    fixed.
+    """
     positions = np.zeros(len(df))
     state = "flat"
     direction = 0
@@ -92,7 +102,7 @@ def generate_positions(df: pd.DataFrame) -> tuple[pd.Series, list[Trade]]:
         if state in ("long_mr", "short_mr"):
             days_held += 1
             exit_reason = None
-            if regime[i] != "positive":
+            if not regime_blind and regime[i] != "positive":
                 exit_reason = "regime_flip"
             elif np.isfinite(mr_z[i]) and abs(mr_z[i]) < config.MR_EXIT_Z:
                 exit_reason = "reverted"
@@ -108,7 +118,7 @@ def generate_positions(df: pd.DataFrame) -> tuple[pd.Series, list[Trade]]:
             exit_reason = None
             favorable = direction * cum_ret_since_entry
             stop_dist = config.BRK_TRAILING_STOP_SIGMA * vol_fcst[i] if np.isfinite(vol_fcst[i]) else np.inf
-            if regime[i] != "negative":
+            if not regime_blind and regime[i] != "negative":
                 exit_reason = "regime_flip"
             elif (peak_favorable - favorable) > stop_dist:
                 exit_reason = "trailing_stop"
@@ -120,8 +130,10 @@ def generate_positions(df: pd.DataFrame) -> tuple[pd.Series, list[Trade]]:
                 state, direction, days_held, cum_ret_since_entry, peak_favorable = "flat", 0, 0, 0.0, 0.0
 
         # --- process entries (only if currently flat) ---
+        mr_regime_ok = regime_blind or regime[i] == "positive"
+        brk_regime_ok = regime_blind or regime[i] == "negative"
         if state == "flat":
-            if regime[i] == "positive" and np.isfinite(mr_z[i]):
+            if mr_regime_ok and np.isfinite(mr_z[i]):
                 if mr_z[i] > config.MR_ENTRY_Z:
                     state, direction = "short_mr", -1
                 elif mr_z[i] < -config.MR_ENTRY_Z:
@@ -129,7 +141,7 @@ def generate_positions(df: pd.DataFrame) -> tuple[pd.Series, list[Trade]]:
                 if state != "flat":
                     days_held, cum_ret_since_entry, peak_favorable = 0, 0.0, 0.0
                     entry_date, entry_strategy = dates[i], "mean_reversion"
-            elif regime[i] == "negative" and np.isfinite(breakout_sigma[i]):
+            elif brk_regime_ok and np.isfinite(breakout_sigma[i]):
                 # momentum: follow the move (see module docstring -- reverted
                 # from checkpoint 4b's contrarian flip after the leakage check)
                 if breakout_sigma[i] > config.BRK_ENTRY_SIGMA:
