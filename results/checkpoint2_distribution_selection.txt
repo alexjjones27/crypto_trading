@@ -1,0 +1,77 @@
+Sample: 1990-01-03 -> 2017-12-29 (n=7055)
+
+dist              AIC          BIC       LogLik   LB(20)_p  LB2(20)_p  ARCH-LM_p     skew   exkurt
+normal       18228.48     18262.79     -9109.24     0.0090     0.4511     0.2649   -0.436    1.735
+t            17962.08     18003.25     -8975.04     0.0070     0.5765     0.4610   -0.456    1.903
+skewt        17930.51     17978.54     -8958.25     0.0107     0.5814     0.4504   -0.454    1.901
+
+Ljung-Box on standardized residuals (levels), full table, per distribution:
+
+-- normal --
+params:
+mu          0.025369
+omega      -0.000330
+alpha[1]    0.124563
+gamma[1]   -0.114512
+beta[1]     0.980360
+
+Ljung-Box (levels):
+      lb_stat  lb_pvalue
+5   13.603706   0.018333
+10  20.196833   0.027445
+20  37.952088   0.008976
+
+Ljung-Box (squared):
+      lb_stat  lb_pvalue
+5    8.406137   0.135228
+10  14.371072   0.156729
+20  20.110043   0.451065
+
+ARCH-LM stat=14.5859 p=0.2649
+
+-- t --
+params:
+mu          0.040161
+omega      -0.000827
+alpha[1]    0.126672
+gamma[1]   -0.119760
+beta[1]     0.985780
+nu          7.020906
+
+Ljung-Box (levels):
+      lb_stat  lb_pvalue
+5   15.273940   0.009254
+10  21.787349   0.016225
+20  38.845710   0.006968
+
+Ljung-Box (squared):
+      lb_stat  lb_pvalue
+5    6.520864   0.258781
+10  11.162426   0.345004
+20  18.166292   0.576455
+
+ARCH-LM stat=11.8108 p=0.4610
+
+-- skewt --
+params:
+mu          0.024737
+omega       0.000878
+alpha[1]    0.128677
+gamma[1]   -0.123268
+beta[1]     0.984030
+eta         7.353490
+lambda     -0.093256
+
+Ljung-Box (levels):
+      lb_stat  lb_pvalue
+5   13.748874   0.017286
+10  20.052773   0.028757
+20  37.319843   0.010710
+
+Ljung-Box (squared):
+      lb_stat  lb_pvalue
+5    6.688930   0.244822
+10  11.284851   0.335760
+20  18.091473   0.581382
+
+ARCH-LM stat=11.9416 p=0.4504
