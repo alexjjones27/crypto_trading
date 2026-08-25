@@ -37,6 +37,7 @@ def save_result(result, name: str):
 def evaluate_variant(name: str, result, returns: pd.Series) -> str:
     lines = [f"--- {name} ---"]
     lines.append(f"n_forecasts={len(result.cond_vol)}  n_refits={result.n_refits}  "
+                 f"n_refits_rejected={result.n_refits_rejected}  "
                  f"n_nonfinite_dropped={result.n_nonfinite}")
     lines.append(
         f"cond_vol (annualized %) mean={result.cond_vol.mean()*100*(252**0.5):.2f} "

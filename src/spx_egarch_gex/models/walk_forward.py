@@ -17,10 +17,23 @@ EGARCH(1,1) fit/fix+forecast takes ~10-100ms). On non-refit days the
 previous fit's parameters are held fixed and the recursion is simply
 re-evaluated on the extended data (via `ARCHModel.fix`), which is cheap and
 still uses all realized returns through t-1.
+
+Some daily MLE refits land on a degenerate solution -- e.g. beta[1]
+pinned at/near the EGARCH stationarity boundary (|beta|=1), or a
+parameter blown out to an implausible scale -- while scipy's optimizer
+still reports `convergence_flag == 0`. These aren't rare enough to ignore
+(observed on both window types, concentrated in the smaller-sample early
+1990s): the resulting one-step variance forecast can be many orders of
+magnitude off, which silently corrupts every downstream mean/std
+statistic even after filtering literal inf/nan. Each day's *candidate*
+forecast is therefore sanity-checked (plausible annualized-vol range +
+stationarity), and a refit that fails the check is rejected in favor of
+the last good parameter set rather than accepted.
 """
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 
 import numpy as np
@@ -28,6 +41,34 @@ import pandas as pd
 from arch import arch_model
 
 from spx_egarch_gex.models.egarch import RETURN_SCALE
+
+logger = logging.getLogger(__name__)
+
+# Plausible one-day-ahead SPX annualized vol forecast range. SPX realized
+# vol has never annualized above ~150% even on the worst single days
+# (Oct 1987, Oct 2008); a EGARCH forecast outside [0.5%, 250%] reflects a
+# degenerate fit, not a real market condition.
+MIN_ANNUALIZED_VOL = 0.005
+MAX_ANNUALIZED_VOL = 2.5
+MAX_ABS_BETA = 0.999  # EGARCH stationarity requires |beta| < 1
+
+
+def _annualized_vol(var_pct2: float) -> float:
+    return (var_pct2**0.5) / RETURN_SCALE * (252**0.5)
+
+
+def _params_sane(params: pd.Series) -> bool:
+    beta = params.get("beta[1]")
+    if beta is not None and abs(beta) >= MAX_ABS_BETA:
+        return False
+    return True
+
+
+def _forecast_sane(var_pct2: float) -> bool:
+    if not np.isfinite(var_pct2) or var_pct2 <= 0:
+        return False
+    vol = _annualized_vol(var_pct2)
+    return MIN_ANNUALIZED_VOL <= vol <= MAX_ANNUALIZED_VOL
 
 
 @dataclass
@@ -38,8 +79,9 @@ class WalkForwardResult:
     dist: str
     cond_vol: pd.Series  # one-step-ahead forecast, fractional (not percent) return-scale
     std_resid: pd.Series  # realized_return_t / cond_vol_t
-    n_refits: int
-    n_nonfinite: int  # forecasts dropped for being <=0 / inf / nan (numerical instability)
+    n_refits: int  # accepted (sane) refits
+    n_refits_rejected: int  # refit attempts that failed the sanity check
+    n_nonfinite: int  # forecasts dropped: no sane params available yet, or fallback also failed
 
 
 def walk_forward_egarch(
@@ -62,6 +104,7 @@ def walk_forward_egarch(
     forecasts = np.full(n, np.nan)
     params = None
     n_refits = 0
+    n_refits_rejected = 0
 
     for t in range(min_obs, n):
         # Training window: all data strictly before t (i.e. through t-1).
@@ -71,19 +114,33 @@ def walk_forward_egarch(
         need_refit = params is None or (t - min_obs) % refit_frequency == 0
         am = arch_model(train, mean="Constant", vol="EGARCH", p=1, o=1, q=1, dist=dist)
 
+        var_pct2 = np.nan
         if need_refit:
             res = am.fit(disp="off", show_warning=False)
-            params = res.params
-            n_refits += 1
-            fc = res.forecast(horizon=1, reindex=False)
+            candidate_params = res.params
+            candidate_fc = res.forecast(horizon=1, reindex=False)
+            candidate_var = candidate_fc.variance.iloc[-1, 0]
+
+            if _params_sane(candidate_params) and _forecast_sane(candidate_var):
+                params = candidate_params
+                var_pct2 = candidate_var
+                n_refits += 1
+            else:
+                n_refits_rejected += 1
+                if params is not None:
+                    fixed = am.fix(params)
+                    fc = fixed.forecast(horizon=1, reindex=False)
+                    var_pct2 = fc.variance.iloc[-1, 0]
+                # else: no prior good params yet -> stays nan
         else:
             fixed = am.fix(params)
             fc = fixed.forecast(horizon=1, reindex=False)
+            var_pct2 = fc.variance.iloc[-1, 0]
 
-        # variance forecast is in (returns*100)^2 units -> back to fractional
-        var_pct2 = fc.variance.iloc[-1, 0]
-        vol = np.sqrt(var_pct2) / RETURN_SCALE if var_pct2 > 0 else np.nan
-        forecasts[t] = vol if np.isfinite(vol) else np.nan
+        if _forecast_sane(var_pct2):
+            forecasts[t] = np.sqrt(var_pct2) / RETURN_SCALE
+        # else leave as NaN (either no params yet, or fallback params also
+        # produced an implausible forecast on the new data -- both rare)
 
     cond_vol = pd.Series(forecasts, index=dates, name="cond_vol_forecast")
     realized = r / RETURN_SCALE  # fractional log returns
@@ -92,12 +149,10 @@ def walk_forward_egarch(
 
     n_attempted = n - min_obs
     n_nonfinite = int(cond_vol.iloc[min_obs:].isna().sum())
-    if n_nonfinite:
-        import logging
-
-        logging.getLogger(__name__).warning(
-            "%d/%d forecasts non-finite/non-positive (window_type=%s) and dropped",
-            n_nonfinite, n_attempted, window_type,
+    if n_refits_rejected or n_nonfinite:
+        logger.warning(
+            "window_type=%s: %d/%d refits rejected as insane, %d/%d forecasts left NaN",
+            window_type, n_refits_rejected, n_refits + n_refits_rejected, n_nonfinite, n_attempted,
         )
 
     return WalkForwardResult(
@@ -108,6 +163,7 @@ def walk_forward_egarch(
         cond_vol=cond_vol.dropna(),
         std_resid=std_resid.dropna(),
         n_refits=n_refits,
+        n_refits_rejected=n_refits_rejected,
         n_nonfinite=n_nonfinite,
     )
 
