@@ -943,6 +943,23 @@ def compute_with_vs_without_flips(trades_df: pd.DataFrame, pnl_col: str = "pnl_n
     return {"with_flips": with_flips, "without_flips_ie_winners_only": without_flips}
 
 
+def max_days_to_resolution_variant(trades_df: pd.DataFrame, max_days: float, pnl_col: str = "pnl_net") -> pd.DataFrame:
+    """Compares the unrestricted trade set against the subset that also
+    required, at entry, a scheduled time-to-resolution under `max_days` --
+    per the task's point that a market can sit at $0.99 for months before
+    resolving, which changes annualized return even though the per-trade
+    P&L is identical. Uses `days_to_scheduled_end_at_entry` (each market's
+    *scheduled* end date minus the entry timestamp), which is known at
+    entry time -- not the realized resolution time, which would leak
+    lookahead into what is supposed to be an entry-time filter."""
+    all_m = compute_metrics(trades_df, pnl_col)
+    all_m["variant"] = f"unrestricted (n={len(trades_df)})"
+    filtered = trades_df[trades_df["days_to_scheduled_end_at_entry"] <= max_days]
+    filt_m = compute_metrics(filtered, pnl_col)
+    filt_m["variant"] = f"max {max_days:.0f}d to scheduled resolution (n={len(filtered)})"
+    return pd.DataFrame([all_m, filt_m])
+
+
 def category_breakdown(trades_df: pd.DataFrame, pnl_col: str = "pnl_net") -> pd.DataFrame:
     rows = []
     for bucket, grp in trades_df.groupby("report_bucket"):
@@ -1085,6 +1102,7 @@ def write_report(
     trades_by_fill: dict[str, pd.DataFrame],
     days_dist: pd.DataFrame,
     category_tables: dict[str, pd.DataFrame],
+    max_days_tables: dict[str, pd.DataFrame],
     sensitivity_tables: dict[str, pd.DataFrame],
     depth_cap_flags: pd.DataFrame,
     signal_cfg: SignalConfig,
@@ -1218,6 +1236,21 @@ def write_report(
         lines.append(_df_to_markdown(cat_df.reset_index()))
         lines.append("\n")
 
+    lines.append(f"\n## Max time-to-resolution variant (unrestricted vs. <= {MAX_DAYS_TO_RESOLUTION:.0f} days at entry)\n")
+    lines.append(
+        "A market can sit at $0.99 for months before it finally resolves -- "
+        "the per-trade dollar P&L is identical, but that dead capital-tied-up "
+        "time collapses the annualized return. This variant additionally "
+        "requires, at entry, that the market's *scheduled* end date (not the "
+        "realized resolution time, which would leak lookahead into an "
+        "entry-time filter) was no more than "
+        f"{MAX_DAYS_TO_RESOLUTION:.0f} days away.\n"
+    )
+    for label, mdf in max_days_tables.items():
+        lines.append(f"\n**{label}**\n")
+        lines.append(_df_to_markdown(mdf[["variant"] + [c for c in mdf.columns if c != "variant"]]))
+        lines.append("\n")
+
     lines.append("\n## Threshold sensitivity ($0.98 / $0.99 / $0.995)\n")
     for label, sens_df in sensitivity_tables.items():
         lines.append(f"\n**{label}**\n")
@@ -1279,6 +1312,7 @@ def write_report(
 
 SAMPLE_SIZE = 4000
 CROSSING_WORKERS = 16
+MAX_DAYS_TO_RESOLUTION = 7.0  # entry-time filter variant, per the task's example
 
 
 def find_all_crossings(
@@ -1391,6 +1425,11 @@ def main() -> None:
         for fill_type, tdf in trades_by_fill.items() if not tdf.empty
     }
 
+    max_days_tables = {
+        f"{fill_type} fills, net of fees": max_days_to_resolution_variant(tdf, MAX_DAYS_TO_RESOLUTION, "pnl_net")
+        for fill_type, tdf in trades_by_fill.items() if not tdf.empty
+    }
+
     print("Running threshold sensitivity (0.98 / 0.99 / 0.995) ...")
     sensitivity_tables = {}
     for fill_type in ("maker", "taker"):
@@ -1418,6 +1457,7 @@ def main() -> None:
         trades_by_fill=trades_by_fill,
         days_dist=days_dist,
         category_tables=category_tables,
+        max_days_tables=max_days_tables,
         sensitivity_tables=sensitivity_tables,
         depth_cap_flags=depth_cap_flags,
         signal_cfg=signal_cfg,
