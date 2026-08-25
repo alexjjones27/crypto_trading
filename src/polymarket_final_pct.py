@@ -1281,33 +1281,50 @@ SAMPLE_SIZE = 4000
 CROSSING_WORKERS = 16
 
 
-def run_sample_backtest(
-    sample: list[dict], fill: FillAssumptions, cfg: BacktestConfig, max_workers: int = CROSSING_WORKERS,
-) -> pd.DataFrame:
-    """Runs the no-lookahead crossing signal + simulated trade for every
-    market in `sample`, concurrently (I/O-bound HTTP calls). Depth-capping
-    only pulls the trade feed for markets that actually produced a
-    crossing, keeping the (larger) no-crossing majority cheap."""
+def find_all_crossings(
+    sample: list[dict], signal_cfg: SignalConfig, max_workers: int = CROSSING_WORKERS,
+) -> list[tuple[dict, dict, Optional[float]]]:
+    """Runs the no-lookahead crossing signal for every market in `sample`,
+    concurrently (I/O-bound HTTP calls), plus the depth-cap estimate for
+    each crossing found. This is the expensive, fill-independent part of
+    the pipeline -- computed once and reused for every fill assumption
+    (maker/taker) rather than repeated per fill, since neither the price
+    history nor the crossing depends on the fee/gas assumption."""
     all_crossings: list[tuple[dict, dict]] = []
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
-        futures = {pool.submit(find_market_crossings, m, cfg.signal): m for m in sample}
+        futures = {pool.submit(find_market_crossings, m, signal_cfg): m for m in sample}
         for fut in as_completed(futures):
             market = futures[fut]
             for crossing in fut.result():
                 all_crossings.append((market, crossing))
 
-    def _simulate_with_depth(market: dict, crossing: dict) -> dict:
-        cap = estimate_available_shares(
-            market.get("conditionId"), crossing["token_id"], crossing["entry_time_s"], cfg.signal.threshold,
+    def _depth(market: dict, crossing: dict) -> Optional[float]:
+        return estimate_available_shares(
+            market.get("conditionId"), crossing["token_id"], crossing["entry_time_s"], signal_cfg.threshold,
         )
-        return simulate_trade(crossing, market, fill, cfg, cap_shares=cap)
 
-    trades = []
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
-        futures = [pool.submit(_simulate_with_depth, market, crossing) for market, crossing in all_crossings]
-        for fut in as_completed(futures):
-            trades.append(fut.result())
+        futures = [pool.submit(_depth, market, crossing) for market, crossing in all_crossings]
+        caps = [fut.result() for fut in futures]
+    return [(m, c, cap) for (m, c), cap in zip(all_crossings, caps)]
+
+
+def simulate_trades_for_fill(
+    crossings: list[tuple[dict, dict, Optional[float]]], fill: FillAssumptions, cfg: BacktestConfig,
+) -> pd.DataFrame:
+    trades = [simulate_trade(crossing, market, fill, cfg, cap_shares=cap) for market, crossing, cap in crossings]
     return pd.DataFrame(trades)
+
+
+def run_sample_backtest(
+    sample: list[dict], fill: FillAssumptions, cfg: BacktestConfig, max_workers: int = CROSSING_WORKERS,
+) -> pd.DataFrame:
+    """Convenience single-fill entry point (used by threshold_sensitivity,
+    where crossings differ per threshold anyway). The main() pipeline calls
+    find_all_crossings() once and simulate_trades_for_fill() per fill
+    assumption instead, to avoid redoing crossing detection twice."""
+    crossings = find_all_crossings(sample, cfg.signal, max_workers)
+    return simulate_trades_for_fill(crossings, fill, cfg)
 
 
 def days_to_resolution_distribution(trades_df: pd.DataFrame) -> pd.DataFrame:
@@ -1342,11 +1359,14 @@ def main() -> None:
     gas_sponsored = GasAssumptions(relayer_sponsored=True)
     cfg = BacktestConfig(signal=signal_cfg, position_notional=100.0, gas=gas_sponsored)
 
-    print("Running crossing detection + simulated trades (maker and taker fills) ...")
+    print("Running crossing detection (shared across fill assumptions) ...")
+    crossings = find_all_crossings(sample, signal_cfg)
+    print(f"  {len(crossings)} crossings found across {len(sample)} sampled markets")
+
     trades_by_fill = {}
     for fill_type in ("maker", "taker"):
         fill = FillAssumptions(fill_type=fill_type)
-        tdf = run_sample_backtest(sample, fill, cfg)
+        tdf = simulate_trades_for_fill(crossings, fill, cfg)
         trades_by_fill[fill_type] = tdf
         n_flips = int((~tdf["won"]).sum()) if not tdf.empty else 0
         print(f"  {fill_type}: {len(tdf)} trades, {n_flips} flips")
