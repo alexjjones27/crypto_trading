@@ -44,12 +44,18 @@ from spx_egarch_gex.models.egarch import RETURN_SCALE
 
 logger = logging.getLogger(__name__)
 
-# Plausible one-day-ahead SPX annualized vol forecast range. SPX realized
-# vol has never annualized above ~150% even on the worst single days
-# (Oct 1987, Oct 2008); a EGARCH forecast outside [0.5%, 250%] reflects a
-# degenerate fit, not a real market condition.
-MIN_ANNUALIZED_VOL = 0.005
-MAX_ANNUALIZED_VOL = 2.5
+# Plausible one-day-ahead SPX annualized vol forecast range. Calibrated
+# empirically: on this same walk-forward, the 2008 GFC peak forecast is
+# ~76% and the Mar-2020 COVID peak is ~103% (both legitimate, verified
+# against the historical record), while VIX has never closed below ~9%
+# (2017-11-03) in its full history. [3%, 150%] sits comfortably outside
+# both the realistic floor and the worst legitimate crisis peak observed,
+# while still catching degenerate fits -- an earlier, looser [0.5%, 250%]
+# band let through both near-zero-vol and >150-246% "forecasts" on ordinary
+# trading days in the placid 1993-1995 window, all traced to the same
+# optimizer-instability issue as the beta-boundary case below.
+MIN_ANNUALIZED_VOL = 0.03
+MAX_ANNUALIZED_VOL = 1.5
 MAX_ABS_BETA = 0.999  # EGARCH stationarity requires |beta| < 1
 
 
