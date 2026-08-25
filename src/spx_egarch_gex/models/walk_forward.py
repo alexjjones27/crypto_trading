@@ -39,6 +39,7 @@ class WalkForwardResult:
     cond_vol: pd.Series  # one-step-ahead forecast, fractional (not percent) return-scale
     std_resid: pd.Series  # realized_return_t / cond_vol_t
     n_refits: int
+    n_nonfinite: int  # forecasts dropped for being <=0 / inf / nan (numerical instability)
 
 
 def walk_forward_egarch(
@@ -81,11 +82,23 @@ def walk_forward_egarch(
 
         # variance forecast is in (returns*100)^2 units -> back to fractional
         var_pct2 = fc.variance.iloc[-1, 0]
-        forecasts[t] = np.sqrt(var_pct2) / RETURN_SCALE
+        vol = np.sqrt(var_pct2) / RETURN_SCALE if var_pct2 > 0 else np.nan
+        forecasts[t] = vol if np.isfinite(vol) else np.nan
 
     cond_vol = pd.Series(forecasts, index=dates, name="cond_vol_forecast")
     realized = r / RETURN_SCALE  # fractional log returns
     std_resid = (realized / cond_vol).rename("std_resid")
+    std_resid = std_resid.replace([np.inf, -np.inf], np.nan)
+
+    n_attempted = n - min_obs
+    n_nonfinite = int(cond_vol.iloc[min_obs:].isna().sum())
+    if n_nonfinite:
+        import logging
+
+        logging.getLogger(__name__).warning(
+            "%d/%d forecasts non-finite/non-positive (window_type=%s) and dropped",
+            n_nonfinite, n_attempted, window_type,
+        )
 
     return WalkForwardResult(
         window_type=window_type,
@@ -95,6 +108,7 @@ def walk_forward_egarch(
         cond_vol=cond_vol.dropna(),
         std_resid=std_resid.dropna(),
         n_refits=n_refits,
+        n_nonfinite=n_nonfinite,
     )
 
 
