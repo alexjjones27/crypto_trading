@@ -1,0 +1,25 @@
+=== Data coverage ===
+spx_close   : 1990-01-02 -> 2026-08-24  n=9228
+vix_close   : 1990-01-02 -> 2026-08-24  n=9228
+gex         : 2011-05-02 -> 2026-08-24  n=3851
+dix         : 2011-05-02 -> 2026-08-24  n=3851
+
+=== GEX-constrained window ===
+First usable GEX date: 2011-05-02
+Rows with all of spx/vix/gex present from 2011-05-02: 3851
+
+=== Missingness within GEX-covered window ===
+spx_close   : 0 missing / 3851 rows (0.00%)
+vix_close   : 0 missing / 3851 rows (0.00%)
+gex         : 0 missing / 3851 rows (0.00%)
+dix         : 0 missing / 3851 rows (0.00%)
+
+=== Trading-day alignment check (SPX close vs SqueezeMetrics' own price) ===
+Max abs price diff: 5.2900 (0.1191% relative)
+Mean abs price diff: 0.0055 (0.0002% relative)
+Rows with >0.1% price mismatch (possible date misalignment): 1
+
+=== Proposed split (see config.py; PENDING CONFIRMATION) ===
+in-sample  : 2011-05-02 -> 2017-12-31  (1679 complete rows)
+validation : 2018-01-01 -> 2020-12-31  (756 complete rows)
+holdout    : 2021-01-01 -> 2026-08-24  (1416 complete rows)
