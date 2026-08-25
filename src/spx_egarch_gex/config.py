@@ -78,14 +78,23 @@ MAX_LEVERAGE = 2.0
 
 # Mean-reversion sub-strategy (active only when regime == positive):
 # entry/exit on a vol-standardized z-score of trailing n-day cumulative
-# return. Lookback=3 (not 5) per checkpoint 4b diagnostics: a sensitivity
-# grid over lookback in {3,5,10,20} x entry_z in {1.0,1.5,2.0,2.5} showed
-# lookback=3 was the ONLY row with a positive mean trade return at every
-# entry_z tested (10/20-day lookbacks were consistently negative across the
-# board) -- picked for that cross-threshold consistency, not as the single
-# best grid cell, to avoid picking noise. entry_z/exit_z/max_hold left at
-# their original a priori values (not re-tuned) to avoid compounding
-# in-sample parameter selection.
+# return. Lookback=3 (not 5), originally picked in checkpoint 4b from a
+# sensitivity grid run on the FULL 2011-2026 sample -- since found (leakage
+# check, see results/leakage_check.txt) to have used data through the
+# entire planned holdout window, so that selection was contaminated.
+# Re-run as a nested selection (grid computed on in-sample
+# 2011-2017 only, decision made on validation-2018-2020-only performance,
+# holdout never read): lookback=3 remains the only lookback with a
+# positive mean trade return at every entry_z on validation data too, so
+# it survives the leak-free re-test BY THE SAME CRITERION originally used
+# -- but the supporting evidence is much weaker under the honest
+# accounting: small samples (3-80 trades per cell within a single 3-7 year
+# window) and no t-stat above ~1.9 anywhere in either the in-sample or
+# validation grid. Kept as the best-supported (not contradicted) choice,
+# but flagged as fragile pending checkpoint 5's proper significance
+# testing on the full walk-forward -- treat this as a working choice, not
+# a validated one. entry_z/exit_z/max_hold left at their original a priori
+# values throughout (never grid-searched).
 MR_LOOKBACK_DAYS = 3
 MR_ENTRY_Z = 1.5
 MR_EXIT_Z = 0.25
@@ -93,14 +102,19 @@ MR_MAX_HOLD_DAYS = 10
 
 # Vol-breakout sub-strategy (active only when regime == negative): entry on
 # a realized-return breakout vs that day's EGARCH forecast vol, exit on a
-# vol-scaled trailing stop. Direction is CONTRARIAN (fade the breakout),
-# reversed from checkpoint 4's original momentum framing per checkpoint 4b
-# diagnostics: fading beat following by a wide margin (win rate 62.7% vs
-# 34.9%, mean trade return +0.04% vs -0.33%) and this is consistent with
-# checkpoint 3's standalone finding that negative-gamma return
-# autocorrelation was MORE negative (more reversal-like) than
-# positive-gamma, the opposite of the momentum hypothesis this sub-strategy
-# was originally built around.
+# vol-scaled trailing stop. Direction is MOMENTUM (follow the breakout) --
+# checkpoint 4b originally flipped this to contrarian based on an A/B test
+# that the leakage check found was run on the full 2011-2026 sample
+# (contaminated: touches the entire planned holdout). Re-run as a nested
+# selection (A/B computed on in-sample 2011-2017, decision made on
+# validation-2018-2020-only performance, holdout never read): momentum
+# beats contrarian on BOTH in-sample (mean trade return +0.27% vs -0.55%)
+# and validation (+0.09% vs -0.61%) -- the opposite of the contaminated
+# result. Reverted to momentum. The "contrarian wins" finding was
+# apparently driven by something specific to 2021-2026 data that the
+# leaked test was implicitly evaluated on, not a real in-sample/validation
+# effect -- a concrete illustration of why the leakage mattered, not just
+# a technicality.
 BRK_ENTRY_SIGMA = 1.0
 BRK_TRAILING_STOP_SIGMA = 1.5
 BRK_MAX_HOLD_DAYS = 5

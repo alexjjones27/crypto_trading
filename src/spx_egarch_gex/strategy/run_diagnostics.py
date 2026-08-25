@@ -76,8 +76,12 @@ def mr_sensitivity_grid(df: pd.DataFrame) -> pd.DataFrame:
             cfg_backup = (config.MR_LOOKBACK_DAYS, config.MR_ENTRY_Z)
             config.MR_LOOKBACK_DAYS, config.MR_ENTRY_Z = lookback, entry_z
             try:
-                # rebuild mr_z with the trial lookback (breakout signal untouched)
-                trial_df = build_signal_frame().loc[config.GEX_HISTORY_START:]
+                # rebuild mr_z with the trial lookback (breakout signal untouched).
+                # Must reslice to the CALLER's df date range, not a hardcoded
+                # GEX_HISTORY_START-to-present -- df.index.min()/.max() is what
+                # makes this function respect a restricted (e.g. in-sample-only)
+                # date range instead of silently re-including the whole history.
+                trial_df = build_signal_frame().loc[df.index.min():df.index.max()]
                 _, trades = generate_positions(trial_df)
                 tl = trade_log_df(trades)
                 mr = tl.loc[tl.strategy == "mean_reversion", "trade_return"]

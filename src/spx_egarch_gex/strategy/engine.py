@@ -15,16 +15,25 @@ Mean-reversion (regime == positive):
           MR_EXIT_Z, OR MR_MAX_HOLD_DAYS elapsed.
 
 Vol-breakout (regime == negative):
-  Entry:  |breakout_sigma| > BRK_ENTRY_SIGMA -> FADE the move's direction
-          (contrarian, not momentum -- reversed from checkpoint 4's
-          original framing; see config.py's comment on BRK_ENTRY_SIGMA for
-          why: checkpoint 3 found negative-gamma autocorrelation was MORE
-          negative/reversal-like than positive-gamma, and checkpoint 4b's
-          direction test confirmed fading beats following by a wide margin
-          in-sample).
+  Entry:  |breakout_sigma| > BRK_ENTRY_SIGMA -> FOLLOW the move's direction
+          (momentum, back to checkpoint 4's original framing). checkpoint 4b
+          flipped this to contrarian based on an A/B test that, per the
+          leakage check, was run on the full 2011-2026 sample including the
+          entire planned holdout -- contaminated. Re-run as a proper nested
+          selection (fit on in-sample 2011-2017, decide on validation
+          2018-2020 only, holdout never read) reversed the conclusion:
+          momentum beats contrarian on BOTH in-sample (mean trade return
+          +0.27% vs -0.55%) and validation (+0.09% vs -0.61%). The
+          "contrarian wins" result was an artifact of whatever's in
+          2021-2026, not a finding that survives leak-free evaluation.
   Exit:   regime flips away from negative, OR a vol-scaled trailing stop
           (BRK_TRAILING_STOP_SIGMA daily-vol-units of retracement from the
           trade's best point so far) triggers, OR BRK_MAX_HOLD_DAYS elapsed.
+          This remains a payoff-convexity design (let winners run, cut
+          losers on a stop) rather than a hold-to-target bet -- checkpoint
+          3's standalone regime test still didn't show a strong directional
+          persistence edge on its own, so the trailing stop is doing real
+          work here, not just tidying up a already-strong signal.
 
 Sizing (both): vol-targeted, TARGET_ANNUALIZED_VOL / vol_fcst_ann_t, capped
 at MAX_LEVERAGE, re-sized every day a position is held (not fixed at
@@ -121,11 +130,12 @@ def generate_positions(df: pd.DataFrame) -> tuple[pd.Series, list[Trade]]:
                     days_held, cum_ret_since_entry, peak_favorable = 0, 0.0, 0.0
                     entry_date, entry_strategy = dates[i], "mean_reversion"
             elif regime[i] == "negative" and np.isfinite(breakout_sigma[i]):
-                # contrarian: fade the move, not follow it (see module docstring)
+                # momentum: follow the move (see module docstring -- reverted
+                # from checkpoint 4b's contrarian flip after the leakage check)
                 if breakout_sigma[i] > config.BRK_ENTRY_SIGMA:
-                    state, direction = "short_brk", -1
-                elif breakout_sigma[i] < -config.BRK_ENTRY_SIGMA:
                     state, direction = "long_brk", 1
+                elif breakout_sigma[i] < -config.BRK_ENTRY_SIGMA:
+                    state, direction = "short_brk", -1
                 if state != "flat":
                     days_held, cum_ret_since_entry, peak_favorable = 0, 0.0, 0.0
                     entry_date, entry_strategy = dates[i], "vol_breakout"

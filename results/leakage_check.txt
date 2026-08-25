@@ -1,0 +1,68 @@
+=== PART 1: contamination check ===
+checkpoint-4b grid search date range used: 2011-05-02 -> 2026-08-24
+checkpoint-4b momentum/contrarian A-B test date range used: 2011-05-02 -> 2026-08-24
+
+Planned split: in-sample 2011-05-02->2017-12-31, validation 2018-01-01->2020-12-31, holdout 2021-01-01->present
+
+CONTAMINATED: True. Both selection steps used the ENTIRE available sample (2011-05-02 to 2026-08-24), which fully contains and extends past the planned holdout start (2021-01-01). This is complete overlap, not partial: every single holdout-period date (2021-01-01 onward) was inside the data both the lookback/entry_z grid and the momentum-vs-contrarian A/B test were computed on. The in-sample and validation windows were touched too, but that's expected/fine for a selection step -- the holdout being touched is the actual problem.
+
+=== PART 2: nested re-selection (holdout never touched) ===
+in-sample fit range actually used: 2011-05-02 -> 2017-12-29
+validation decision range actually used: 2018-01-02 -> 2020-12-31
+(holdout 2021-01-01-present: zero rows read by this script -- confirmed by construction, df.loc[] above never references it)
+
+--- Mean-reversion: grid computed on in-sample ---
+ lookback  entry_z  n_trades  win_rate  mean_ret_pct    t_stat
+        3      1.0       158  0.500000      0.140682  0.992555
+        3      1.5        75  0.453333      0.199373  0.878266
+        3      2.0        27  0.518519      0.249916  0.819574
+        3      2.5         6  0.166667     -0.081445 -0.711897
+        5      1.0       143  0.650350      0.526596  3.278324
+        5      1.5        62  0.500000     -0.095123 -0.443978
+        5      2.0        15  0.533333     -0.247833 -0.472363
+        5      2.5         5  0.600000      0.189943       NaN
+       10      1.0        88  0.454545     -0.212500 -1.136267
+       10      1.5        43  0.372093     -0.404890 -1.380636
+       10      2.0        17  0.411765     -0.342870 -0.998343
+       10      2.5         4  0.250000     -0.151689       NaN
+       20      1.0        76  0.447368      0.022045  0.110005
+       20      1.5        36  0.388889     -0.231377 -1.035881
+       20      2.0        20  0.250000     -0.549923 -2.697148
+       20      2.5         5  0.000000     -0.612013       NaN
+
+--- Same grid cells, evaluated on validation-only data (decision made here) ---
+ lookback  entry_z  n_trades  win_rate  mean_ret_pct    t_stat
+        3      1.0        80  0.575000      0.070345  0.311637
+        3      1.5        36  0.527778      0.069698  0.193159
+        3      2.0        10  0.600000      1.668657  1.719242
+        3      2.5         3  0.666667      0.312591       NaN
+        5      1.0        64  0.484375     -0.325087 -1.369636
+        5      1.5        33  0.393939     -0.411337 -1.024139
+        5      2.0         9  0.444444      0.944543  0.916178
+        5      2.5         4  0.750000      2.720239       NaN
+       10      1.0        47  0.425532     -0.540637 -1.714745
+       10      1.5        22  0.545455      0.167972  0.382344
+       10      2.0        10  0.600000      0.859747  0.913298
+       10      2.5         5  0.800000      2.776101       NaN
+       20      1.0        40  0.400000     -0.060597 -0.147668
+       20      1.5        25  0.360000     -0.314889 -0.798347
+       20      2.0        15  0.400000      0.183860  0.272371
+       20      2.5         6  0.500000      1.618400  0.983170
+
+Cross-threshold consistency on VALIDATION (mirrors the original selection logic):
+  lookback=3: mean_ret_pct at each entry_z = [0.07034501125139363, 0.06969836178004561, 1.668657359222342, 0.3125909707691235]  all positive: True
+  lookback=5: mean_ret_pct at each entry_z = [-0.32508723279215895, -0.41133673208779487, 0.9445427029005258, 2.72023920138052]  all positive: False
+  lookback=10: mean_ret_pct at each entry_z = [-0.5406367525281989, 0.16797232592368663, 0.8597465139318758, 2.7761009188649397]  all positive: False
+  lookback=20: mean_ret_pct at each entry_z = [-0.06059662662856399, -0.31488933558160376, 0.18385997630532136, 1.6183998227545435]  all positive: False
+
+--- Vol-breakout direction: A/B computed on in-sample ---
+        direction  n_trades  win_rate  mean_ret_pct    t_stat
+momentum (follow)        31  0.645161      0.269618  0.544218
+contrarian (fade)        31  0.354839     -0.547388 -1.257173
+
+--- Same A/B, evaluated on validation-only data (decision made here) ---
+        direction  n_trades  win_rate  mean_ret_pct    t_stat
+momentum (follow)        30  0.700000      0.089098  0.128561
+contrarian (fade)        30  0.233333     -0.607564 -0.613572
+
+Contrarian still beats momentum on validation-only data: False
