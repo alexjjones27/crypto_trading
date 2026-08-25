@@ -1,0 +1,27 @@
+Sample: 2011-05-02 -> 2026-08-24, lag=1 regime
+
+--- intraday (open-to-close) ---
+lag-1 autocorr: positive=-0.0449 (n=3502)  negative=-0.2051 (n=348)
+  permutation test on (pos-neg) autocorr diff: observed=0.1602 null_mean=-0.0106  p=0.1824
+sign-continuation P(same sign as yesterday): positive=0.492  negative=0.506  (0.5=random; >0.5=momentum; <0.5=reversal)
+  permutation test on (pos-neg) continuation-rate diff: observed=-0.0140 p=0.6701
+realized vol (annualized): positive=12.12%  negative=28.14%
+
+--- overnight (prev close-to-open) ---
+lag-1 autocorr: positive=-0.0011 (n=3502)  negative=-0.2092 (n=348)
+  permutation test on (pos-neg) autocorr diff: observed=0.2081 null_mean=-0.0301  p=0.1642
+sign-continuation P(same sign as yesterday): positive=0.490  negative=0.405  (0.5=random; >0.5=momentum; <0.5=reversal)
+  permutation test on (pos-neg) continuation-rate diff: observed=0.0851 p=0.0098
+realized vol (annualized): positive=5.81%  negative=14.91%
+
+--- close-to-close (for reference, matches checkpoint3) ---
+lag-1 autocorr: positive=-0.0522 (n=3502)  negative=-0.2344 (n=348)
+  permutation test on (pos-neg) autocorr diff: observed=0.1822 null_mean=-0.0284  p=0.1874
+sign-continuation P(same sign as yesterday): positive=0.488  negative=0.480  (0.5=random; >0.5=momentum; <0.5=reversal)
+  permutation test on (pos-neg) continuation-rate diff: observed=0.0084 p=0.7918
+realized vol (annualized): positive=14.18%  negative=35.82%
+
+--- weekly-horizon trend test (trailing 5d return vs forward 5d return) ---
+corr(trailing 5d, forward 5d): positive=-0.0440 (n=3494)  negative=-0.0266 (n=348)
+(hypothesis: positive should be more NEGATIVE (reversal), negative should be more POSITIVE (trend))
+permutation test on (pos-neg) corr diff: observed=-0.0174  null_mean=0.0177  p=0.8684
