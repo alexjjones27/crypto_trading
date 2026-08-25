@@ -78,16 +78,29 @@ MAX_LEVERAGE = 2.0
 
 # Mean-reversion sub-strategy (active only when regime == positive):
 # entry/exit on a vol-standardized z-score of trailing n-day cumulative
-# return.
-MR_LOOKBACK_DAYS = 5
+# return. Lookback=3 (not 5) per checkpoint 4b diagnostics: a sensitivity
+# grid over lookback in {3,5,10,20} x entry_z in {1.0,1.5,2.0,2.5} showed
+# lookback=3 was the ONLY row with a positive mean trade return at every
+# entry_z tested (10/20-day lookbacks were consistently negative across the
+# board) -- picked for that cross-threshold consistency, not as the single
+# best grid cell, to avoid picking noise. entry_z/exit_z/max_hold left at
+# their original a priori values (not re-tuned) to avoid compounding
+# in-sample parameter selection.
+MR_LOOKBACK_DAYS = 3
 MR_ENTRY_Z = 1.5
 MR_EXIT_Z = 0.25
 MR_MAX_HOLD_DAYS = 10
 
 # Vol-breakout sub-strategy (active only when regime == negative): entry on
 # a realized-return breakout vs that day's EGARCH forecast vol, exit on a
-# vol-scaled trailing stop (payoff-convexity edge, NOT a directional-
-# persistence edge -- checkpoint 3 found no support for the latter).
+# vol-scaled trailing stop. Direction is CONTRARIAN (fade the breakout),
+# reversed from checkpoint 4's original momentum framing per checkpoint 4b
+# diagnostics: fading beat following by a wide margin (win rate 62.7% vs
+# 34.9%, mean trade return +0.04% vs -0.33%) and this is consistent with
+# checkpoint 3's standalone finding that negative-gamma return
+# autocorrelation was MORE negative (more reversal-like) than
+# positive-gamma, the opposite of the momentum hypothesis this sub-strategy
+# was originally built around.
 BRK_ENTRY_SIGMA = 1.0
 BRK_TRAILING_STOP_SIGMA = 1.5
 BRK_MAX_HOLD_DAYS = 5

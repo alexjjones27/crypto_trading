@@ -15,14 +15,16 @@ Mean-reversion (regime == positive):
           MR_EXIT_Z, OR MR_MAX_HOLD_DAYS elapsed.
 
 Vol-breakout (regime == negative):
-  Entry:  |breakout_sigma| > BRK_ENTRY_SIGMA -> follow the move's direction
+  Entry:  |breakout_sigma| > BRK_ENTRY_SIGMA -> FADE the move's direction
+          (contrarian, not momentum -- reversed from checkpoint 4's
+          original framing; see config.py's comment on BRK_ENTRY_SIGMA for
+          why: checkpoint 3 found negative-gamma autocorrelation was MORE
+          negative/reversal-like than positive-gamma, and checkpoint 4b's
+          direction test confirmed fading beats following by a wide margin
+          in-sample).
   Exit:   regime flips away from negative, OR a vol-scaled trailing stop
           (BRK_TRAILING_STOP_SIGMA daily-vol-units of retracement from the
           trade's best point so far) triggers, OR BRK_MAX_HOLD_DAYS elapsed.
-          This is a payoff-convexity design (let winners run, cut losers on
-          a stop) -- checkpoint 3 found no directional-persistence edge in
-          this regime, so the trailing stop (not a fixed hold-and-hope) is
-          what has to do the work of capturing more upside than downside.
 
 Sizing (both): vol-targeted, TARGET_ANNUALIZED_VOL / vol_fcst_ann_t, capped
 at MAX_LEVERAGE, re-sized every day a position is held (not fixed at
@@ -119,10 +121,11 @@ def generate_positions(df: pd.DataFrame) -> tuple[pd.Series, list[Trade]]:
                     days_held, cum_ret_since_entry, peak_favorable = 0, 0.0, 0.0
                     entry_date, entry_strategy = dates[i], "mean_reversion"
             elif regime[i] == "negative" and np.isfinite(breakout_sigma[i]):
+                # contrarian: fade the move, not follow it (see module docstring)
                 if breakout_sigma[i] > config.BRK_ENTRY_SIGMA:
-                    state, direction = "long_brk", 1
-                elif breakout_sigma[i] < -config.BRK_ENTRY_SIGMA:
                     state, direction = "short_brk", -1
+                elif breakout_sigma[i] < -config.BRK_ENTRY_SIGMA:
+                    state, direction = "long_brk", 1
                 if state != "flat":
                     days_held, cum_ret_since_entry, peak_favorable = 0, 0.0, 0.0
                     entry_date, entry_strategy = dates[i], "vol_breakout"

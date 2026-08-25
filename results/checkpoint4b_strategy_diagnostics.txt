@@ -1,0 +1,32 @@
+=== Trade-level P&L summary ===
+mean_reversion: n=160  mean=-0.184%  median=-0.065%  std=1.906%  min=-7.40%  max=4.71%  skew=-0.60
+vol_breakout: n=109  mean=-0.328%  median=-0.681%  std=3.465%  min=-12.77%  max=19.80%  skew=1.61
+
+Wrote /home/user/crypto_trading/results/trade_return_distributions.png
+
+=== Mean-reversion sensitivity: (lookback, entry_z) grid ===
+ lookback  entry_z  n_trades  win_rate  mean_ret_pct    t_stat
+        3      1.0       380  0.526316      0.133973  1.370477
+        3      1.5       191  0.492147      0.108884  0.732569
+        3      2.0        67  0.537313      0.486034  1.865048
+        3      2.5        18  0.444444      0.547454  1.036502
+        5      1.0       324  0.570988      0.152683  1.439387
+        5      1.5       160  0.481250     -0.184299 -1.223329
+        5      2.0        51  0.529412      0.135902  0.455027
+        5      2.5        17  0.705882      1.225397  1.912372
+       10      1.0       224  0.482143     -0.214223 -1.590134
+       10      1.5       111  0.459459     -0.285309 -1.514238
+       10      2.0        50  0.480000     -0.170358 -0.543836
+       10      2.5        18  0.555556      0.655263  0.959476
+       20      1.0       191  0.429319     -0.103588 -0.652962
+       20      1.5       100  0.340000     -0.391082 -2.158290
+       20      2.0        54  0.388889     -0.311210 -1.245426
+       20      2.5        18  0.333333      0.252329  0.404579
+
+Best mean_ret_pct in grid: lookback=5 entry_z=2.5 mean_ret=1.225% t_stat=1.91 n=17
+(NOTE: this is exploratory diagnosis on the whole sample, not a walk-forward-selected parameter -- picking 'best of grid' here would be in-sample overfitting; the point is to see whether ANY region of this space shows a real edge before concluding there isn't one.)
+
+=== Vol-breakout: momentum vs contrarian entry direction ===
+        direction  n_trades  win_rate  mean_ret_pct    t_stat
+momentum (follow)       109  0.348624     -0.327775 -0.987511
+contrarian (fade)       110  0.627273      0.038828  0.137804

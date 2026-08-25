@@ -1,17 +1,17 @@
 Sample: 2011-05-02 -> 2026-08-24  (n=3851)
 Regime base rates: {'positive': np.int64(3502), 'negative': np.int64(348)}
 
-Total trades: 269
-mean_reversion: n_trades=160  win_rate=48.1%  avg_days_held=6.0  avg_trade_return=-0.184%
-  exit reasons: {'reverted': np.int64(119), 'max_hold': np.int64(26), 'regime_flip': np.int64(15)}
-vol_breakout: n_trades=109  win_rate=34.9%  avg_days_held=2.6  avg_trade_return=-0.328%
-  exit reasons: {'regime_flip': np.int64(78), 'trailing_stop': np.int64(16), 'max_hold': np.int64(15)}
+Total trades: 301
+mean_reversion: n_trades=191  win_rate=49.2%  avg_days_held=5.1  avg_trade_return=0.109%
+  exit reasons: {'reverted': np.int64(142), 'max_hold': np.int64(28), 'regime_flip': np.int64(21)}
+vol_breakout: n_trades=110  win_rate=62.7%  avg_days_held=2.5  avg_trade_return=0.039%
+  exit reasons: {'regime_flip': np.int64(78), 'trailing_stop': np.int64(23), 'max_hold': np.int64(9)}
 
-Fraction of days with a position: 32.5%
-Mean |position| (vol-targeted notional, when in market): 1.10x
+Fraction of days with a position: 32.3%
+Mean |position| (vol-targeted notional, when in market): 1.08x
 Max |position|: 2.00x
 
 Preliminary (non-rigorous, whole-sample) return stats -- see checkpoint 5 for the real backtest:
-  gross: ann_return=-2.75%  ann_vol=8.70%  sharpe=-0.32
-  net:   ann_return=-3.50%  ann_vol=8.70%  sharpe=-0.40
-  total cost drag over sample: 11.48% (cumulative, unlevered-return terms)
+  gross: ann_return=0.59%  ann_vol=8.72%  sharpe=0.07
+  net:   ann_return=-0.19%  ann_vol=8.72%  sharpe=-0.02
+  total cost drag over sample: 12.03% (cumulative, unlevered-return terms)
