@@ -1,0 +1,333 @@
+<title>Kelly at Different Odds</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --paper:#eff1ee;
+  --paper-raised:#e4e7df;
+  --paper-sunken:#e7eae1;
+  --ink:#1c231f;
+  --ink-soft:#4b5650;
+  --ink-faint:#7d8578;
+  --hairline:#cbd0c4;
+  --hairline-strong:#b4bab0;
+  --gold:#b8862e;
+  --gold-wash:rgba(184,134,46,0.11);
+  --teal:#0e8b7d;
+  --teal-wash:rgba(14,139,125,0.11);
+  --good:#1e7b47;
+  --good-wash:rgba(30,123,71,0.10);
+  --bad:#b3261e;
+  --bad-wash:rgba(179,38,30,0.10);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141814;
+    --paper-raised:#1d2118;
+    --paper-sunken:#1a1e16;
+    --ink:#eceee6;
+    --ink-soft:#a9b0a1;
+    --ink-faint:#767d70;
+    --hairline:#323a2e;
+    --hairline-strong:#414a3c;
+    --gold:#c9974a;
+    --gold-wash:rgba(201,151,74,0.14);
+    --teal:#2fab9c;
+    --teal-wash:rgba(47,171,156,0.14);
+    --good:#4bb579;
+    --good-wash:rgba(75,181,121,0.12);
+    --bad:#e2685c;
+    --bad-wash:rgba(226,104,92,0.13);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141814;
+  --paper-raised:#1d2118;
+  --paper-sunken:#1a1e16;
+  --ink:#eceee6;
+  --ink-soft:#a9b0a1;
+  --ink-faint:#767d70;
+  --hairline:#323a2e;
+  --hairline-strong:#414a3c;
+  --gold:#c9974a;
+  --gold-wash:rgba(201,151,74,0.14);
+  --teal:#2fab9c;
+  --teal-wash:rgba(47,171,156,0.14);
+  --good:#4bb579;
+  --good-wash:rgba(75,181,121,0.12);
+  --bad:#e2685c;
+  --bad-wash:rgba(226,104,92,0.13);
+}
+
+*{box-sizing:border-box;}
+html{color-scheme:light dark;}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'IBM Plex Sans',system-ui,sans-serif;
+  font-weight:400;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--gold-wash);}
+
+.wrap{max-width:900px;margin:0 auto;padding:2.75rem 1.5rem 4rem;}
+
+.eyebrow{
+  font-size:0.7rem; letter-spacing:0.14em; text-transform:uppercase;
+  color:var(--ink-faint); font-weight:500;
+  display:flex; align-items:center; gap:0.6em;
+}
+.eyebrow::before{content:"";width:1.4em;height:1px;background:var(--hairline-strong);display:inline-block;}
+.eyebrow a{color:var(--ink-faint);}
+h1{
+  font-family:'Zilla Slab',Georgia,serif; font-weight:700;
+  font-size:clamp(2.3rem,6vw,3.55rem); line-height:1.02;
+  margin:0.5rem 0 0.85rem; text-wrap:balance; letter-spacing:-0.01em;
+}
+h1 em{font-style:normal;color:var(--gold);}
+.dek{font-size:1.05rem;color:var(--ink-soft);max-width:64ch;margin:0 0 1.4rem;}
+.meta-row{
+  display:flex; flex-wrap:wrap; gap:0.5rem 1.6rem;
+  font-family:'IBM Plex Mono',ui-monospace,monospace; font-size:0.78rem;
+  color:var(--ink-faint); border-top:1px solid var(--hairline); padding-top:0.9rem;
+}
+.meta-row b{color:var(--ink-soft);font-weight:500;}
+.num{font-variant-numeric:tabular-nums;}
+
+section{margin-top:3rem;}
+.sec-head{margin-bottom:1.1rem;}
+h2{
+  font-family:'Zilla Slab',Georgia,serif; font-weight:500; font-size:1.45rem;
+  margin:0 0 0.3rem; letter-spacing:-0.005em;
+}
+h3{font-family:'Zilla Slab',Georgia,serif;font-weight:500;font-size:1.05rem;margin:0 0 0.6rem;}
+.sec-sub{font-size:0.9rem;color:var(--ink-soft);margin:0;max-width:66ch;}
+
+.card{background:var(--paper-raised);border:1px solid var(--hairline);border-radius:10px;padding:1.4rem 1.4rem 1.1rem;}
+
+/* small-multiple bar charts */
+.chart-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;}
+.mini-chart{background:var(--paper-raised);border:1px solid var(--hairline);border-radius:10px;padding:1.1rem 1.2rem 0.9rem;}
+.mini-chart h4{
+  font-size:0.72rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-faint);
+  font-weight:500;margin:0 0 0.9rem;
+}
+.bars{display:flex;align-items:flex-end;gap:0.55rem;height:130px;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:0.4rem;min-width:0;}
+.bar{width:100%;border-radius:3px 3px 0 0;position:relative;}
+.bar.gold{background:var(--gold);}
+.bar.teal{background:var(--teal);}
+.bar.bad{background:var(--bad);}
+.bar.dim{opacity:0.42;}
+.bar-val{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:0.68rem;color:var(--ink);font-weight:500;white-space:nowrap;}
+.bar-lbl{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:0.66rem;color:var(--ink-faint);text-align:center;line-height:1.25;}
+.bar-lbl .note{color:var(--gold);}
+
+.table-scroll{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.86rem;}
+th,td{text-align:left;padding:0.55rem 0.7rem;border-bottom:1px solid var(--hairline);white-space:nowrap;}
+th{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-faint);font-weight:500;}
+td.num,th.num{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;text-align:right;}
+tr:last-child td{border-bottom:none;}
+tr.highlight td{background:var(--gold-wash);}
+tr.muted td{color:var(--ink-faint);}
+.pos{color:var(--good);} .neg{color:var(--bad);}
+
+.takeaway{margin-top:0.9rem;font-size:0.86rem;color:var(--ink-soft);border-left:2px solid var(--hairline-strong);padding-left:0.9rem;}
+.takeaway b{color:var(--ink);font-weight:600;}
+.takeaway.warn{border-left-color:var(--bad);}
+.takeaway.warn b{color:var(--bad);}
+.takeaway.note{border-left-color:var(--teal);}
+.takeaway.note b{color:var(--teal);}
+
+.callout{
+  display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hairline);
+  border:1px solid var(--hairline);border-radius:8px;overflow:hidden;margin-top:1.1rem;
+}
+.callout-col{background:var(--paper-raised);padding:0.9rem 1.1rem;}
+.callout-col.warn{background:var(--bad-wash);}
+.callout-col.note{background:var(--teal-wash);}
+.callout-col h3{margin:0 0 0.5rem;font-size:0.95rem;}
+.callout-col .cnum{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:0.82rem;color:var(--ink-soft);line-height:1.7;}
+.callout-col .cnum b{color:var(--ink);font-weight:600;}
+.callout-col.warn .cnum b{color:var(--bad);}
+.callout-col.note .cnum b{color:var(--teal);}
+
+ul.limits{margin:0.9rem 0 0;padding-left:1.2rem;font-size:0.88rem;color:var(--ink-soft);}
+ul.limits li{margin-bottom:0.55rem;}
+ul.limits b{color:var(--ink);font-weight:600;}
+
+footer{
+  margin-top:3.5rem;padding-top:1.5rem;border-top:1px solid var(--hairline);
+  font-size:0.78rem;color:var(--ink-faint);display:flex;flex-wrap:wrap;justify-content:space-between;gap:0.6rem 1.5rem;
+}
+footer a{color:var(--ink-soft);}
+
+@media (max-width:640px){
+  .chart-row{grid-template-columns:1fr;}
+  .callout{grid-template-columns:1fr;}
+}
+@media (prefers-reduced-motion:reduce){ *{transition:none !important;} }
+</style>
+
+<div class="wrap">
+
+  <div class="eyebrow">Polymarket &middot; Final 1% &middot; companion to <a href="#">Kelly, Capped</a></div>
+  <h1>Kelly at <em>Different Odds</em></h1>
+  <p class="dek">Same $10,000 bankroll, same quarter-Kelly sizing, same exclusion rule &mdash; the only thing that moves is the entry bar. Tightening it does not do what you'd expect.</p>
+  <div class="meta-row">
+    <span><b>5</b> entry thresholds tested, $0.980&ndash;$0.999</span>
+    <span><b>4,016</b> markets sampled per threshold</span>
+    <span>quarter-Kelly &middot; <b>3%</b> max position</span>
+    <span>maker fills, net of fees</span>
+  </div>
+
+  <section>
+    <div class="sec-head">
+      <h2>The entry bar isn't a risk dial</h2>
+      <p class="sec-sub">Raw return, risk-adjusted return, and trade count, side by side across five thresholds. None of the three peaks in the same place.</p>
+    </div>
+    <div class="chart-row" id="chartRow"></div>
+    <p class="takeaway"><b>0.980 wins on raw return. 0.990 wins on Sharpe. 0.999 doesn't win at all</b> &mdash; it wins nothing, because almost nothing clears three consecutive snapshots at 99.9% and survives the exact-score/weather exclusion: 11 trades in the whole sample, versus 2,000&ndash;2,100 at every other threshold. A tighter entry bar reads as "safer," but past a certain point it just means the strategy stops having enough trades to exist, which is a different failure mode than the one the bar is supposed to guard against.</p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Full comparison</h2>
+      <p class="sec-sub">Quarter-Kelly, 3% position cap, exact-score/weather markets excluded &mdash; identical configuration to <a href="#">Kelly, Capped</a>, run once per threshold.</p>
+    </div>
+    <div class="card table-scroll">
+      <table id="sweepTable"></table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>The same threshold, twice</h2>
+      <p class="sec-sub">Two rows above are both $0.990. One is the sample this whole report series was built on; the other was drawn fresh, a day later, for this sweep.</p>
+    </div>
+    <div class="callout">
+      <div class="callout-col">
+        <h3>Original sample</h3>
+        <div class="cnum">
+          Trades: <b>2,287</b><br>
+          Flips: <b>3</b><br>
+          CAGR: <b>6.6%</b><br>
+          Sharpe: <b>2.24</b>
+        </div>
+      </div>
+      <div class="callout-col note">
+        <h3>Fresh sample, next day</h3>
+        <div class="cnum">
+          Trades: <b>2,147</b><br>
+          Flips: <b>1</b><br>
+          CAGR: <b>7.2%</b><br>
+          Sharpe: <b>4.09</b>
+        </div>
+      </div>
+    </div>
+    <p class="takeaway note"><b>Same strategy, same threshold, same day-to-day methodology &mdash; Sharpe moves from 2.24 to 4.09 on sampling alone.</b> Nothing about the underlying edge changed; a different stratified draw from a population that grows every day landed on a different handful of flips. Read every number in this report, and in <a href="#">Kelly, Capped</a>, the same way: as one realized path through a resampling distribution that is still wide, not as a precise coefficient. The threshold ranking above (0.98 &gt; 0.99 &gt; 0.995 by return; 0.99 &gt; 0.995 &gt; 0.98 by Sharpe) should be read as directionally real &mdash; loosening the bar increases both return and trade count, and 0.999 is a hard floor on liquidity &mdash; but not as a precise optimum to the third decimal.</p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Limitations specific to this sweep</h2>
+    </div>
+    <div class="card">
+      <ul class="limits">
+        <li><b>Five thresholds, five samples that mostly &mdash; but not perfectly &mdash; overlap.</b> Each threshold's 4,016-market sample was redrawn from the live census rather than filtered from one fixed pool, since the crossing signal itself is threshold-dependent. The $0.990 vs. $0.990 (original sample) comparison above is the direct measurement of how much that redraw alone moves the answer.</li>
+        <li><b>0.999's zero-flip result is not evidence the strategy is safer there.</b> Eleven trades cannot support any claim about tail risk in either direction; it is absence of a sample, not presence of safety.</li>
+        <li><b>Kelly sizing at each threshold uses that threshold's own walk-forward flip-rate belief</b> (same Beta(1,300) prior, same per-category shrinkage as <a href="#">Kelly, Capped</a>) &mdash; the position sizes are not held constant across thresholds, so return differences reflect both the raw edge and how confidently that edge got sized.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <span>Source: <code>alexjjones27/crypto_trading</code> &middot; <code>scripts/run_threshold_sweep.py</code> + <code>scripts/run_kelly_threshold_sweep.py</code></span>
+    <span>Sample drawn 2026-08-26 &middot; thresholds 0.980&ndash;0.999</span>
+  </footer>
+
+</div>
+
+<script>
+const ROWS = [{"threshold": "0.980", "n_total_trades": 3441, "n_excluded": 300, "n_taken": 2112, "n_flips_taken": 5, "final_equity": 13416.72, "total_return_pct": 34.17, "cagr_pct": 8.71, "max_drawdown_pct": 2.86, "sharpe": 3.15}, {"threshold": "0.985", "n_total_trades": 3413, "n_excluded": 298, "n_taken": 2081, "n_flips_taken": 3, "final_equity": 12834.37, "total_return_pct": 28.34, "cagr_pct": 7.44, "max_drawdown_pct": 2.85, "sharpe": 3.11}, {"threshold": "0.990", "n_total_trades": 3357, "n_excluded": 296, "n_taken": 2147, "n_flips_taken": 1, "final_equity": 12712.67, "total_return_pct": 27.13, "cagr_pct": 7.15, "max_drawdown_pct": 2.87, "sharpe": 4.09}, {"threshold": "0.990 (original sample)", "n_total_trades": 3364, "n_excluded": 269, "n_taken": 2287, "n_flips_taken": 3, "final_equity": 12472.18, "total_return_pct": 24.72, "cagr_pct": 6.57, "max_drawdown_pct": 3.38, "sharpe": 2.24}, {"threshold": "0.995", "n_total_trades": 3309, "n_excluded": 296, "n_taken": 2087, "n_flips_taken": 1, "final_equity": 12188.22, "total_return_pct": 21.88, "cagr_pct": 5.86, "max_drawdown_pct": 2.87, "sharpe": 3.43}, {"threshold": "0.999", "n_total_trades": 2954, "n_excluded": 265, "n_taken": 11, "n_flips_taken": 0, "final_equity": 10001.62, "total_return_pct": 0.02, "cagr_pct": 0.0, "max_drawdown_pct": 0.0, "sharpe": 1.38}];
+
+function fmtMoney(v){
+  const sign = v < 0 ? "-" : "";
+  return sign + "$" + Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0});
+}
+
+/* ---------------- three small-multiple bar charts ---------------- */
+const chartRow = document.getElementById('chartRow');
+
+function buildMiniChart(title, values, fmt, colorClass, highlightIdx, dimIdx) {
+  const wrap = document.createElement('div');
+  wrap.className = 'mini-chart';
+  const h4 = document.createElement('h4');
+  h4.textContent = title;
+  wrap.appendChild(h4);
+
+  const bars = document.createElement('div');
+  bars.className = 'bars';
+  const maxAbs = Math.max(...values.map(v => Math.abs(v)), 1e-9);
+
+  values.forEach((v, i) => {
+    const col = document.createElement('div');
+    col.className = 'bar-col';
+    const val = document.createElement('div');
+    val.className = 'bar-val';
+    val.textContent = fmt(v);
+    const bar = document.createElement('div');
+    const h = Math.max(3, Math.abs(v) / maxAbs * 100);
+    bar.className = 'bar ' + colorClass + (i === dimIdx ? ' dim' : '');
+    bar.style.height = h + '%';
+    const lbl = document.createElement('div');
+    lbl.className = 'bar-lbl';
+    lbl.innerHTML = ROWS[i].threshold.includes('original') ? '$0.990<div class="note">(orig.)</div>' : '$' + ROWS[i].threshold;
+    col.append(val, bar, lbl);
+    if (i === highlightIdx) col.style.filter = 'saturate(1.3)';
+    bars.appendChild(col);
+  });
+  wrap.appendChild(bars);
+  return wrap;
+}
+
+const cagrs = ROWS.map(r => r.cagr_pct);
+const sharpes = ROWS.map(r => r.sharpe);
+const takenPct = ROWS.map(r => r.n_taken);
+
+const idxBestCagr = cagrs.indexOf(Math.max(...cagrs));
+const idxBestSharpe = sharpes.indexOf(Math.max(...sharpes.filter(s => s < 100)));
+const idxThin = ROWS.findIndex(r => r.n_taken < 100);
+
+chartRow.appendChild(buildMiniChart('CAGR', cagrs, v => v.toFixed(1) + '%', 'gold', idxBestCagr, idxThin));
+chartRow.appendChild(buildMiniChart('Sharpe', sharpes, v => v.toFixed(2), 'teal', idxBestSharpe, idxThin));
+chartRow.appendChild(buildMiniChart('Trades taken', takenPct, v => v.toLocaleString(), 'bad', -1, idxThin));
+
+/* ---------------- full table ---------------- */
+const table = document.getElementById('sweepTable');
+const thead = document.createElement('thead');
+thead.innerHTML = '<tr><th>Threshold</th><th class="num">Eligible</th><th class="num">Excluded</th><th class="num">Taken</th><th class="num">Flips</th><th class="num">Final equity</th><th class="num">CAGR</th><th class="num">Max DD</th><th class="num">Sharpe</th></tr>';
+table.appendChild(thead);
+const tbody = document.createElement('tbody');
+ROWS.forEach(r => {
+  const tr = document.createElement('tr');
+  if (r.threshold === '0.990') tr.className = 'highlight';
+  if (r.n_taken < 100) tr.className = 'muted';
+  tr.innerHTML = `
+    <td>$${r.threshold}</td>
+    <td class="num">${r.n_total_trades.toLocaleString()}</td>
+    <td class="num">${r.n_excluded.toLocaleString()}</td>
+    <td class="num">${r.n_taken.toLocaleString()}</td>
+    <td class="num">${r.n_flips_taken}</td>
+    <td class="num">${fmtMoney(r.final_equity)}</td>
+    <td class="num ${r.cagr_pct >= 0 ? 'pos' : 'neg'}">${r.cagr_pct.toFixed(2)}%</td>
+    <td class="num">${r.max_drawdown_pct.toFixed(2)}%</td>
+    <td class="num">${r.sharpe !== null ? r.sharpe.toFixed(2) : '&mdash;'}</td>
+  `;
+  tbody.appendChild(tr);
+});
+table.appendChild(tbody);
+</script>
