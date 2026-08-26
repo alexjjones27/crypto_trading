@@ -1,0 +1,263 @@
+<title>The Honest Range</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --paper:#eff1ee; --paper-raised:#e4e7df; --paper-sunken:#e7eae1;
+  --ink:#1c231f; --ink-soft:#4b5650; --ink-faint:#7d8578;
+  --hairline:#cbd0c4; --hairline-strong:#b4bab0;
+  --gold:#b8862e; --gold-wash:rgba(184,134,46,0.11);
+  --teal:#0e8b7d; --teal-wash:rgba(14,139,125,0.11);
+  --good:#1e7b47; --good-wash:rgba(30,123,71,0.10);
+  --bad:#b3261e; --bad-wash:rgba(179,38,30,0.10);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141814; --paper-raised:#1d2118; --paper-sunken:#1a1e16;
+    --ink:#eceee6; --ink-soft:#a9b0a1; --ink-faint:#767d70;
+    --hairline:#323a2e; --hairline-strong:#414a3c;
+    --gold:#c9974a; --gold-wash:rgba(201,151,74,0.14);
+    --teal:#2fab9c; --teal-wash:rgba(47,171,156,0.14);
+    --good:#4bb579; --good-wash:rgba(75,181,121,0.12);
+    --bad:#e2685c; --bad-wash:rgba(226,104,92,0.13);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141814; --paper-raised:#1d2118; --paper-sunken:#1a1e16;
+  --ink:#eceee6; --ink-soft:#a9b0a1; --ink-faint:#767d70;
+  --hairline:#323a2e; --hairline-strong:#414a3c;
+  --gold:#c9974a; --gold-wash:rgba(201,151,74,0.14);
+  --teal:#2fab9c; --teal-wash:rgba(47,171,156,0.14);
+  --good:#4bb579; --good-wash:rgba(75,181,121,0.12);
+  --bad:#e2685c; --bad-wash:rgba(226,104,92,0.13);
+}
+
+*{box-sizing:border-box;}
+html{color-scheme:light dark;}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;}
+::selection{background:var(--gold-wash);}
+.num{font-variant-numeric:tabular-nums;}
+
+.wrap{max-width:900px;margin:0 auto;padding:2.75rem 1.5rem 5rem;}
+
+.eyebrow{font-size:0.7rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-faint);font-weight:500;display:flex;align-items:center;gap:0.6em;}
+.eyebrow::before{content:"";width:1.4em;height:1px;background:var(--hairline-strong);display:inline-block;}
+h1{font-family:'Zilla Slab',Georgia,serif;font-weight:700;font-size:clamp(2.3rem,6vw,3.7rem);line-height:1.0;margin:0.5rem 0 0.9rem;text-wrap:balance;letter-spacing:-0.01em;}
+h1 em{font-style:normal;color:var(--gold);}
+.dek{font-size:1.08rem;color:var(--ink-soft);max-width:66ch;margin:0 0 1.4rem;}
+.meta-row{display:flex;flex-wrap:wrap;gap:0.5rem 1.6rem;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:0.78rem;color:var(--ink-faint);border-top:1px solid var(--hairline);padding-top:0.9rem;}
+.meta-row b{color:var(--ink-soft);font-weight:500;}
+
+section{margin-top:3.2rem;}
+.sec-head{margin-bottom:1.1rem;}
+.sec-num{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:0.72rem;color:var(--ink-faint);letter-spacing:0.06em;margin-bottom:0.3rem;}
+h2{font-family:'Zilla Slab',Georgia,serif;font-weight:500;font-size:1.55rem;margin:0 0 0.35rem;letter-spacing:-0.005em;}
+h3{font-family:'Zilla Slab',Georgia,serif;font-weight:500;font-size:1.05rem;margin:0 0 0.6rem;}
+.sec-sub{font-size:0.92rem;color:var(--ink-soft);margin:0;max-width:68ch;}
+
+.card{background:var(--paper-raised);border:1px solid var(--hairline);border-radius:10px;padding:1.5rem 1.5rem 1.2rem;}
+
+.pull{font-family:'Zilla Slab',Georgia,serif;font-weight:500;font-size:1.28rem;line-height:1.42;color:var(--ink);border-left:3px solid var(--gold);padding:0.2rem 0 0.2rem 1.3rem;margin:1.3rem 0;max-width:62ch;}
+.pull em{font-style:normal;color:var(--gold);}
+
+/* fan charts */
+.fan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;}
+.fan-card{background:var(--paper-raised);border:1px solid var(--hairline);border-radius:10px;padding:1.1rem 1.2rem 1rem;}
+.fan-card h4{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-faint);font-weight:500;margin:0 0 0.9rem;}
+.fan-svg-wrap{position:relative;}
+.fan-axis-label{font-family:'IBM Plex Mono',monospace;font-size:10px;fill:var(--ink-faint);}
+.fan-legend{display:flex;flex-wrap:wrap;gap:0.9rem;margin-top:0.7rem;font-size:0.68rem;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;}
+.fan-legend-item{display:flex;align-items:center;gap:0.4em;}
+.fan-swatch{width:8px;height:8px;border-radius:50%;display:inline-block;}
+
+.table-scroll{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.85rem;}
+th,td{text-align:left;padding:0.55rem 0.7rem;border-bottom:1px solid var(--hairline);white-space:nowrap;}
+th{font-size:0.67rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-faint);font-weight:500;}
+td.num,th.num{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;text-align:right;}
+tr:last-child td{border-bottom:none;}
+tr.highlight td{background:var(--gold-wash);}
+
+.split-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.split-card{background:var(--paper-raised);border:1px solid var(--hairline);border-radius:10px;padding:1.2rem 1.3rem;}
+.split-card h3{margin-bottom:0.3rem;}
+.split-span{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--ink-faint);margin-bottom:0.9rem;}
+.split-stat{display:flex;justify-content:space-between;font-size:0.85rem;color:var(--ink-soft);padding:0.4rem 0;border-bottom:1px solid var(--hairline);}
+.split-stat:last-child{border-bottom:none;}
+.split-stat b{color:var(--ink);font-weight:600;font-family:'IBM Plex Mono',monospace;}
+.reduction-bar-track{height:8px;background:var(--paper-sunken);border-radius:4px;overflow:hidden;margin-top:0.9rem;}
+.reduction-bar-fill{height:100%;background:var(--teal);border-radius:4px;}
+.reduction-label{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--teal);margin-top:0.4rem;text-align:right;}
+
+.takeaway{margin-top:0.9rem;font-size:0.87rem;color:var(--ink-soft);border-left:2px solid var(--hairline-strong);padding-left:0.9rem;}
+.takeaway b{color:var(--ink);font-weight:600;}
+.takeaway.warn{border-left-color:var(--bad);} .takeaway.warn b{color:var(--bad);}
+.takeaway.good{border-left-color:var(--good);} .takeaway.good b{color:var(--good);}
+
+.verdict{background:var(--paper-sunken);border:1px solid var(--hairline-strong);border-radius:10px;padding:1.5rem 1.6rem;margin-top:1.5rem;}
+.verdict h3{font-size:1.15rem;margin-bottom:0.7rem;}
+
+footer{margin-top:3.5rem;padding-top:1.5rem;border-top:1px solid var(--hairline);font-size:0.78rem;color:var(--ink-faint);display:flex;flex-wrap:wrap;justify-content:space-between;gap:0.6rem 1.5rem;}
+
+@media (max-width:720px){ .fan-grid{grid-template-columns:1fr;} .split-grid{grid-template-columns:1fr;} }
+@media (prefers-reduced-motion:reduce){ *{transition:none !important;} }
+</style>
+
+<div class="wrap">
+
+  <div class="eyebrow">Polymarket &middot; Final 1% &middot; methodology review</div>
+  <h1>The Honest <em>Range</em></h1>
+  <p class="dek">Every number in this series so far came from one realized sequence of trades. This resamples that sequence 1,000 times and re-derives the two claims this whole strategy leans on hardest &mdash; and revises one of them down.</p>
+  <div class="meta-row">
+    <span><b>1,000</b> block-bootstrap resamples</span>
+    <span><b>36</b> monthly blocks resampled with replacement</span>
+    <span>exclusion rule tested on a <b>time-split held-out half</b></span>
+  </div>
+
+  <section>
+    <div class="sec-head">
+      <div class="sec-num">01</div>
+      <h2>The headline number was on the lucky side</h2>
+      <p class="sec-sub">Resample calendar-month blocks of trades with replacement, stitch them back-to-back preserving each block's internal order, re-run the identical walk-forward Kelly sim. 1,000 times. The historical path we reported sits above the median of what that same underlying data plausibly produces.</p>
+    </div>
+    <div class="fan-grid" id="fanGrid"></div>
+    <p class="pull">Reported CAGR: <em>6.6%</em>. Bootstrap median: <em>3.6%</em>. The number in every table so far was roughly the <em>70th percentile</em> outcome, not the typical one.</p>
+    <div class="table-scroll">
+      <table id="ciTable"></table>
+    </div>
+    <p class="takeaway good"><b>The reassuring part:</b> 0 of 1,000 resamples lost money, and the 5th-percentile CAGR is still +1.6%. The edge itself looks real and durable across resamples &mdash; it's the <i>size</i> of the edge that the single historical path overstated, not its existence.</p>
+    <p class="takeaway warn"><b>The part worth sitting with:</b> the Sharpe ratio's 5th-to-95th percentile range is 0.71 to 4.89 &mdash; a roughly 7&times; spread from the same underlying trades, just resampled differently. Every Sharpe number quoted anywhere in this report series, including 2.24, should be read as one draw from that range, not a precise coefficient.</p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="sec-num">02</div>
+      <h2>Does the exclusion rule survive its own blind spot?</h2>
+      <p class="sec-sub">The exact-score/weather exclusion was built by reading all 7 flips in the full sample &mdash; in-sample by construction. Split the sample at its time median and re-measure the rule's effect in each half independently, as if the second half had never been seen when the rule was written.</p>
+    </div>
+    <div class="split-grid">
+      <div class="split-card">
+        <h3>Early half</h3>
+        <div class="split-span">2023-03-05 &rarr; 2026-03-02 &middot; ~3 years &middot; 1,682 trades</div>
+        <div class="split-stat"><span>Flips</span><b>3</b></div>
+        <div class="split-stat"><span>Exact-score/weather trades</span><b>47</b></div>
+        <div class="split-stat"><span>Flip rate, unfiltered</span><b>0.178%</b></div>
+        <div class="split-stat"><span>Flip rate, after exclusion</span><b>0.122%</b></div>
+        <div class="reduction-bar-track"><div class="reduction-bar-fill" style="width:31.4%;"></div></div>
+        <div class="reduction-label">31.4% relative reduction</div>
+      </div>
+      <div class="split-card">
+        <h3>Late half</h3>
+        <div class="split-span">2026-03-02 &rarr; 2026-08-24 &middot; ~6 months &middot; 1,682 trades</div>
+        <div class="split-stat"><span>Flips</span><b>4</b></div>
+        <div class="split-stat"><span>Exact-score/weather trades</span><b>222</b></div>
+        <div class="split-stat"><span>Flip rate, unfiltered</span><b>0.238%</b></div>
+        <div class="split-stat"><span>Flip rate, after exclusion</span><b>0.068%</b></div>
+        <div class="reduction-bar-track"><div class="reduction-bar-fill" style="width:71.2%;"></div></div>
+        <div class="reduction-label">71.2% relative reduction</div>
+      </div>
+    </div>
+    <p class="takeaway good" style="margin-top:1.1rem;"><b>The rule holds in both halves, not just one.</b> A rule that only "worked" because of one lucky/unlucky cluster would show a strong effect in one half and roughly nothing in the other. Both halves show a real, positive reduction &mdash; weaker early, much stronger late.</p>
+    <p class="takeaway"><b>But notice what else moved: the exact-score/weather trade count itself grew from 47 (across 3 years) to 222 (across 6 months)</b> &mdash; roughly 15&times; the density. Both of the exact-score flips, and one of the two weather flips, only exist in the late half because the market <i>type</i> barely existed at volume before then. That's consistent with two different stories this data can't fully separate: a genuinely emerging, structurally riskier market category as Polymarket's live/exact-value product surface has grown, or a rule that's still mostly resting on a handful of events in a newly-dense corner of the sample. Both are true enough to act on; neither is proven at this n.</p>
+  </section>
+
+  <div class="verdict">
+    <h3>What actually changes</h3>
+    <p style="font-size:0.94rem;color:var(--ink-soft);margin:0;">Nothing here reverses a conclusion &mdash; it recalibrates confidence in one and strengthens the other. The exclusion rule now has real (if still thin) out-of-sample support: it wasn't just explaining the data it was fit on. The headline Kelly return, on the other hand, should be quoted as a range, not a point: call it <b style="color:var(--ink);">roughly 2&ndash;6% CAGR, with 6.6% at the upper end of what a fair resampling of the same 3.5 years supports</b> &mdash; and Sharpe anywhere from "mediocre" to "excellent" depending on which months get more or less weight, which is exactly the kind of statement the sample-size limitation in every prior report was gesturing at without a number attached. Now it has one.</p>
+  </div>
+
+  <footer>
+    <span>Source: <code>alexjjones27/crypto_trading</code> &middot; <code>scripts/bootstrap_kelly_ci.py</code> + <code>scripts/validate_exclusion_rule.py</code></span>
+    <span>1,000 resamples &middot; seed 42 &middot; reproducible</span>
+  </footer>
+
+</div>
+
+<script>
+const CI = {
+  cagr_pct: {p5: 1.61, p25: 2.72, median: 3.60, p75: 4.56, p95: 6.14, point: 6.6, unit: "%", label: "CAGR"},
+  sharpe: {p5: 0.71, p25: 1.28, median: 1.86, p75: 2.83, p95: 4.89, point: 2.24, unit: "", label: "Sharpe"},
+  max_drawdown_pct: {p5: 2.84, p25: 2.97, median: 2.98, p75: 4.35, p95: 5.72, point: 3.4, unit: "%", label: "Max drawdown"},
+};
+
+function buildFan(key) {
+  const d = CI[key];
+  const W = 260, H = 150, padL = 12, padR = 12, padT = 14, padB = 26;
+  const lo = Math.min(d.p5, d.point) * 0.85, hi = Math.max(d.p95, d.point) * 1.1;
+  const y = (v) => padT + (H - padT - padB) * (1 - (v - lo) / (hi - lo));
+  const cx = W / 2;
+
+  const ns = "http://www.w3.org/2000/svg";
+  function el(tag, attrs) {
+    const e = document.createElementNS(ns, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", height: H, role: "img" });
+
+  // p5-p95 whisker
+  svg.appendChild(el("line", { x1: cx, x2: cx, y1: y(d.p5), y2: y(d.p95), stroke: "var(--hairline-strong)", "stroke-width": 2 }));
+  // p25-p75 box
+  const boxW = 46;
+  svg.appendChild(el("rect", { x: cx - boxW/2, y: y(d.p75), width: boxW, height: y(d.p25) - y(d.p75), fill: "var(--teal-wash)", stroke: "var(--teal)", "stroke-width": 1.5, rx: 3 }));
+  // median line
+  svg.appendChild(el("line", { x1: cx - boxW/2, x2: cx + boxW/2, y1: y(d.median), y2: y(d.median), stroke: "var(--teal)", "stroke-width": 2 }));
+  // point estimate marker
+  svg.appendChild(el("circle", { cx: cx + boxW/2 + 22, cy: y(d.point), r: 5.5, fill: "var(--gold)", stroke: "var(--paper-raised)", "stroke-width": 2 }));
+  svg.appendChild(el("line", { x1: cx + boxW/2 + 4, x2: cx + boxW/2 + 22, y1: y(d.point), y2: y(d.point), stroke: "var(--gold)", "stroke-width": 1.5, "stroke-dasharray": "2 2" }));
+
+  // labels
+  [["p95", d.p95], ["p5", d.p5]].forEach(([lbl, v]) => {
+    const t = el("text", { class: "fan-axis-label", x: 4, y: y(v) + 3, "text-anchor": "start" });
+    t.textContent = v.toFixed(2) + d.unit;
+    svg.appendChild(t);
+  });
+  const mt = el("text", { class: "fan-axis-label", x: cx - boxW/2 - 6, y: y(d.median) + 3, "text-anchor": "end", fill: "var(--teal)" });
+  mt.textContent = "med " + d.median.toFixed(2) + d.unit;
+  svg.appendChild(mt);
+  const pt = el("text", { class: "fan-axis-label", x: cx + boxW/2 + 26, y: y(d.point) + 3, "text-anchor": "start", fill: "var(--gold)" });
+  pt.textContent = "reported " + d.point.toFixed(2) + d.unit;
+  svg.appendChild(pt);
+
+  return svg;
+}
+
+const fanGrid = document.getElementById("fanGrid");
+Object.keys(CI).forEach((key) => {
+  const card = document.createElement("div");
+  card.className = "fan-card";
+  const h4 = document.createElement("h4");
+  h4.textContent = CI[key].label;
+  card.appendChild(h4);
+  const wrap = document.createElement("div");
+  wrap.className = "fan-svg-wrap";
+  wrap.appendChild(buildFan(key));
+  card.appendChild(wrap);
+  fanGrid.appendChild(card);
+});
+const legend = document.createElement("div");
+legend.className = "fan-legend";
+legend.innerHTML = `
+  <span class="fan-legend-item"><span class="fan-swatch" style="background:var(--teal);"></span>bootstrap median &amp; interquartile box</span>
+  <span class="fan-legend-item"><span class="fan-swatch" style="background:var(--gold);"></span>reported point estimate</span>
+  <span class="fan-legend-item">whisker: 5th&ndash;95th percentile</span>
+`;
+fanGrid.parentElement.insertBefore(legend, fanGrid.nextSibling);
+
+/* full CI table */
+const table = document.getElementById("ciTable");
+const thead = document.createElement("thead");
+thead.innerHTML = "<tr><th>Metric</th><th class=\"num\">Reported</th><th class=\"num\">p5</th><th class=\"num\">p25</th><th class=\"num\">Median</th><th class=\"num\">p75</th><th class=\"num\">p95</th></tr>";
+table.appendChild(thead);
+const tbody = document.createElement("tbody");
+Object.keys(CI).forEach((key) => {
+  const d = CI[key];
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td>${d.label}</td><td class="num" style="color:var(--gold);font-weight:500;">${d.point.toFixed(2)}${d.unit}</td>
+    <td class="num">${d.p5.toFixed(2)}${d.unit}</td><td class="num">${d.p25.toFixed(2)}${d.unit}</td>
+    <td class="num" style="color:var(--teal);">${d.median.toFixed(2)}${d.unit}</td>
+    <td class="num">${d.p75.toFixed(2)}${d.unit}</td><td class="num">${d.p95.toFixed(2)}${d.unit}</td>`;
+  tbody.appendChild(tr);
+});
+table.appendChild(tbody);
+</script>
