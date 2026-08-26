@@ -1,0 +1,314 @@
+<title>The Capacity Wall</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --paper:#eff1ee;
+  --paper-raised:#e4e7df;
+  --paper-sunken:#e7eae1;
+  --ink:#1c231f;
+  --ink-soft:#4b5650;
+  --ink-faint:#7d8578;
+  --hairline:#cbd0c4;
+  --hairline-strong:#b4bab0;
+  --gold:#b8862e;
+  --gold-wash:rgba(184,134,46,0.11);
+  --teal:#0e8b7d;
+  --teal-wash:rgba(14,139,125,0.11);
+  --good:#1e7b47;
+  --good-wash:rgba(30,123,71,0.10);
+  --bad:#b3261e;
+  --bad-wash:rgba(179,38,30,0.10);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141814; --paper-raised:#1d2118; --paper-sunken:#1a1e16;
+    --ink:#eceee6; --ink-soft:#a9b0a1; --ink-faint:#767d70;
+    --hairline:#323a2e; --hairline-strong:#414a3c;
+    --gold:#c9974a; --gold-wash:rgba(201,151,74,0.14);
+    --teal:#2fab9c; --teal-wash:rgba(47,171,156,0.14);
+    --good:#4bb579; --good-wash:rgba(75,181,121,0.12);
+    --bad:#e2685c; --bad-wash:rgba(226,104,92,0.13);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141814; --paper-raised:#1d2118; --paper-sunken:#1a1e16;
+  --ink:#eceee6; --ink-soft:#a9b0a1; --ink-faint:#767d70;
+  --hairline:#323a2e; --hairline-strong:#414a3c;
+  --gold:#c9974a; --gold-wash:rgba(201,151,74,0.14);
+  --teal:#2fab9c; --teal-wash:rgba(47,171,156,0.14);
+  --good:#4bb579; --good-wash:rgba(75,181,121,0.12);
+  --bad:#e2685c; --bad-wash:rgba(226,104,92,0.13);
+}
+
+*{box-sizing:border-box;}
+html{color-scheme:light dark;}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;}
+::selection{background:var(--gold-wash);}
+.num{font-variant-numeric:tabular-nums;}
+
+.wrap{max-width:900px;margin:0 auto;padding:2.75rem 1.5rem 5rem;}
+
+.eyebrow{font-size:0.7rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-faint);font-weight:500;display:flex;align-items:center;gap:0.6em;}
+.eyebrow::before{content:"";width:1.4em;height:1px;background:var(--hairline-strong);display:inline-block;}
+h1{font-family:'Zilla Slab',Georgia,serif;font-weight:700;font-size:clamp(2.3rem,6vw,3.7rem);line-height:1.0;margin:0.5rem 0 0.9rem;text-wrap:balance;letter-spacing:-0.01em;}
+h1 em{font-style:normal;color:var(--bad);}
+.dek{font-size:1.08rem;color:var(--ink-soft);max-width:66ch;margin:0 0 1.4rem;}
+.meta-row{display:flex;flex-wrap:wrap;gap:0.5rem 1.6rem;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:0.78rem;color:var(--ink-faint);border-top:1px solid var(--hairline);padding-top:0.9rem;}
+.meta-row b{color:var(--ink-soft);font-weight:500;}
+
+section{margin-top:3.2rem;}
+.sec-head{margin-bottom:1.1rem;}
+.sec-num{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:0.72rem;color:var(--ink-faint);letter-spacing:0.06em;margin-bottom:0.3rem;}
+h2{font-family:'Zilla Slab',Georgia,serif;font-weight:500;font-size:1.55rem;margin:0 0 0.35rem;letter-spacing:-0.005em;}
+h3{font-family:'Zilla Slab',Georgia,serif;font-weight:500;font-size:1.08rem;margin:0 0 0.6rem;}
+.sec-sub{font-size:0.92rem;color:var(--ink-soft);margin:0;max-width:68ch;}
+
+.card{background:var(--paper-raised);border:1px solid var(--hairline);border-radius:10px;padding:1.5rem 1.5rem 1.2rem;}
+
+.pull{
+  font-family:'Zilla Slab',Georgia,serif;font-weight:500;font-size:1.3rem;line-height:1.4;
+  color:var(--ink);border-left:3px solid var(--bad);padding:0.2rem 0 0.2rem 1.3rem;margin:1.3rem 0;
+  max-width:62ch;
+}
+.pull em{font-style:normal;color:var(--bad);}
+
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--hairline);border:1px solid var(--hairline);border-radius:10px;overflow:hidden;}
+.stat{background:var(--paper-raised);padding:1.1rem 1.2rem 1.2rem;display:flex;flex-direction:column;gap:0.35rem;}
+.stat-label{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-faint);font-weight:500;}
+.stat-value{font-weight:600;font-size:1.75rem;letter-spacing:-0.01em;font-family:'IBM Plex Mono',monospace;}
+.stat-value.bad{color:var(--bad);}
+.stat-sub{font-size:0.76rem;color:var(--ink-soft);}
+
+.bars{display:flex;align-items:flex-end;gap:0.6rem;height:120px;margin-top:0.4rem;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:0.4rem;min-width:0;}
+.bar{width:100%;border-radius:3px 3px 0 0;}
+.bar.bad{background:var(--bad);}
+.bar-val{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:var(--ink);font-weight:500;}
+.bar-lbl{font-family:'IBM Plex Mono',monospace;font-size:0.66rem;color:var(--ink-faint);text-align:center;}
+
+.path-grid{display:grid;grid-template-columns:1fr;gap:1rem;}
+.path-card{background:var(--paper-raised);border:1px solid var(--hairline);border-radius:10px;overflow:hidden;}
+.path-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.1rem 1.4rem;background:var(--paper-sunken);border-bottom:1px solid var(--hairline);}
+.path-head h3{margin:0;}
+.path-tag{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;padding:0.25rem 0.65rem;border-radius:99px;white-space:nowrap;font-weight:500;}
+.path-tag.recommend{background:var(--good-wash);color:var(--good);}
+.path-tag.caution{background:var(--gold-wash);color:var(--gold);}
+.path-tag.hard{background:var(--bad-wash);color:var(--bad);}
+.path-body{padding:1.2rem 1.4rem 1.3rem;}
+.path-body p{margin:0 0 0.9rem;font-size:0.92rem;color:var(--ink-soft);}
+.path-body p:last-child{margin-bottom:0;}
+.path-body b{color:var(--ink);font-weight:600;}
+.path-metrics{display:flex;flex-wrap:wrap;gap:1.4rem;margin:0.9rem 0;padding:0.8rem 1rem;background:var(--paper-sunken);border-radius:7px;font-family:'IBM Plex Mono',monospace;font-size:0.78rem;}
+.path-metrics span{color:var(--ink-faint);}
+.path-metrics b{color:var(--ink);font-weight:500;}
+
+.table-scroll{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.85rem;}
+th,td{text-align:left;padding:0.55rem 0.7rem;border-bottom:1px solid var(--hairline);white-space:nowrap;}
+th{font-size:0.67rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-faint);font-weight:500;}
+td.num,th.num{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;text-align:right;}
+tr:last-child td{border-bottom:none;}
+tr.flag td{background:var(--bad-wash);}
+
+.takeaway{margin-top:0.9rem;font-size:0.87rem;color:var(--ink-soft);border-left:2px solid var(--hairline-strong);padding-left:0.9rem;}
+.takeaway b{color:var(--ink);font-weight:600;}
+.takeaway.warn{border-left-color:var(--bad);} .takeaway.warn b{color:var(--bad);}
+.takeaway.good{border-left-color:var(--good);} .takeaway.good b{color:var(--good);}
+
+.case{
+  display:flex;gap:1rem;background:var(--bad-wash);border:1px solid var(--hairline);border-radius:10px;
+  padding:1.2rem 1.4rem;margin-top:1rem;
+}
+.case-icon{font-size:1.5rem;line-height:1;flex-shrink:0;}
+.case p{margin:0;font-size:0.9rem;color:var(--ink-soft);}
+.case b{color:var(--ink);font-weight:600;}
+
+ul.plain{margin:0.6rem 0 0;padding-left:1.2rem;font-size:0.88rem;color:var(--ink-soft);}
+ul.plain li{margin-bottom:0.55rem;}
+ul.plain b{color:var(--ink);font-weight:600;}
+
+.verdict{
+  background:var(--paper-sunken);border:1px solid var(--hairline-strong);border-radius:10px;
+  padding:1.5rem 1.6rem;margin-top:1.5rem;
+}
+.verdict h3{font-size:1.15rem;margin-bottom:0.7rem;}
+
+footer{margin-top:3.5rem;padding-top:1.5rem;border-top:1px solid var(--hairline);font-size:0.78rem;color:var(--ink-faint);display:flex;flex-wrap:wrap;justify-content:space-between;gap:0.6rem 1.5rem;}
+
+@media (max-width:640px){ .stat-grid{grid-template-columns:1fr;} }
+@media (prefers-reduced-motion:reduce){ *{transition:none !important;} }
+</style>
+
+<div class="wrap">
+
+  <div class="eyebrow">Polymarket &middot; Final 1% &middot; institutional scaling review</div>
+  <h1>The <em>Capacity</em> Wall</h1>
+  <p class="dek">The honest answer to "how do we scale this to a real book": the strategy as backtested has almost no capacity. That finding is the useful part &mdash; it points directly at the three structures that do scale, one of which is already a documented $40M/year trade at 29&times; the capital efficiency of anything in this report so far.</p>
+  <div class="meta-row">
+    <span><b>3,364</b> trades analyzed</span>
+    <span><b>738</b> hit a liquidity ceiling</span>
+    <span>median depth at the ceiling: <b>$25</b></span>
+    <span>Polymarket YTD volume: <b>$58.4B</b></span>
+  </div>
+
+  <section>
+    <div class="sec-head">
+      <div class="sec-num">01</div>
+      <h2>What the depth data actually says</h2>
+      <p class="sec-sub">Every trade in the backtest was checked against realized trade sizes within five minutes of its crossing &mdash; the only liquidity signal available after the fact. 22% of trades hit that ceiling before reaching even $100.</p>
+    </div>
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="stat-label">Trades depth-capped</div>
+        <div class="stat-value bad num">738 / 3,364</div>
+        <div class="stat-sub">22% never got the full $100 desired</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Median size available</div>
+        <div class="stat-value bad num">$24.87</div>
+        <div class="stat-sub">at the moment of a capped crossing</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">90th percentile available</div>
+        <div class="stat-value bad num">$77.40</div>
+        <div class="stat-sub">the good case is still sub-$100</div>
+      </div>
+    </div>
+    <p class="pull">A <em>Citadel-scale</em> ticket is measured in millions. The market, at the exact moment this edge exists, is offering tens of dollars.</p>
+    <p class="sec-sub" style="margin-top:1rem;">And this isn't evenly spread. Depth-capping by category, same sample:</p>
+    <div class="bars" id="capBars"></div>
+    <p class="takeaway warn"><b>The category with zero flips is also one of the thinnest.</b> Sports win/lose markets never flipped in this sample &mdash; but a quarter of sports trades hit the liquidity ceiling, same as the noisiest category. Flip-risk and capacity are different axes. A book that only screens for the first will still run into the second.</p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="sec-num">02</div>
+      <h2>Why the ceiling is real, not an artifact of our data</h2>
+      <p class="sec-sub">Polymarket's own scale isn't the constraint &mdash; the platform did $58.4B in trading volume year-to-date through August 2026, up from roughly $1.2B monthly as recently as 2025. The constraint is structural to <i>this specific price band</i>.</p>
+    </div>
+    <div class="card">
+      <p style="font-size:0.92rem;color:var(--ink-soft);margin:0 0 0.9rem;">Once a market prices in at $0.99+, almost everyone who wanted exposure already has it. The remaining flow at that price is thin by construction &mdash; it's the last few percent of a book that has already cleared. Aggregate platform volume tells you the venue is now institutional-scale; it says nothing about depth at the specific price level this strategy trades. Those are different numbers, and the gap between them is the entire capacity problem.</p>
+      <p style="font-size:0.92rem;color:var(--ink-soft);margin:0;">It also explains who's already there. <b>Susquehanna</b> built a dedicated prediction-markets desk in 2023 and is now the flagship market maker on Kalshi. <b>Jump Trading</b> doubled its team to roughly 20 people in 2026 and took equity stakes in both Kalshi and Polymarket. <b>DRW</b> and <b>Akuna</b> are staffing dedicated desks. None of them are taking $0.99 crossings with market orders &mdash; they're quoting the book that other people cross. That's the tell for where the real capacity sits.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="sec-num">03</div>
+      <h2>Three structures that actually scale</h2>
+      <p class="sec-sub">Ranked by how directly they reuse what this backtest already built &mdash; the category-level flip model, the exclusion screen, the walk-forward Bayesian sizing &mdash; versus how much new infrastructure they demand.</p>
+    </div>
+
+    <div class="path-grid">
+
+      <div class="path-card">
+        <div class="path-head">
+          <h3>A &middot; Stop crossing the spread. Quote it.</h3>
+          <span class="path-tag recommend">Reuses this backtest directly</span>
+        </div>
+        <div class="path-body">
+          <p>Every dollar of fee this backtest paid was a dollar a maker earned instead. Polymarket's real fee schedule (confirmed against official docs) is $0 for makers, always &mdash; and makers additionally earn a <b>daily rebate</b> from the taker-fee pool: <b>25%</b> in most categories, <b>20%</b> in crypto, <b>15%</b> in sports, <b>0%</b> in geopolitics. The retail flow this backtest simulated crossing &mdash; someone paying up to lock in a near-certain outcome &mdash; is exactly the order flow a resting maker gets paid to absorb.</p>
+          <div class="path-metrics">
+            <span>Maker fee <b>$0</b> always</span>
+            <span>Rebate <b>15&ndash;25%</b> of counterparty's fee</span>
+            <span>Reuses <b>category flip model + exclusion screen directly</b></span>
+          </div>
+          <p>This doesn't fix the depth problem &mdash; it inverts it. Instead of needing $10M of size to exist at one crossing, a market-making book needs to be quoting <i>many</i> near-certain markets simultaneously, each for a modest size, and let the rebate plus the same edge this backtest measured accumulate across hundreds of small fills a day. The category-level walk-forward risk model built for Kelly sizing is the natural quoting brain for exactly this: skew wider or step back entirely in categories the data already flagged (exact-score live markets, narrow weather ranges), quote tight and large in the ones that showed zero flips (simple win/lose sports) <i>and</i> reasonable depth (crypto price markets, only 7.7% capped).</p>
+        </div>
+      </div>
+
+      <div class="path-card">
+        <div class="path-head">
+          <h3>B &middot; NegRisk basket arbitrage</h3>
+          <span class="path-tag recommend">Different risk entirely &mdash; the real "Citadel" trade</span>
+        </div>
+        <div class="path-body">
+          <p>Polymarket's negRisk markets are the mechanism behind any event with three or more mutually exclusive outcomes &mdash; an election with five candidates, a tournament bracket &mdash; where exactly one outcome resolves YES and the rest resolve NO, enforced at settlement. When retail flow concentrates on the one or two favorites, the complementary outcomes trade thin, and the sum of all YES prices in the basket drifts below $1.00. Buying the full basket at less than $1.00 guarantees exactly $1.00 back, regardless of which outcome wins &mdash; the position is indifferent to the actual event, unlike everything else in this report.</p>
+          <div class="path-metrics">
+            <span>Documented realized profit <b>~$40M</b>, Apr 2024&ndash;Apr 2025</span>
+            <span><b>29&times;</b> capital efficiency vs. binary arbitrage (IMDEA Networks, 86M-bet study)</span>
+            <span>Risk: execution + oracle, <i>not</i> direction</span>
+          </div>
+          <p>This is the one structure in this report that isn't a variant of "guess right and hope it doesn't flip." The exposure is to <b>execution</b> (filling the full basket before the mispricing closes) and to the <b>same oracle layer</b> as everything else here &mdash; not to which candidate wins. That is a fundamentally different, and fundamentally more scalable, risk to underwrite. It needs its own infrastructure: a live scanner across every open negRisk event summing YES legs, sized to buy the full basket in one atomic sequence. Nothing in this backtest's pipeline does that today &mdash; it is the highest-value net-new build coming out of this review.</p>
+        </div>
+      </div>
+
+      <div class="path-card">
+        <div class="path-head">
+          <h3>C &middot; Cross-venue arb against Kalshi</h3>
+          <span class="path-tag caution">Real, but crowded and capital-inefficient</span>
+        </div>
+        <div class="path-body">
+          <p>Kalshi (CFTC-regulated, dollar-settled) and Polymarket (historically USDC, now also a CFTC-registered U.S. exchange as of 2026) price some of the same real-world events, and gaps of 1&ndash;3&cent; appear routinely, widening around fast-moving news. Buy YES on the cheap side, NO on the expensive side, collect the gap at settlement regardless of outcome.</p>
+          <div class="path-metrics">
+            <span>Typical gross gap <b>1&ndash;3&cent;</b>, larger around news</span>
+            <span>Net of costs, often <b>&lt;1&cent;</b> and closing fast</span>
+            <span>Capital sits <b>split across two venues</b> with no fungibility between them</span>
+          </div>
+          <p>Structurally sound, but two problems make it a worse building block than A or B for a fund entering now, not a first mover. First, capital efficiency is poor: money is trapped on both venues simultaneously with no way to net collateral between them until each leg resolves. Second, this is the most heavily bot-contested corner of the whole space &mdash; the gaps that are wide enough to be worth crossing after both venues' fees close in seconds. Worth automating as a third book once A and B are running; not worth building first.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="sec-num">04</div>
+      <h2>The tail risk isn't always "the world changed"</h2>
+      <p class="sec-sub">Every flip this backtest found looked like the world changing at the last minute. It doesn't have to. Resolution runs through UMA's optimistic oracle, and that layer has already been attacked once, in public, for real money.</p>
+    </div>
+    <div class="case">
+      <div class="case-icon">&#9888;</div>
+      <p><b>The precedent:</b> a Polymarket question with a factually unambiguous "No" answer had its resolution disputed just before it would have finalized, escalating the outcome into a UMA governance vote. Using a combination of owned and delegated voting power, the disputing wallet flipped the vote outcome &mdash; profiting an estimated <b>$100K&ndash;$300K</b> and burning the honest proposer's $1,000 bond in the process. This was not a data error or a genuine last-minute reversal. It was a governance-layer attack on the resolution mechanism itself.</p>
+    </div>
+    <p class="takeaway warn" style="margin-top:1.1rem;"><b>Scale is what turns this from a curiosity into an operational risk.</b> A fund holding meaningful size in a near-certain position is a visible, static, easily-priced target &mdash; exactly the profile worth someone spending real money to dispute. The three flip categories this backtest already uses (genuine reversal / disputed resolution / oracle error) need a fourth line item going forward: <b>adversarial dispute</b>, distinct from a disagreement made in good faith. The operational answer is to monitor UMA proposal and dispute activity on open positions in real time, and, at real size, to hold enough of a bonded stake in the oracle itself to have a vote in your own resolutions rather than being a pure price-taker on them.</p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="sec-num">05</div>
+      <h2>What actually carries over</h2>
+      <p class="sec-sub">None of the three paths above are a clean rebuild. Everything this backtest series already established is the risk engine underneath all of them.</p>
+    </div>
+    <div class="card">
+      <ul class="plain">
+        <li><b>The category exclusion screen</b> (exact-score live markets, narrow weather-range markets) is a quoting exclusion for a market maker exactly as much as it was an entry filter for a taker.</li>
+        <li><b>The walk-forward Bayesian flip-rate model</b>, shrunk per category and updated only on information available at the time, is the correctly-specified input for how aggressively to quote each category &mdash; not just whether to enter it.</li>
+        <li><b>The position-cap sensitivity result</b> (Sharpe peaks near a 1&ndash;3% cap and degrades sharply past it) is a real, measured risk-limit calibration, not a guess &mdash; it transfers to per-market and per-category limits on a market-making book directly.</li>
+        <li><b>The depth-capping methodology</b> itself &mdash; checking realized nearby trade size, not assuming infinite liquidity at the quote &mdash; is the same discipline a market maker needs when sizing its own resting orders, just pointed at "how much can I safely quote" instead of "how much could I have bought."</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="verdict">
+    <h3>Bottom line</h3>
+    <p style="font-size:0.94rem;color:var(--ink-soft);margin:0 0 0.8rem;">The strategy as built is a $100-notional retail edge with a median of <b class="num" style="color:var(--ink);">$25</b> of liquidity behind it at the moment it exists. It does not scale by being run bigger. It scales by changing what it is: a market-making book that gets paid the rebate this report's own backtest was paying away, quoted with the risk model this report already built &mdash; and, in parallel, a NegRisk basket-arbitrage desk chasing a real, already-documented, direction-independent edge worth an order of magnitude more per dollar of capital deployed. Susquehanna and Jump are already running the first. Nobody in the public record is running the second at scale using a risk model this specific. That's the gap worth building into.</p>
+  </div>
+
+  <footer>
+    <span>Source: <code>alexjjones27/crypto_trading</code> &middot; extends <a href="#">The Final 1%</a> and <a href="#">Kelly, Capped</a></span>
+    <span>Figures: internal backtest (3,364 trades) + public sources, Aug 2026</span>
+  </footer>
+
+</div>
+
+<script>
+const CAP = [
+  { name: "crypto price", pct: 7.7 },
+  { name: "politics", pct: 15.4 },
+  { name: "other", pct: 24.5 },
+  { name: "sports", pct: 25.0 },
+];
+const barsEl = document.getElementById('capBars');
+const maxPct = Math.max(...CAP.map(c => c.pct));
+barsEl.innerHTML = CAP.map(c => {
+  const h = Math.max(6, c.pct / maxPct * 100);
+  return `<div class="bar-col">
+    <div class="bar-val num">${c.pct.toFixed(1)}%</div>
+    <div class="bar bad" style="height:${h}%;"></div>
+    <div class="bar-lbl">${c.name}</div>
+  </div>`;
+}).join('');
+</script>
