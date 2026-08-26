@@ -1,0 +1,74 @@
+[
+  {
+    "threshold": "0.980",
+    "n_total_trades": 3441,
+    "n_excluded": 300,
+    "n_taken": 2112,
+    "n_flips_taken": 5,
+    "final_equity": 13416.72,
+    "total_return_pct": 34.17,
+    "cagr_pct": 8.71,
+    "max_drawdown_pct": 2.86,
+    "sharpe": 3.15
+  },
+  {
+    "threshold": "0.985",
+    "n_total_trades": 3413,
+    "n_excluded": 298,
+    "n_taken": 2081,
+    "n_flips_taken": 3,
+    "final_equity": 12834.37,
+    "total_return_pct": 28.34,
+    "cagr_pct": 7.44,
+    "max_drawdown_pct": 2.85,
+    "sharpe": 3.11
+  },
+  {
+    "threshold": "0.990",
+    "n_total_trades": 3357,
+    "n_excluded": 296,
+    "n_taken": 2147,
+    "n_flips_taken": 1,
+    "final_equity": 12712.67,
+    "total_return_pct": 27.13,
+    "cagr_pct": 7.15,
+    "max_drawdown_pct": 2.87,
+    "sharpe": 4.09
+  },
+  {
+    "threshold": "0.990 (original sample)",
+    "n_total_trades": 3364,
+    "n_excluded": 269,
+    "n_taken": 2287,
+    "n_flips_taken": 3,
+    "final_equity": 12472.18,
+    "total_return_pct": 24.72,
+    "cagr_pct": 6.57,
+    "max_drawdown_pct": 3.38,
+    "sharpe": 2.24
+  },
+  {
+    "threshold": "0.995",
+    "n_total_trades": 3309,
+    "n_excluded": 296,
+    "n_taken": 2087,
+    "n_flips_taken": 1,
+    "final_equity": 12188.22,
+    "total_return_pct": 21.88,
+    "cagr_pct": 5.86,
+    "max_drawdown_pct": 2.87,
+    "sharpe": 3.43
+  },
+  {
+    "threshold": "0.999",
+    "n_total_trades": 2954,
+    "n_excluded": 265,
+    "n_taken": 11,
+    "n_flips_taken": 0,
+    "final_equity": 10001.62,
+    "total_return_pct": 0.02,
+    "cagr_pct": 0.0,
+    "max_drawdown_pct": 0.0,
+    "sharpe": 1.38
+  }
+]
