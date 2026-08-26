@@ -23,6 +23,10 @@
     --good-wash: rgba(31,122,77,0.10);
     --bad: #a4433a;
     --bad-wash: rgba(164,67,58,0.09);
+    --series-arb: #2f9e44;
+    --series-arb-wash: rgba(47,158,68,0.10);
+    --series-mm: #b8860b;
+    --series-mm-wash: rgba(184,134,11,0.10);
     --shadow: 0 1px 2px rgba(27,31,26,0.06), 0 8px 24px -12px rgba(27,31,26,0.18);
     --shadow-lg: 0 2px 4px rgba(27,31,26,0.05), 0 24px 48px -20px rgba(27,31,26,0.22);
   }
@@ -46,6 +50,10 @@
       --good-wash: rgba(75,189,133,0.12);
       --bad: #e08277;
       --bad-wash: rgba(224,130,119,0.12);
+      --series-arb: #42ab63;
+      --series-arb-wash: rgba(66,171,99,0.14);
+      --series-mm: #b17f16;
+      --series-mm-wash: rgba(177,127,22,0.14);
       --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
       --shadow-lg: 0 2px 4px rgba(0,0,0,0.3), 0 24px 48px -20px rgba(0,0,0,0.6);
     }
@@ -69,6 +77,10 @@
     --good-wash: rgba(75,189,133,0.12);
     --bad: #e08277;
     --bad-wash: rgba(224,130,119,0.12);
+    --series-arb: #42ab63;
+    --series-arb-wash: rgba(66,171,99,0.14);
+    --series-mm: #b17f16;
+    --series-mm-wash: rgba(177,127,22,0.14);
     --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
     --shadow-lg: 0 2px 4px rgba(0,0,0,0.3), 0 24px 48px -20px rgba(0,0,0,0.6);
   }
@@ -107,6 +119,12 @@
     font-size: 12.5px; color: var(--ink-muted);
   }
   .meta-row b { color: var(--ink-secondary); font-weight: 600; }
+
+  .companion-heading {
+    font-family: "Domine", Georgia, serif; font-weight: 600; font-size: 28px; margin: 68px 0 12px;
+    color: var(--ink-primary); text-wrap: balance;
+  }
+  .companion-lede { font-size: 15.5px; line-height: 1.65; color: var(--ink-secondary); max-width: 70ch; margin: 0; }
 
   .callout-banner {
     margin-top: 28px; display: flex; gap: 14px; align-items: flex-start;
@@ -373,6 +391,144 @@
     </p>
   </section>
 
+  <h2 class="companion-heading">Two companion strategies</h2>
+  <p class="companion-lede">
+    Final-1% is a probabilistic edge -- it bets on a flip-rate belief, and can lose. The two strategies below are
+    structurally different, run alongside it rather than as variants of it. One is a genuine, rigorously
+    backtestable arbitrage; the other -- market-making -- turned out not to be honestly backtestable at all with
+    the data this project has access to, which is itself the answer worth recording.
+  </p>
+
+  <!-- ===== NEGRISK BASKET ARBITRAGE ===== -->
+  <section class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>NegRisk basket arbitrage</h2>
+        <p class="panel-note">Polymarket's NegRisk markets group N mutually exclusive, jointly exhaustive outcomes
+          (e.g. "who wins the election") under one basket, with an explicit "Other" catch-all leg guaranteeing the
+          set is complete. Whenever the legs' fee-adjusted prices sum to under $1, buying one share of every leg
+          costs less than $1 and redeems for exactly $1 via CTF merge regardless of which outcome wins -- a
+          completeness arbitrage, not a directional bet.</p>
+      </div>
+      <div class="finding">75% of a bounded, volume-ranked sample of 20 complete NegRisk baskets had a real,
+        persistent pricing gap at some point in their life. <b style="color:var(--series-arb)">Mean edge 2.31%</b>
+        per trade, execution-risk bounded rather than probability bounded.</div>
+    </div>
+
+    <div class="stats" style="margin: 24px 0 8px;">
+      <div class="stat">
+        <div class="label">Events with a gap</div>
+        <div class="value" style="color:var(--series-arb)">15 / 20</div>
+        <div class="sub">of provably-complete baskets scanned (168 found total; top 20 by volume backtested)</div>
+      </div>
+      <div class="stat">
+        <div class="label">Total return</div>
+        <div class="value">+5.31%</div>
+        <div class="sub">$10,000 &rarr; $10,530.57, 15 trades, 3.5 years</div>
+      </div>
+      <div class="stat">
+        <div class="label">Mean / median edge</div>
+        <div class="value">2.31% / 1.18%</div>
+        <div class="sub">per trade, before the position-sizing shown below</div>
+      </div>
+      <div class="stat">
+        <div class="label">Merge-tx gas</div>
+        <div class="value">$0.0047</div>
+        <div class="sub">live Polygon estimate; ordinary order flow is relayer-sponsored ($0)</div>
+      </div>
+    </div>
+
+    <div class="legend" style="margin: 20px 0 4px;">
+      <span><span class="swatch-line" style="background:var(--series-arb)"></span>Basket-arb equity (15% of equity staked per trade)</span>
+    </div>
+    <div class="chart-block" id="chart-arb"></div>
+
+    <p class="panel-note" style="margin-top:26px;">All 20 events scanned (a bounded, volume-ranked sample of the
+      168 complete NegRisk baskets found -- not an exhaustive census like the Final-1% market population):</p>
+    <div class="table-scroll"><table class="data-table" id="table-arb"></table></div>
+
+    <div class="compare-takeaway" style="margin-top:20px;">
+      Same fill-price limitation as the rest of this project: each leg's price is the last observed CLOB snapshot,
+      not a real executable quote, and all N legs are assumed to fill simultaneously at those prices -- real
+      execution across separate order books carries slippage and race risk this doesn't model. Completeness is
+      verified per event (only baskets with a confirmed "Other" leg are included), not assumed.
+    </div>
+  </section>
+
+  <!-- ===== MARKET-MAKING PROXY ===== -->
+  <section class="panel">
+    <div class="callout-banner" style="margin-bottom:26px;">
+      <span class="mark">Not a real backtest</span>
+      <p>Polymarket's <code style="font-family:'IBM Plex Mono',monospace;background:var(--page-bg);padding:1px 5px;border-radius:4px;">/book</code>
+        endpoint 404s on resolved markets, so there is no historical order-book depth to determine what price a
+        resting quote would actually have been filled at, or how often. What follows is an explicitly toy,
+        parameterized estimate built from trade prints alone -- a sensitivity grid, not a point estimate, because
+        every input is an assumption rather than a measurement.</p>
+    </div>
+    <div class="panel-head">
+      <div>
+        <h2>Market-making, stylized proxy</h2>
+        <p class="panel-note">Pure spread capture: a resting quote is assumed to capture a fixed share of each real
+          trade's size, earning exactly the assumed half-spread per share, with the spread capped at 30% of the
+          distance to $0 or $1 so it stays sane at the extreme prices this market population is full of. No
+          inventory-direction term -- two earlier versions of this model (mark to resolution; mark to the next
+          trade print) were tried and rejected because both leaked spurious directional profit unrelated to
+          market-making. See the panel note below for what that leaves out.</p>
+      </div>
+      <div class="finding">Base case (half-spread $0.01, 15% fill-share):
+        <b style="color:var(--series-mm)">$130,006 cumulative</b> across 3,074 of 3,357 markets touched.</div>
+    </div>
+
+    <div class="stats" style="margin: 24px 0 8px;">
+      <div class="stat">
+        <div class="label">Markets touched</div>
+        <div class="value" style="color:var(--series-mm)">3,074</div>
+        <div class="sub">of 3,357 in the reused Final-1% population, over 3.5 years</div>
+      </div>
+      <div class="stat">
+        <div class="label">Cumulative P&amp;L</div>
+        <div class="value">$130,006</div>
+        <div class="sub">base case: $0.01 half-spread, 15% assumed fill-share</div>
+      </div>
+      <div class="stat">
+        <div class="label">Per-trade cap</div>
+        <div class="value">$25</div>
+        <div class="sub">max notional captured from any single print</div>
+      </div>
+      <div class="stat">
+        <div class="label">Adverse selection</div>
+        <div class="value" style="color:var(--bad)">Not modeled</div>
+        <div class="sub">this is a best case, not an expected case -- see below</div>
+      </div>
+    </div>
+
+    <p class="panel-note" style="margin-top:8px;"><b>Why this isn't shown as a return on $10,000.</b> A market
+      maker's P&amp;L scales with how much order flow it touches across many markets running at once, not with a
+      single bankroll compounding trade-to-trade the way Final-1% or the basket arb do. Framing this as
+      "+1,300% on $10k" would imply a bankroll-bounded strategy it isn't; the chart below is cumulative dollar
+      P&amp;L from operating capped ($25/trade) quotes across the whole market population, which is the honest
+      unit for what this model actually represents.</p>
+
+    <div class="legend" style="margin: 20px 0 4px;">
+      <span><span class="swatch-line" style="background:var(--series-mm)"></span>Cumulative estimated spread-capture P&amp;L (base case)</span>
+    </div>
+    <div class="chart-block" id="chart-mm"></div>
+
+    <p class="panel-note" style="margin-top:26px;">Sensitivity grid -- every cell is a full independent re-run, not
+      an interpolation:</p>
+    <div class="table-scroll"><table class="data-table" id="table-mm"></table></div>
+
+    <div class="compare-takeaway" style="margin-top:20px;">
+      <b>What "not modeled" costs.</b> Real market makers lose money precisely when informed flow moves the market
+      against inventory they haven't unwound yet -- adverse selection. This model assumes every captured position
+      flattens instantly and costlessly at the assumed spread, which is why it's presented as a best case rather
+      than an expected one. The two more elaborate models that tried to include a directional term were rejected
+      (see the script's docstring) because both leaked unrelated profit into the total rather than genuinely
+      capturing adverse selection risk -- getting that right needs real order-book data this project doesn't have,
+      not a better guess.
+    </div>
+  </section>
+
   <footer>
     <p><b style="color:var(--ink-secondary)">Reading this correctly.</b> This is a historical backtest on resolved
       Polymarket markets, not a live track record &mdash; no trades were placed. Returns assume maker fills (resting
@@ -517,4 +673,113 @@ renderCiRow(ciRows[0], 21898.52, 16827.43, 2444.99, 7732.53, 42869.36, 76207.12,
 renderCiRow(ciRows[1], 25.31, 7.54, -18.35, -3.57, 22.21, 36.47, -20, 40, v => v.toFixed(0)+'%');
 renderCiRow(ciRows[2], 33.25, 62.72, 2.70, 24.68, 79.84, 92.65, 0, 100, v => v.toFixed(0)+'%');
 renderCiRow(ciRows[3], 1.34, 0.56, -0.04, 0.24, 1.80, 5.21, -0.5, 7.5, v => v.toFixed(1));
+
+// ===================== Companion strategies =====================
+const COMPANION = {"arb_trades":[{"date":"2025-02-16","title":"Next Prime Minister of Canada after the election?","profit_frac":1.39,"stake":1500.0,"pnl":20.9,"equity_after":10020.9,"n_legs":17},{"date":"2025-04-05","title":"F1 Drivers Champion","profit_frac":2.18,"stake":1503.13,"pnl":32.72,"equity_after":10053.62,"n_legs":25},{"date":"2025-04-11","title":"Highest grossing movie in 2025?","profit_frac":1.06,"stake":1508.04,"pnl":15.97,"equity_after":10069.59,"n_legs":22},{"date":"2025-05-02","title":"Big Game Champion 2026","profit_frac":2.36,"stake":1510.44,"pnl":35.62,"equity_after":10105.21,"n_legs":33},{"date":"2025-06-29","title":"New York City Mayoral Election","profit_frac":0.99,"stake":1515.78,"pnl":15.01,"equity_after":10120.22,"n_legs":19},{"date":"2025-08-06","title":"2025 National Heads-Up Poker Championship Winner","profit_frac":14.63,"stake":1518.03,"pnl":222.05,"equity_after":10342.27,"n_legs":104},{"date":"2025-09-15","title":"Ireland Presidential Election","profit_frac":1.42,"stake":1551.34,"pnl":22.09,"equity_after":10364.36,"n_legs":29},{"date":"2025-09-20","title":"LALIGA Winner ","profit_frac":0.1,"stake":1554.65,"pnl":1.52,"equity_after":10365.88,"n_legs":25},{"date":"2025-09-27","title":"English Premier League Winner ","profit_frac":0.2,"stake":1554.88,"pnl":3.14,"equity_after":10369.02,"n_legs":25},{"date":"2025-10-15","title":"Romania: Bucharest Mayoral Election","profit_frac":4.75,"stake":1555.35,"pnl":73.9,"equity_after":10442.92,"n_legs":27},{"date":"2025-11-11","title":"Portugal Presidential Election","profit_frac":0.61,"stake":1566.44,"pnl":9.48,"equity_after":10452.4,"n_legs":47},{"date":"2025-12-12","title":"Who will Trump nominate as Fed Chair?","profit_frac":0.42,"stake":1567.86,"pnl":6.56,"equity_after":10458.96,"n_legs":39},{"date":"2026-03-17","title":"Peru Presidential Election Winner","profit_frac":1.18,"stake":1568.84,"pnl":18.55,"equity_after":10477.52,"n_legs":49},{"date":"2026-04-11","title":"The Masters 2026: Winner ","profit_frac":0.07,"stake":1571.63,"pnl":1.07,"equity_after":10478.59,"n_legs":102},{"date":"2026-07-07","title":"World Cup Winner ","profit_frac":3.31,"stake":1571.79,"pnl":51.98,"equity_after":10530.57,"n_legs":60}],"arb_curve":[["2025-02-16",10000.0],["2025-02-16",10020.9],["2025-04-05",10053.62],["2025-04-11",10069.59],["2025-05-02",10105.21],["2025-06-29",10120.22],["2025-08-06",10342.27],["2025-09-15",10364.36],["2025-09-20",10365.88],["2025-09-27",10369.02],["2025-10-15",10442.92],["2025-11-11",10452.4],["2025-12-12",10458.96],["2026-03-17",10477.52],["2026-04-11",10478.59],["2026-07-07",10530.57]],"arb_all":[{"title":"World Cup Winner ","n_legs":60,"arb_found":true,"max_profit_pct":21.6,"entry_profit_pct":3.31},{"title":"Big Game Champion 2026","n_legs":33,"arb_found":true,"max_profit_pct":16.5,"entry_profit_pct":2.36},{"title":"Who will Trump nominate as Fed Chair?","n_legs":39,"arb_found":true,"max_profit_pct":8.37,"entry_profit_pct":0.42},{"title":"New York City Mayoral Election","n_legs":19,"arb_found":true,"max_profit_pct":2.44,"entry_profit_pct":0.99},{"title":"English Premier League Winner ","n_legs":25,"arb_found":true,"max_profit_pct":23.91,"entry_profit_pct":0.2},{"title":"Next president of South Korea?","n_legs":34,"arb_found":false,"max_profit_pct":-1.78,"entry_profit_pct":null},{"title":"UEFA Champions League Winner ","n_legs":60,"arb_found":false,"max_profit_pct":32.61,"entry_profit_pct":null},{"title":"2025 National Heads-Up Poker Championship Winner","n_legs":104,"arb_found":true,"max_profit_pct":45.22,"entry_profit_pct":14.63},{"title":"Romania Presidential Election Winner","n_legs":25,"arb_found":false,"max_profit_pct":0.14,"entry_profit_pct":null},{"title":"Eurovision Winner 2026","n_legs":50,"arb_found":false,"max_profit_pct":-3.24,"entry_profit_pct":null},{"title":"F1 Drivers Champion","n_legs":25,"arb_found":true,"max_profit_pct":17.21,"entry_profit_pct":2.18},{"title":"Ireland Presidential Election","n_legs":29,"arb_found":true,"max_profit_pct":4.86,"entry_profit_pct":1.42},{"title":"Portugal Presidential Election","n_legs":47,"arb_found":true,"max_profit_pct":2.03,"entry_profit_pct":0.61},{"title":"Romania: Bucharest Mayoral Election","n_legs":27,"arb_found":true,"max_profit_pct":14.55,"entry_profit_pct":4.75},{"title":"Poland Presidential Election","n_legs":19,"arb_found":false,"max_profit_pct":0.05,"entry_profit_pct":null},{"title":"The Masters 2026: Winner ","n_legs":102,"arb_found":true,"max_profit_pct":1.12,"entry_profit_pct":0.07},{"title":"Highest grossing movie in 2025?","n_legs":22,"arb_found":true,"max_profit_pct":11.69,"entry_profit_pct":1.06},{"title":"Next Prime Minister of Canada after the election?","n_legs":17,"arb_found":true,"max_profit_pct":1.88,"entry_profit_pct":1.39},{"title":"LALIGA Winner ","n_legs":25,"arb_found":true,"max_profit_pct":18.55,"entry_profit_pct":0.1},{"title":"Peru Presidential Election Winner","n_legs":49,"arb_found":true,"max_profit_pct":14.81,"entry_profit_pct":1.18}],"mm_curve":[["2024-01-01",0.0],["2024-03-23",43.93],["2024-06-26",83.17],["2024-08-01",3097.82],["2024-09-01",3156.07],["2024-09-10",3380.96],["2024-10-01",3470.26],["2024-10-11",3561.93],["2024-10-22",3763.3],["2024-10-28",3826.28],["2024-11-03",4396.06],["2024-11-23",6675.91],["2024-11-28",7152.12],["2024-12-04",7466.03],["2024-12-14",7692.56],["2024-12-28",9536.99],["2025-01-08",10600.16],["2025-01-17",10676.09],["2025-01-20",11102.85],["2025-01-22",42143.15],["2025-02-01",42541.65],["2025-02-04",42960.58],["2025-02-10",43044.7],["2025-02-13",43271.45],["2025-02-23",43457.8],["2025-03-02",43477.09],["2025-03-07",43783.36],["2025-03-13",45286.23],["2025-03-18",45616.8],["2025-03-24",45772.02],["2025-04-01",45974.79],["2025-04-07",46404.68],["2025-04-11",46661.6],["2025-04-18",46871.31],["2025-04-26",46930.33],["2025-04-30",47386.28],["2025-05-02",48393.88],["2025-05-05",49048.47],["2025-05-09",49346.24],["2025-05-12",49887.77],["2025-05-22",50255.29],["2025-05-28",50562.03],["2025-06-01",50842.0],["2025-06-06",52353.2],["2025-06-16",52389.24],["2025-06-16",52435.64],["2025-06-19",52493.85],["2025-06-21",52546.22],["2025-06-23",52645.94],["2025-06-24",53028.3],["2025-06-26",53109.74],["2025-06-29",54115.48],["2025-06-30",54121.98],["2025-07-01",54182.79],["2025-07-06",55112.96],["2025-07-07",55114.69],["2025-07-11",55122.35],["2025-07-15",55132.81],["2025-07-16",55218.18],["2025-07-20",55291.24],["2025-07-21",55465.44],["2025-07-27",55483.08],["2025-07-30",55752.59],["2025-07-31",56131.75],["2025-08-05",56224.09],["2025-08-10",56314.79],["2025-08-12",56390.7],["2025-08-15",56539.29],["2025-08-16",56606.48],["2025-08-19",56663.4],["2025-08-20",56766.12],["2025-08-21",56829.9],["2025-08-22",57175.93],["2025-08-24",57358.57],["2025-08-26",57373.95],["2025-08-28",57591.1],["2025-08-29",57739.72],["2025-08-31",57909.63],["2025-09-01",58099.55],["2025-09-02",58209.6],["2025-09-04",58342.22],["2025-09-05",58348.6],["2025-09-05",58494.65],["2025-09-06",58522.31],["2025-09-08",58536.52],["2025-09-09",58547.33],["2025-09-10",58730.6],["2025-09-11",58824.64],["2025-09-12",58898.8],["2025-09-12",58952.32],["2025-09-13",59016.87],["2025-09-14",59310.65],["2025-09-15",59412.07],["2025-09-17",59425.03],["2025-09-18",59503.59],["2025-09-19",59510.25],["2025-09-20",59592.54],["2025-09-20",59621.99],["2025-09-21",59668.77],["2025-09-21",59676.09],["2025-09-21",59715.3],["2025-09-22",59717.25],["2025-09-23",59844.45],["2025-09-24",59851.35],["2025-09-25",59875.59],["2025-09-26",59895.14],["2025-09-27",59930.45],["2025-09-27",60086.11],["2025-09-29",60125.43],["2025-09-30",60178.76],["2025-10-01",62728.13],["2025-10-02",62807.29],["2025-10-04",62823.66],["2025-10-06",63100.89],["2025-10-07",63116.62],["2025-10-09",63261.73],["2025-10-09",63387.5],["2025-10-11",63532.52],["2025-10-11",63560.48],["2025-10-13",63583.5],["2025-10-14",63724.62],["2025-10-15",63727.06],["2025-10-16",63828.81],["2025-10-17",63913.97],["2025-10-18",63987.35],["2025-10-18",64117.76],["2025-10-19",64142.19],["2025-10-19",64163.44],["2025-10-21",64262.49],["2025-10-21",66671.46],["2025-10-22",66891.21],["2025-10-24",66920.37],["2025-10-25",67187.4],["2025-10-25",67688.1],["2025-10-26",67704.81],["2025-10-26",67708.94],["2025-10-27",67862.54],["2025-10-29",67904.85],["2025-10-29",67992.03],["2025-10-30",68020.9],["2025-10-31",68049.64],["2025-11-01",68424.29],["2025-11-02",68482.54],["2025-11-02",68883.9],["2025-11-02",68936.07],["2025-11-03",69282.78],["2025-11-04",69608.86],["2025-11-05",69609.39],["2025-11-05",69616.42],["2025-11-06",69659.4],["2025-11-07",69674.66],["2025-11-08",69762.99],["2025-11-08",69776.37],["2025-11-08",70289.6],["2025-11-09",70295.89],["2025-11-09",70313.42],["2025-11-10",70347.99],["2025-11-10",70360.93],["2025-11-10",70439.92],["2025-11-11",70473.19],["2025-11-12",70575.88],["2025-11-13",70605.47],["2025-11-13",70933.01],["2025-11-14",71132.07],["2025-11-14",71389.11],["2025-11-15",71425.29],["2025-11-15",71521.71],["2025-11-16",71548.57],["2025-11-16",71659.95],["2025-11-17",71667.29],["2025-11-17",72717.62],["2025-11-18",72798.19],["2025-11-19",73282.69],["2025-11-20",73289.37],["2025-11-20",73422.34],["2025-11-21",73628.5],["2025-11-22",73640.48],["2025-11-22",73714.53],["2025-11-22",73785.46],["2025-11-22",73826.89],["2025-11-23",73861.47],["2025-11-23",73897.63],["2025-11-23",74265.47],["2025-11-24",74296.31],["2025-11-25",74302.64],["2025-11-25",74318.9],["2025-11-25",74543.07],["2025-11-26",74880.23],["2025-11-26",75161.14],["2025-11-27",75188.07],["2025-11-27",75371.5],["2025-11-28",75422.56],["2025-11-28",75435.44],["2025-11-29",75488.17],["2025-11-30",75639.29],["2025-11-30",75645.31],["2025-12-01",75645.46],["2025-12-01",75740.88],["2025-12-01",75796.04],["2025-12-01",75819.38],["2025-12-02",76035.13],["2025-12-03",76204.87],["2025-12-04",77125.42],["2025-12-05",78261.36],["2025-12-06",78391.27],["2025-12-06",78398.16],["2025-12-06",78464.55],["2025-12-07",79264.03],["2025-12-07",79323.79],["2025-12-08",79751.99],["2025-12-08",79792.91],["2025-12-09",79826.69],["2025-12-10",80229.87],["2025-12-10",80248.61],["2025-12-11",80557.63],["2025-12-12",80675.46],["2025-12-12",80782.87],["2025-12-13",80786.99],["2025-12-13",80979.25],["2025-12-14",81057.54],["2025-12-14",81173.04],["2025-12-15",81585.84],["2025-12-15",81595.37],["2025-12-15",81748.51],["2025-12-16",81781.01],["2025-12-17",81816.36],["2025-12-17",82129.08],["2025-12-18",82399.49],["2025-12-19",82491.45],["2025-12-20",82493.4],["2025-12-20",82494.78],["2025-12-21",82656.79],["2025-12-21",82696.89],["2025-12-22",82745.18],["2025-12-22",82753.87],["2025-12-23",82783.72],["2025-12-24",82874.07],["2025-12-26",83324.78],["2025-12-26",83402.58],["2025-12-27",83486.45],["2025-12-27",83677.66],["2025-12-28",83680.85],["2025-12-28",83874.5],["2025-12-29",83986.55],["2025-12-30",83990.22],["2025-12-31",84523.45],["2026-01-01",84843.34],["2026-01-01",85132.48],["2026-01-01",85579.73],["2026-01-02",85721.48],["2026-01-03",85746.28],["2026-01-04",85748.83],["2026-01-04",85764.58],["2026-01-05",85766.77],["2026-01-05",85767.35],["2026-01-05",85767.52],["2026-01-06",85863.56],["2026-01-06",85908.2],["2026-01-06",85955.21],["2026-01-07",85988.66],["2026-01-07",85996.19],["2026-01-07",86013.42],["2026-01-08",86257.96],["2026-01-08",86272.23],["2026-01-08",86325.0],["2026-01-09",86537.4],["2026-01-09",86539.9],["2026-01-10",86541.34],["2026-01-10",86779.99],["2026-01-11",86783.51],["2026-01-11",86804.98],["2026-01-11",86882.02],["2026-01-12",87050.42],["2026-01-12",87109.02],["2026-01-13",87428.15],["2026-01-13",87428.38],["2026-01-14",87428.63],["2026-01-14",87430.45],["2026-01-14",87529.08],["2026-01-14",87553.01],["2026-01-15",87588.82],["2026-01-15",87612.55],["2026-01-15",87645.61],["2026-01-16",87653.61],["2026-01-16",87709.3],["2026-01-17",87741.76],["2026-01-18",87773.65],["2026-01-18",87777.91],["2026-01-18",87817.99],["2026-01-19",88043.6],["2026-01-20",88095.38],["2026-01-21",88114.11],["2026-01-21",88135.51],["2026-01-21",88174.13],["2026-01-22",88399.22],["2026-01-22",88456.82],["2026-01-23",88472.92],["2026-01-23",88480.19],["2026-01-24",88483.28],["2026-01-24",88497.1],["2026-01-24",88582.66],["2026-01-24",88669.08],["2026-01-25",88682.47],["2026-01-25",88686.42],["2026-01-25",88731.82],["2026-01-25",88850.76],["2026-01-26",88882.01],["2026-01-26",88905.3],["2026-01-26",89057.97],["2026-01-27",89100.52],["2026-01-27",89354.32],["2026-01-28",89503.7],["2026-01-29",89657.32],["2026-01-29",89679.65],["2026-01-30",89695.1],["2026-01-30",89766.49],["2026-02-01",89776.16],["2026-02-01",89795.27],["2026-02-02",89835.06],["2026-02-02",89836.93],["2026-02-02",89861.94],["2026-02-02",89866.02],["2026-02-03",89891.04],["2026-02-03",89896.77],["2026-02-03",89921.33],["2026-02-04",89929.92],["2026-02-04",89930.47],["2026-02-05",89936.38],["2026-02-06",89944.94],["2026-02-06",90698.82],["2026-02-07",90715.42],["2026-02-08",90723.68],["2026-02-08",90774.07],["2026-02-09",90779.78],["2026-02-09",91044.05],["2026-02-09",91044.42],["2026-02-10",91128.06],["2026-02-10",91207.66],["2026-02-10",91217.85],["2026-02-10",91248.12],["2026-02-11",91341.48],["2026-02-11",91572.54],["2026-02-12",91577.18],["2026-02-12",91728.75],["2026-02-13",92042.98],["2026-02-13",92285.26],["2026-02-13",92433.43],["2026-02-13",92531.1],["2026-02-14",92541.32],["2026-02-14",92543.9],["2026-02-15",92685.84],["2026-02-15",92798.22],["2026-02-15",92868.95],["2026-02-15",92897.48],["2026-02-16",93110.92],["2026-02-16",93379.72],["2026-02-17",93660.04],["2026-02-17",93999.28],["2026-02-17",94046.39],["2026-02-17",94050.12],["2026-02-18",94375.17],["2026-02-18",94618.25],["2026-02-18",94649.95],["2026-02-18",94775.45],["2026-02-18",94795.54],["2026-02-18",94834.44],["2026-02-19",94966.77],["2026-02-19",95194.09],["2026-02-20",95315.96],["2026-02-20",95367.79],["2026-02-21",95404.74],["2026-02-21",95666.53],["2026-02-21",95682.44],["2026-02-22",95765.0],["2026-02-22",95779.5],["2026-02-22",95855.74],["2026-02-23",95859.52],["2026-02-23",95866.99],["2026-02-24",95941.9],["2026-02-24",95970.39],["2026-02-25",96001.92],["2026-02-25",96026.78],["2026-02-25",96032.09],["2026-02-26",96159.3],["2026-02-26",96161.41],["2026-02-26",96173.79],["2026-02-26",96174.7],["2026-02-27",96211.14],["2026-02-27",96421.2],["2026-02-27",96482.82],["2026-02-27",96518.49],["2026-02-28",96529.07],["2026-02-28",96538.46],["2026-02-28",96617.65],["2026-03-01",96806.92],["2026-03-01",96889.04],["2026-03-02",97021.48],["2026-03-02",97023.1],["2026-03-02",97024.37],["2026-03-02",97024.61],["2026-03-03",97030.49],["2026-03-04",97114.84],["2026-03-04",97289.36],["2026-03-04",97474.87],["2026-03-05",97477.3],["2026-03-05",97500.75],["2026-03-05",97505.32],["2026-03-06",97550.29],["2026-03-06",98266.24],["2026-03-07",98308.2],["2026-03-07",98309.41],["2026-03-07",98347.81],["2026-03-07",98549.87],["2026-03-08",98625.98],["2026-03-08",98911.73],["2026-03-08",98958.88],["2026-03-08",98970.91],["2026-03-09",98990.69],["2026-03-10",99061.38],["2026-03-10",99380.84],["2026-03-10",99385.4],["2026-03-11",99396.83],["2026-03-12",99464.44],["2026-03-12",99608.02],["2026-03-12",100351.98],["2026-03-12",100474.43],["2026-03-13",100508.67],["2026-03-13",101466.07],["2026-03-14",101554.31],["2026-03-14",102489.13],["2026-03-14",102507.04],["2026-03-14",102521.11],["2026-03-15",102559.38],["2026-03-15",102562.61],["2026-03-15",102563.56],["2026-03-16",102636.59],["2026-03-16",102698.9],["2026-03-16",102726.16],["2026-03-17",103038.16],["2026-03-17",103038.46],["2026-03-17",103050.95],["2026-03-18",103315.38],["2026-03-18",103322.73],["2026-03-19",103450.13],["2026-03-19",103525.78],["2026-03-19",103538.14],["2026-03-19",103845.06],["2026-03-20",103876.87],["2026-03-20",104394.68],["2026-03-20",104522.56],["2026-03-21",104536.6],["2026-03-21",104570.23],["2026-03-21",104672.03],["2026-03-22",104818.08],["2026-03-22",104951.26],["2026-03-23",105008.55],["2026-03-24",105261.44],["2026-03-24",105264.19],["2026-03-25",105466.35],["2026-03-25",105513.98],["2026-03-25",105547.0],["2026-03-26",105774.6],["2026-03-26",105782.33],["2026-03-27",105791.34],["2026-03-27",105799.31],["2026-03-27",105811.83],["2026-03-28",105816.93],["2026-03-28",105817.25],["2026-03-29",105874.06],["2026-03-30",105877.29],["2026-03-31",105890.53],["2026-03-31",106022.04],["2026-04-01",106127.15],["2026-04-01",106333.75],["2026-04-01",106868.95],["2026-04-02",106875.18],["2026-04-02",106908.41],["2026-04-02",106954.28],["2026-04-03",107162.02],["2026-04-03",107209.04],["2026-04-04",107276.64],["2026-04-04",107287.96],["2026-04-05",107293.32],["2026-04-05",107295.8],["2026-04-06",107299.85],["2026-04-06",107320.03],["2026-04-06",107331.49],["2026-04-06",107332.02],["2026-04-07",107332.66],["2026-04-07",107332.7],["2026-04-07",107559.56],["2026-04-07",107569.35],["2026-04-08",108340.86],["2026-04-08",108356.22],["2026-04-08",108488.62],["2026-04-09",108508.75],["2026-04-09",108648.66],["2026-04-09",108666.38],["2026-04-09",108667.78],["2026-04-10",108692.27],["2026-04-11",108820.15],["2026-04-12",108824.41],["2026-04-13",108934.71],["2026-04-13",108936.97],["2026-04-13",108992.93],["2026-04-14",109003.88],["2026-04-14",109004.87],["2026-04-15",109014.41],["2026-04-15",109015.14],["2026-04-15",109023.93],["2026-04-15",109094.48],["2026-04-16",109131.36],["2026-04-16",109185.49],["2026-04-16",109188.99],["2026-04-17",109271.87],["2026-04-17",109274.15],["2026-04-18",109276.57],["2026-04-18",109286.93],["2026-04-18",109294.27],["2026-04-19",109370.63],["2026-04-19",109384.78],["2026-04-19",109408.96],["2026-04-19",109441.14],["2026-04-20",109449.95],["2026-04-21",109597.63],["2026-04-21",109628.61],["2026-04-21",110417.21],["2026-04-22",110417.72],["2026-04-22",110469.8],["2026-04-22",110768.36],["2026-04-23",110804.52],["2026-04-24",110981.14],["2026-04-24",110981.19],["2026-04-24",111062.31],["2026-04-24",111256.51],["2026-04-24",111261.99],["2026-04-25",111482.46],["2026-04-25",111487.23],["2026-04-25",111496.05],["2026-04-26",111497.52],["2026-04-27",111510.7],["2026-04-27",111521.37],["2026-04-27",111531.18],["2026-04-27",111537.78],["2026-04-28",111566.89],["2026-04-29",111642.47],["2026-04-29",111646.63],["2026-04-30",111712.44],["2026-04-30",111712.79],["2026-04-30",111745.59],["2026-05-01",112975.42],["2026-05-01",112975.51],["2026-05-01",113035.76],["2026-05-02",113066.45],["2026-05-02",113075.52],["2026-05-03",113198.35],["2026-05-03",113205.43],["2026-05-03",113226.09],["2026-05-04",113236.1],["2026-05-04",113236.39],["2026-05-05",113322.45],["2026-05-05",113334.16],["2026-05-06",113359.82],["2026-05-06",113577.21],["2026-05-07",113584.16],["2026-05-07",113584.75],["2026-05-07",113628.34],["2026-05-07",113636.17],["2026-05-08",113643.69],["2026-05-08",113646.42],["2026-05-09",113841.14],["2026-05-09",113875.56],["2026-05-09",116463.64],["2026-05-10",116479.06],["2026-05-10",116480.47],["2026-05-10",116496.7],["2026-05-11",116588.96],["2026-05-11",116589.63],["2026-05-11",116589.93],["2026-05-12",116945.01],["2026-05-12",116987.54],["2026-05-13",117024.25],["2026-05-14",117262.05],["2026-05-14",117469.15],["2026-05-14",117495.62],["2026-05-15",117595.22],["2026-05-15",117621.91],["2026-05-16",117671.8],["2026-05-16",117705.9],["2026-05-16",118044.89],["2026-05-17",118054.3],["2026-05-17",118173.39],["2026-05-18",118204.01],["2026-05-18",118744.37],["2026-05-19",118754.44],["2026-05-19",118756.2],["2026-05-19",118756.65],["2026-05-20",118835.1],["2026-05-20",118846.24],["2026-05-20",118868.89],["2026-05-20",118882.0],["2026-05-21",118884.27],["2026-05-21",119149.84],["2026-05-21",119150.48],["2026-05-22",119214.87],["2026-05-22",119216.28],["2026-05-22",119224.1],["2026-05-22",119271.7],["2026-05-23",119292.57],["2026-05-24",119296.6],["2026-05-24",119373.32],["2026-05-25",120027.68],["2026-05-26",120028.5],["2026-05-27",120044.14],["2026-05-27",120046.68],["2026-05-28",120424.56],["2026-05-28",120442.06],["2026-05-29",120449.4],["2026-05-30",120464.5],["2026-05-30",120465.48],["2026-06-01",120469.49],["2026-06-01",120594.22],["2026-06-01",120599.32],["2026-06-02",120602.54],["2026-06-02",120628.84],["2026-06-03",120847.22],["2026-06-03",120853.17],["2026-06-04",120908.56],["2026-06-04",120916.65],["2026-06-04",120927.11],["2026-06-05",120942.79],["2026-06-05",120970.16],["2026-06-06",120971.26],["2026-06-06",120973.12],["2026-06-06",120981.91],["2026-06-07",121238.23],["2026-06-07",121281.89],["2026-06-08",121291.28],["2026-06-08",121305.17],["2026-06-09",121317.0],["2026-06-09",121383.93],["2026-06-09",121495.75],["2026-06-10",121512.3],["2026-06-10",121514.06],["2026-06-10",121589.69],["2026-06-11",121594.57],["2026-06-11",121614.02],["2026-06-11",121693.37],["2026-06-12",121693.61],["2026-06-12",121695.7],["2026-06-13",121695.86],["2026-06-13",121852.39],["2026-06-14",121960.36],["2026-06-14",121983.14],["2026-06-14",121984.38],["2026-06-14",121987.12],["2026-06-15",122189.77],["2026-06-16",122268.9],["2026-06-16",122269.07],["2026-06-17",122273.59],["2026-06-17",122366.55],["2026-06-17",122371.45],["2026-06-19",122390.14],["2026-06-19",122392.8],["2026-06-19",122395.7],["2026-06-19",122406.37],["2026-06-20",122550.13],["2026-06-21",123637.6],["2026-06-23",123652.42],["2026-06-24",125182.89],["2026-06-24",125215.62],["2026-06-24",125218.2],["2026-06-25",125303.98],["2026-06-25",125321.27],["2026-06-26",125442.05],["2026-06-27",125527.1],["2026-06-27",125566.5],["2026-06-28",125865.65],["2026-06-28",125873.46],["2026-06-29",125874.21],["2026-06-29",125885.96],["2026-06-30",125886.35],["2026-06-30",125987.25],["2026-06-30",125994.67],["2026-07-01",126029.78],["2026-07-01",126213.09],["2026-07-04",126216.53],["2026-07-04",126232.35],["2026-07-05",126233.32],["2026-07-06",126252.49],["2026-07-07",126253.46],["2026-07-07",126324.5],["2026-07-08",126337.44],["2026-07-08",126342.84],["2026-07-08",126377.94],["2026-07-09",126620.66],["2026-07-10",126669.12],["2026-07-11",126687.11],["2026-07-12",126688.76],["2026-07-13",126838.51],["2026-07-14",126839.83],["2026-07-15",127794.51],["2026-07-16",127808.48],["2026-07-16",127822.34],["2026-07-17",127829.1],["2026-07-17",127978.99],["2026-07-17",128054.97],["2026-07-18",128078.14],["2026-07-18",128132.15],["2026-07-19",128205.43],["2026-07-19",128294.18],["2026-07-20",128399.63],["2026-07-21",128436.87],["2026-07-22",128437.59],["2026-07-22",128605.21],["2026-07-22",128610.1],["2026-07-23",128612.61],["2026-07-23",128616.19],["2026-07-24",128628.42],["2026-07-24",128631.55],["2026-07-25",128635.02],["2026-07-25",128637.27],["2026-07-26",128663.93],["2026-07-27",128714.38],["2026-07-27",128717.95],["2026-07-29",128728.52],["2026-07-30",128934.56],["2026-07-31",128962.65],["2026-07-31",128993.56],["2026-07-31",128997.8],["2026-08-01",129090.73],["2026-08-01",129120.46],["2026-08-02",129120.7],["2026-08-02",129120.97],["2026-08-02",129145.33],["2026-08-02",129149.14],["2026-08-03",129158.99],["2026-08-04",129159.3],["2026-08-04",129159.79],["2026-08-05",129498.79],["2026-08-05",129500.91],["2026-08-07",129501.27],["2026-08-07",129802.92],["2026-08-07",129830.42],["2026-08-08",129840.91],["2026-08-09",129842.5],["2026-08-10",129851.64],["2026-08-10",129853.27],["2026-08-10",129864.83],["2026-08-11",129876.53],["2026-08-12",129876.71],["2026-08-12",129882.71],["2026-08-13",129884.53],["2026-08-14",129899.18],["2026-08-14",129907.57],["2026-08-16",129911.01],["2026-08-16",129927.59],["2026-08-17",129941.28],["2026-08-18",129951.99],["2026-08-19",129960.65],["2026-08-19",129961.15],["2026-08-19",129970.08],["2026-08-20",129977.04],["2026-08-20",129985.64],["2026-08-21",129986.81],["2026-08-21",129987.89],["2026-08-21",129989.02],["2026-08-24",130005.09],["2026-08-24",130005.72],["2026-08-24",130005.74]],"mm_sens":[{"half_spread":0.005,"fill_share":0.05,"total_pnl":34245.2025528553,"n_markets_active":3074},{"half_spread":0.005,"fill_share":0.15,"total_pnl":81462.37603694903,"n_markets_active":3074},{"half_spread":0.005,"fill_share":0.3,"total_pnl":132339.52633079645,"n_markets_active":3074},{"half_spread":0.01,"fill_share":0.05,"total_pnl":56895.78172674561,"n_markets_active":3074},{"half_spread":0.01,"fill_share":0.15,"total_pnl":130005.73444264341,"n_markets_active":3074},{"half_spread":0.01,"fill_share":0.3,"total_pnl":207049.88574739735,"n_markets_active":3074},{"half_spread":0.02,"fill_share":0.05,"total_pnl":95895.96961569459,"n_markets_active":3074},{"half_spread":0.02,"fill_share":0.15,"total_pnl":210656.33981426028,"n_markets_active":3074},{"half_spread":0.02,"fill_share":0.3,"total_pnl":328844.8255078232,"n_markets_active":3074}]};
+
+function renderStepChart(containerId, curve, color, colorWash, yLabel, yFmt, yMin, extraInfo) {
+  const W = 960, marginL = 66, marginR = 20, marginT = 16, marginB = 30;
+  const plotW = W - marginL - marginR, H = 260, plotH = H - marginT - marginB;
+  const n = curve.length;
+  const vals = curve.map(d => d[1]);
+  const yMax = Math.max(...vals) * 1.08;
+  const yLo = yMin !== undefined ? yMin : Math.min(0, Math.min(...vals) * 1.05);
+  const xAt = i => marginL + (i / (n - 1)) * plotW;
+  const yAt = v => marginT + plotH - ((v - yLo) / (yMax - yLo)) * plotH;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${yLabel} over time" id="${containerId}-svg">`;
+  const ticks = 4;
+  for (let t = 0; t <= ticks; t++) {
+    const val = yLo + (yMax - yLo) * t / ticks;
+    const y = yAt(val);
+    svg += `<line class="grid-line" x1="${marginL}" x2="${W-marginR}" y1="${y}" y2="${y}"/>`;
+    svg += `<text class="axis-label" x="${marginL-10}" y="${y+3}" text-anchor="end">${yFmt(val)}</text>`;
+  }
+  if (yLo < 0 && yMax > 0) {
+    const y0 = yAt(0);
+    svg += `<line x1="${marginL}" x2="${W-marginR}" y1="${y0}" y2="${y0}" stroke="var(--border-strong)" stroke-width="1"/>`;
+  }
+
+  // step path (horizontal-then-vertical between points)
+  let path = `M${xAt(0)} ${yAt(curve[0][1])} `;
+  let area = `M${xAt(0)} ${yAt(yLo > 0 ? yLo : 0)} L${xAt(0)} ${yAt(curve[0][1])} `;
+  for (let i = 1; i < n; i++) {
+    const xPrev = xAt(i - 1), x = xAt(i), yPrev = yAt(curve[i-1][1]), y = yAt(curve[i][1]);
+    path += `L${x} ${yPrev} L${x} ${y} `;
+    area += `L${x} ${yPrev} L${x} ${y} `;
+  }
+  area += `L${xAt(n-1)} ${yAt(yLo > 0 ? yLo : 0)} Z`;
+  svg += `<path d="${area}" fill="${colorWash}" stroke="none"/>`;
+  svg += `<path d="${path}" fill="none" stroke="${color}" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>`;
+
+  curve.forEach((d, i) => {
+    if (n > 60 && i !== 0 && i !== n - 1) return; // only mark discrete trade points on small series
+    const r = (i === 0 || i === n - 1) ? 4.5 : 3.5;
+    svg += `<circle class="pt" data-i="${i}" cx="${xAt(i)}" cy="${yAt(d[1])}" r="${r}" fill="${color}" stroke="var(--surface-raised)" stroke-width="2" style="cursor:pointer"/>`;
+  });
+  const last = curve[n-1];
+  svg += `<text x="${xAt(n-1)-6}" y="${yAt(last[1])-12}" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="12" font-weight="600" fill="${color}">${yFmt(last[1])}</text>`;
+
+  const xTickIdx = [0, Math.round((n-1)*0.28), Math.round((n-1)*0.53), Math.round((n-1)*0.78), n-1];
+  xTickIdx.forEach(i => {
+    svg += `<text class="axis-label" x="${xAt(i)}" y="${H-6}" text-anchor="middle">${fmtDate(curve[i][0])}</text>`;
+  });
+  svg += `</svg>`;
+  document.getElementById(containerId).innerHTML = svg;
+
+  document.getElementById(containerId).querySelectorAll('.pt').forEach(el => {
+    const i = +el.dataset.i;
+    const d = curve[i];
+    const extra = extraInfo && extraInfo[i]
+      ? `<div class="t-head" style="margin-top:5px;">${extraInfo[i].title}</div>
+         <div class="t-row"><span class="k">Edge</span><span>${extraInfo[i].profit_frac.toFixed(2)}%</span></div>
+         <div class="t-row"><span class="k">Stake</span><span>${fmtMoney(extraInfo[i].stake)}</span></div>
+         <div class="t-row"><span class="k">P&amp;L</span><span>${fmtMoney(extraInfo[i].pnl)}</span></div>`
+      : '';
+    el.addEventListener('mouseenter', e => showTip(e, `<div class="t-head">${fmtDate(d[0])}</div>
+      <div class="t-row"><span class="k">${yLabel}</span><span>${yFmt(d[1])}</span></div>${extra}`));
+    el.addEventListener('mousemove', e => showTip(e, tooltip.innerHTML));
+    el.addEventListener('mouseleave', hideTip);
+  });
+}
+
+const arbExtra = [null, ...COMPANION.arb_trades];
+renderStepChart('chart-arb', COMPANION.arb_curve, 'var(--series-arb)', 'var(--series-arb-wash)',
+  'Equity', fmtMoney, 9500, arbExtra);
+renderStepChart('chart-mm', COMPANION.mm_curve, 'var(--series-mm)', 'var(--series-mm-wash)',
+  'Cumulative P&L', fmtMoney, 0);
+
+function renderArbTable() {
+  const rows = COMPANION.arb_all.map(r => {
+    const tag = r.arb_found
+      ? `<span class="tag" style="background:var(--series-arb-wash);color:var(--series-arb);">ARB FOUND</span>`
+      : `<span class="tag base">none</span>`;
+    const pct = r.arb_found ? `${r.entry_profit_pct.toFixed(2)}%` : `&mdash;`;
+    return `<tr>
+      <td>${r.title}</td><td>${r.n_legs}</td><td>${tag}</td><td>${pct}</td>
+      <td>${r.max_profit_pct.toFixed(2)}%</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('table-arb').innerHTML = `
+    <thead><tr><th style="text-align:left;">Event</th><th>Legs</th><th>Result</th><th>Entry edge</th><th>Best observed</th></tr></thead>
+    <tbody>${rows}</tbody>`;
+}
+renderArbTable();
+
+function renderMmTable() {
+  const base = COMPANION.mm_sens.find(s => s.half_spread === 0.01 && s.fill_share === 0.15);
+  const rows = COMPANION.mm_sens.map(s => {
+    const isBase = s === base;
+    return `<tr class="${isBase ? 'is-optimal' : ''}">
+      <td>$${s.half_spread.toFixed(3)}${isBase ? ' <span class="tag opt">base case</span>' : ''}</td>
+      <td>${(s.fill_share*100).toFixed(0)}%</td>
+      <td>${fmtMoney(s.total_pnl)}</td>
+      <td>${s.n_markets_active.toLocaleString()}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('table-mm').innerHTML = `
+    <thead><tr><th style="text-align:left;">Half-spread</th><th>Fill share</th><th>Total P&amp;L</th><th>Markets active</th></tr></thead>
+    <tbody>${rows}</tbody>`;
+}
+renderMmTable();
 </script>

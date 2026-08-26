@@ -9,20 +9,31 @@ estimate from the one thing that *is* recoverable historically -- the
 public trade-print tape (data-api /trades) -- and states its assumptions as
 assumptions, not measurements.
 
-Model: for a fixed assumed half-spread and an assumed "fill share" (the
-fraction of each real trade's size a resting maker quote is assumed to
-capture), every captured unit is priced at the trade print improved by the
-half-spread, and held to the market's resolution (no active inventory
-hedging modeled -- unrealistic in the conservative direction, since a real
-MM skews quotes to manage inventory, so this likely overstates the model's
-own directional risk rather than understating it). Per captured share:
-  taker BUY (MM sells)  -> pnl = (price + half_spread) - resolved_payout
-  taker SELL (MM buys)  -> pnl = resolved_payout - (price - half_spread)
-Summed across all captured units, this is algebraically spread-capture plus
-whatever net directional inventory imbalance the trade flow left behind --
-no order-book simulation, no queue-position modeling, no real fill
-probability. Run as a sensitivity grid over (half_spread, fill_share), not
-a single point estimate, precisely because both are assumptions.
+Model: pure spread capture. For a fixed assumed half-spread and an assumed
+"fill share" (the fraction of each real trade's size a resting maker quote
+is assumed to capture), every captured unit earns exactly the half-spread,
+full stop -- no inventory-direction term.
+
+Two earlier, more elaborate versions of this model were tried and rejected
+before landing here, and it's worth recording why, since both looked
+plausible before the numbers gave them away:
+  1. Mark inventory to the market's RESOLVED payout (0 or 1). This let a
+     handful of "decays to zero" longshot markets dominate the total with
+     pure directional P&L that has nothing to do with market-making --
+     $133k of a $428k total from one Florida-senator-appointment longshot.
+  2. Mark inventory to the NEXT observed trade print instead. This still
+     inflated results ($282k), because consecutive raw trade prints
+     naturally alternate between hitting the real bid and the real ask
+     (bid-ask bounce) even with a constant fair value -- using that bounce
+     as a "mark" double-counts a spread that already exists in the prints,
+     on top of the model's own assumed half-spread.
+Removing the inventory term entirely avoids both failure modes. It also
+means this model is a deliberate BEST CASE: it assumes perfect, instant,
+costless flattening of every position, i.e. zero adverse selection. Real
+market makers lose money precisely when informed flow moves the market
+against inventory they haven't unwound yet; that risk is real and this
+number does not include it, which is disclosed prominently in the report
+rather than papered over with an unreliable price-based correction.
 
 Reuses the SAME market population and (already disk-cached, no new network
 calls) trade tapes as the Final-1% backtest, via fetch_market_trades.
@@ -65,7 +76,31 @@ def load_market_meta():
     return meta
 
 
+MAX_RELATIVE_SPREAD = 0.3  # a quoted half-spread can't exceed 30% of the distance to 0 or 1
+
+
 def market_pnl(trades, resolved_idx, half_spread, fill_share):
+    """Pure spread capture: every captured unit earns the half_spread, full
+    stop. See the module docstring for why the two inventory-marking
+    variants tried before this were rejected (both leaked spurious
+    directional profit -- one from resolution windfalls on longshots, one
+    from double-counting real trade-print bid-ask bounce as a price move).
+    resolved_idx is accepted but unused -- kept in the signature so the
+    call site doesn't need to change if a sounder inventory model is added
+    later.
+
+    A flat, price-independent half_spread is itself unrealistic at the
+    extremes this dataset is full of (it's built from markets that crossed
+    $0.99+, so the complementary side sits near $0.001-0.01 for most of the
+    market's life): a $0.01 absolute spread on a $0.001 token is a 1,000%+
+    relative spread, and combined with a fixed-dollar notional cap this
+    let captured share counts explode at tiny prices (25/0.001 = 25,000
+    shares from one $25 trade) and turned a handful of longshot markets
+    into an implied 2,600%+ total return. The effective half-spread used is
+    therefore capped at MAX_RELATIVE_SPREAD of the distance to whichever
+    boundary (0 or 1) is closer -- still an assumption, but one that keeps
+    quoted spreads sane in dollar terms near the extremes instead of
+    silently blowing up."""
     total = 0.0
     n_captured = 0
     captured_notional = 0.0
@@ -74,22 +109,17 @@ def market_pnl(trades, resolved_idx, half_spread, fill_share):
             price = float(t["price"])
             size = float(t["size"])
             side = t["side"]
-            outcome_idx = int(t.get("outcomeIndex", 0))
         except (KeyError, ValueError, TypeError):
             continue
-        if price <= 0 or price >= 1 or size <= 0:
+        if price <= 0 or price >= 1 or size <= 0 or side not in ("BUY", "SELL"):
+            continue
+        eff_half_spread = min(half_spread, MAX_RELATIVE_SPREAD * price, MAX_RELATIVE_SPREAD * (1 - price))
+        if eff_half_spread <= 0:
             continue
         shares = min(size * fill_share, MAX_NOTIONAL_PER_TRADE / price)
         if shares <= 0:
             continue
-        resolved_payout = 1.0 if outcome_idx == resolved_idx else 0.0
-        if side == "BUY":
-            per_share = (price + half_spread) - resolved_payout
-        elif side == "SELL":
-            per_share = resolved_payout - (price - half_spread)
-        else:
-            continue
-        total += shares * per_share
+        total += shares * eff_half_spread
         n_captured += 1
         captured_notional += shares * price
     return total, n_captured, captured_notional

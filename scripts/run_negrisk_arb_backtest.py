@@ -160,7 +160,7 @@ def find_arb_entry(event, legs):
         frames.append(s)
     combined = pmf.pd.concat(frames, axis=1).sort_index().ffill()
     combined = combined.dropna(how="any")  # only once every leg has been observed at least once
-    print(f"    [debug] {len(legs)} legs, {n_floored} floored (no trade data), "
+    print(f"    [negrisk] {len(legs)} legs, {n_floored} floored (no trade data), "
           f"{len(combined)} usable grid points", flush=True)
     if combined.empty:
         return None
