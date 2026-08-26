@@ -1,0 +1,33 @@
+{
+  "split_date": "2026-03-02T06:03:19+00:00",
+  "full_sample": {
+    "label": "Full sample",
+    "n_trades": 3364,
+    "n_flips": 7,
+    "n_excluded_trades": 269,
+    "n_excluded_flips": 4,
+    "flip_rate_before": 0.002080856123662307,
+    "flip_rate_after": 0.0009693053311793214,
+    "relative_reduction_pct": 53.41795522732517
+  },
+  "early_half": {
+    "label": "Early half (train period)",
+    "n_trades": 1682,
+    "n_flips": 3,
+    "n_excluded_trades": 47,
+    "n_excluded_flips": 1,
+    "flip_rate_before": 0.0017835909631391202,
+    "flip_rate_after": 0.0012232415902140672,
+    "relative_reduction_pct": 31.416921508664636
+  },
+  "late_half": {
+    "label": "Late half (test period)",
+    "n_trades": 1682,
+    "n_flips": 4,
+    "n_excluded_trades": 222,
+    "n_excluded_flips": 3,
+    "flip_rate_before": 0.0023781212841854932,
+    "flip_rate_after": 0.0006849315068493151,
+    "relative_reduction_pct": 71.1986301369863
+  }
+}
