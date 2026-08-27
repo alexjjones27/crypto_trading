@@ -28,7 +28,7 @@ import polymarket_final_pct as pmf
 from run_kelly_backtest import load, run_sim, DATA_DIR, START_BANKROLL
 from run_flat_stake_backtest import run_flat_sim
 
-WINDOW_S = pmf.DEPTH_WINDOW_S  # 300s, same window as the existing depth-cap proxy
+WINDOW_S = pmf.VWAP_WINDOW_S  # short window: price-impact measurement, not the depth-cap's 300s
 
 
 def liquidity_tier(shares_per_min: float) -> str:
@@ -52,7 +52,7 @@ def main(input_file="trades_maker.csv", out_suffix=""):
         shares = float(r["shares"]) if r["shares"] not in ("", None) else 100.0 / entry_price
         fit = pmf.estimate_vwap_fill(
             r["condition_id"], r["token_id"] if "token_id" in r else None,
-            int(r["entry_dt"].timestamp()), shares, window_s=WINDOW_S,
+            int(r["entry_dt"].timestamp()), entry_price, shares,
         ) if "token_id" in r else None
         if fit is None:
             n_no_data += 1

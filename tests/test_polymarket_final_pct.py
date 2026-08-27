@@ -365,7 +365,7 @@ def test_estimate_vwap_fill_walks_the_tape_in_price_order(monkeypatch):
     ]
     monkeypatch.setattr(pmf, "fetch_market_trades", lambda condition_id: trades)
 
-    r = estimate_vwap_fill("cid", "tok", entry_time_s=1000, desired_shares=60.0)
+    r = estimate_vwap_fill("cid", "tok", entry_time_s=1000, entry_price=0.99, desired_shares=60.0)
     assert r is not None
     # fills 40 @ 0.99 then 20 @ 0.995, in chronological (not price) order
     expected_vwap = (40 * 0.99 + 20 * 0.995) / 60
@@ -379,7 +379,7 @@ def test_estimate_vwap_fill_reports_partial_fill_ratio(monkeypatch):
     trades = [{"asset": "tok", "side": "BUY", "timestamp": 1000, "price": 0.99, "size": 10.0}]
     monkeypatch.setattr(pmf, "fetch_market_trades", lambda condition_id: trades)
 
-    r = estimate_vwap_fill("cid", "tok", entry_time_s=1000, desired_shares=100.0)
+    r = estimate_vwap_fill("cid", "tok", entry_time_s=1000, entry_price=0.99, desired_shares=100.0)
     assert r is not None
     assert r["filled_shares"] == pytest.approx(10.0)
     assert r["fill_ratio"] == pytest.approx(0.10)
@@ -389,7 +389,29 @@ def test_estimate_vwap_fill_reports_partial_fill_ratio(monkeypatch):
 def test_estimate_vwap_fill_returns_none_with_no_matching_trades(monkeypatch):
     import polymarket_final_pct as pmf
     monkeypatch.setattr(pmf, "fetch_market_trades", lambda condition_id: [])
-    assert estimate_vwap_fill("cid", "tok", entry_time_s=1000, desired_shares=10.0) is None
+    assert estimate_vwap_fill("cid", "tok", entry_time_s=1000, entry_price=0.99, desired_shares=10.0) is None
+
+
+def test_estimate_vwap_fill_stops_at_a_price_jump_from_new_information(monkeypatch):
+    # Regression test for a real bug: an earlier version measured 38% "slippage"
+    # on a sports market where the entry print was $0.71 and the next real BUY
+    # print, 89 seconds later, was $0.98 -- the game had resolved in the
+    # meantime (a goal), not an order consuming liquidity. The guard must stop
+    # the walk at that jump rather than average through it.
+    import polymarket_final_pct as pmf
+    trades = [
+        {"asset": "tok", "side": "BUY", "timestamp": 1000, "price": 0.71, "size": 20.0},
+        {"asset": "tok", "side": "BUY", "timestamp": 1089, "price": 0.98, "size": 99.0},  # new info regime
+        {"asset": "tok", "side": "BUY", "timestamp": 1090, "price": 0.99, "size": 5.0},
+    ]
+    monkeypatch.setattr(pmf, "fetch_market_trades", lambda condition_id: trades)
+
+    r = estimate_vwap_fill("cid", "tok", entry_time_s=1000, entry_price=0.71, desired_shares=100.0,
+                            window_s=300, max_price_deviation=0.03)
+    assert r is not None
+    assert r["vwap"] == pytest.approx(0.71)  # only the first print is within the deviation guard
+    assert r["filled_shares"] == pytest.approx(20.0)
+    assert r["fill_ratio"] == pytest.approx(0.20)
 
 
 def test_stratified_sample_is_subset_stable_as_census_grows():

@@ -749,9 +749,13 @@ def estimate_available_shares(
     return float(sum(t.get("size", 0.0) for t in near))
 
 
+VWAP_WINDOW_S = 20            # near-immediate execution, not multi-minute drift -- see docstring
+VWAP_MAX_PRICE_DEVIATION = 0.03  # a print this far from entry_price is a new information regime, not liquidity
+
+
 def estimate_vwap_fill(
-    condition_id: str, token_id: str, entry_time_s: int, desired_shares: float,
-    window_s: int = DEPTH_WINDOW_S,
+    condition_id: str, token_id: str, entry_time_s: int, entry_price: float, desired_shares: float,
+    window_s: int = VWAP_WINDOW_S, max_price_deviation: float = VWAP_MAX_PRICE_DEVIATION,
 ) -> Optional[dict]:
     """Real, data-grounded taker slippage estimate -- not an assumed
     percentage. `estimate_available_shares` already caps position SIZE by
@@ -770,6 +774,21 @@ def estimate_vwap_fill(
     entry_time_s forward (a hypothetical order placed at the signal can
     only consume liquidity that arrives after it, not trades that already
     happened before it existed).
+
+    An earlier version of this function used a 300s window with no price
+    guard and measured a 38% "slippage" on a sports over/under market --
+    tracing it back, the entry print was $0.71 and the next real BUY print
+    was 89 seconds later at $0.98, because the underlying event (almost
+    certainly a goal) had resolved in the meantime. That's genuine price
+    *discovery* (the world changed), not price *impact* (an order
+    consuming the book) -- conflating the two overstates "slippage"
+    enormously on any fast-resolving market. Two guards against it: a much
+    shorter window (VWAP_WINDOW_S, not the depth cap's 300s -- sizing from
+    realized volume tolerates a longer lookback fine, but averaging PRICE
+    over a long window does not), and max_price_deviation, which stops the
+    walk the moment a print lands too far from the actual entry_price to
+    plausibly be the same liquidity event rather than a new information
+    regime.
 
     Returns None if there's no BUY-side trade data at all in the window
     (unknown, not "zero slippage"). `fill_ratio` < 1 means even the
@@ -791,10 +810,13 @@ def estimate_vwap_fill(
     cost = 0.0
     filled = 0.0
     for t in near:
+        price = float(t.get("price", 0.0))
+        if abs(price - entry_price) > max_price_deviation:
+            break  # new information regime, not liquidity this order would have consumed
         take = min(remaining, float(t.get("size", 0.0)))
         if take <= 0:
             continue
-        cost += take * float(t.get("price", 0.0))
+        cost += take * price
         filled += take
         remaining -= take
         if remaining <= 1e-9:
