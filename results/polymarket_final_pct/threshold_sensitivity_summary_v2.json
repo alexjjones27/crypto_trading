@@ -1,0 +1,192 @@
+[
+  {
+    "threshold": 0.7,
+    "n_trades": 3819,
+    "n_flips": 478,
+    "flip_rate_pct": 12.5164,
+    "wilson_95ci_pct": [
+      11.5044,
+      13.6037
+    ],
+    "clopper_pearson_95ci_pct": [
+      11.4828,
+      13.6077
+    ],
+    "flat1pct_final_equity": 35122.37,
+    "flat1pct_total_return_pct": 251.22,
+    "flat1pct_cagr_pct": 44.44,
+    "flat1pct_max_drawdown_pct": 9.45,
+    "flat1pct_sharpe": 3.0
+  },
+  {
+    "threshold": 0.8,
+    "n_trades": 3498,
+    "n_flips": 207,
+    "flip_rate_pct": 5.9177,
+    "wilson_95ci_pct": [
+      5.183,
+      6.749
+    ],
+    "clopper_pearson_95ci_pct": [
+      5.1586,
+      6.7514
+    ],
+    "flat1pct_final_equity": 28328.71,
+    "flat1pct_total_return_pct": 183.29,
+    "flat1pct_cagr_pct": 35.63,
+    "flat1pct_max_drawdown_pct": 5.86,
+    "flat1pct_sharpe": 3.73
+  },
+  {
+    "threshold": 0.9,
+    "n_trades": 3327,
+    "n_flips": 74,
+    "flip_rate_pct": 2.2242,
+    "wilson_95ci_pct": [
+      1.7755,
+      2.7832
+    ],
+    "clopper_pearson_95ci_pct": [
+      1.7504,
+      2.7844
+    ],
+    "flat1pct_final_equity": 17733.68,
+    "flat1pct_total_return_pct": 77.34,
+    "flat1pct_cagr_pct": 18.27,
+    "flat1pct_max_drawdown_pct": 4.31,
+    "flat1pct_sharpe": 3.56
+  },
+  {
+    "threshold": 0.95,
+    "n_trades": 3224,
+    "n_flips": 25,
+    "flip_rate_pct": 0.7754,
+    "wilson_95ci_pct": [
+      0.5258,
+      1.1422
+    ],
+    "clopper_pearson_95ci_pct": [
+      0.5024,
+      1.1426
+    ],
+    "flat1pct_final_equity": 13776.87,
+    "flat1pct_total_return_pct": 37.77,
+    "flat1pct_cagr_pct": 9.85,
+    "flat1pct_max_drawdown_pct": 1.99,
+    "flat1pct_sharpe": 3.28
+  },
+  {
+    "threshold": 0.97,
+    "n_trades": 3189,
+    "n_flips": 14,
+    "flip_rate_pct": 0.439,
+    "wilson_95ci_pct": [
+      0.2617,
+      0.7356
+    ],
+    "clopper_pearson_95ci_pct": [
+      0.2402,
+      0.7355
+    ],
+    "flat1pct_final_equity": 12085.44,
+    "flat1pct_total_return_pct": 20.85,
+    "flat1pct_cagr_pct": 5.71,
+    "flat1pct_max_drawdown_pct": 2.25,
+    "flat1pct_sharpe": 2.72
+  },
+  {
+    "threshold": 0.98,
+    "n_trades": 3146,
+    "n_flips": 6,
+    "flip_rate_pct": 0.1907,
+    "wilson_95ci_pct": [
+      0.0874,
+      0.4155
+    ],
+    "clopper_pearson_95ci_pct": [
+      0.07,
+      0.4146
+    ],
+    "flat1pct_final_equity": 11829.42,
+    "flat1pct_total_return_pct": 18.29,
+    "flat1pct_cagr_pct": 5.05,
+    "flat1pct_max_drawdown_pct": 0.93,
+    "flat1pct_sharpe": 3.94
+  },
+  {
+    "threshold": 0.985,
+    "n_trades": 3129,
+    "n_flips": 5,
+    "flip_rate_pct": 0.1598,
+    "wilson_95ci_pct": [
+      0.0683,
+      0.3735
+    ],
+    "clopper_pearson_95ci_pct": [
+      0.0519,
+      0.3725
+    ],
+    "flat1pct_final_equity": 11549.88,
+    "flat1pct_total_return_pct": 15.5,
+    "flat1pct_cagr_pct": 4.31,
+    "flat1pct_max_drawdown_pct": 0.94,
+    "flat1pct_sharpe": 4.28
+  },
+  {
+    "threshold": 0.99,
+    "n_trades": 3073,
+    "n_flips": 4,
+    "flip_rate_pct": 0.1302,
+    "wilson_95ci_pct": [
+      0.0506,
+      0.3342
+    ],
+    "clopper_pearson_95ci_pct": [
+      0.0355,
+      0.3329
+    ],
+    "flat1pct_final_equity": 10947.18,
+    "flat1pct_total_return_pct": 9.47,
+    "flat1pct_cagr_pct": 2.69,
+    "flat1pct_max_drawdown_pct": 0.97,
+    "flat1pct_sharpe": 2.73
+  },
+  {
+    "threshold": 0.995,
+    "n_trades": 3027,
+    "n_flips": 3,
+    "flip_rate_pct": 0.0991,
+    "wilson_95ci_pct": [
+      0.0337,
+      0.291
+    ],
+    "clopper_pearson_95ci_pct": [
+      0.0204,
+      0.2894
+    ],
+    "flat1pct_final_equity": 10719.64,
+    "flat1pct_total_return_pct": 7.2,
+    "flat1pct_cagr_pct": 2.06,
+    "flat1pct_max_drawdown_pct": 0.96,
+    "flat1pct_sharpe": 2.65
+  },
+  {
+    "threshold": 0.999,
+    "n_trades": 2693,
+    "n_flips": 0,
+    "flip_rate_pct": 0.0,
+    "wilson_95ci_pct": [
+      -0.0,
+      0.1424
+    ],
+    "clopper_pearson_95ci_pct": [
+      0.0,
+      0.1369
+    ],
+    "flat1pct_final_equity": 10121.7,
+    "flat1pct_total_return_pct": 1.22,
+    "flat1pct_cagr_pct": 0.36,
+    "flat1pct_max_drawdown_pct": 0.0,
+    "flat1pct_sharpe": 11.45
+  }
+]

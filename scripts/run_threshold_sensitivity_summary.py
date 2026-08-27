@@ -17,10 +17,10 @@ THRESHOLDS = ["07", "08", "09", "095", "097", "098", "0985", "099", "0995", "099
 THRESHOLD_VALUES = [0.70, 0.80, 0.90, 0.95, 0.97, 0.98, 0.985, 0.99, 0.995, 0.999]
 
 
-def main():
+def main(suffix=""):
     rows = []
     for thr_str, thr_val in zip(THRESHOLDS, THRESHOLD_VALUES):
-        fn = f"trades_maker_thr{thr_str}.csv"
+        fn = f"trades_maker_thr{thr_str}{suffix}.csv"
         path = os.path.join(DATA_DIR, fn)
         if not os.path.exists(path):
             print(f"  (missing {fn}, skipping)")
@@ -52,11 +52,15 @@ def main():
               f"final=${flat['final_equity']:>10,.2f}  CAGR={flat['cagr_pct']:>6.2f}%  "
               f"MaxDD={flat['max_drawdown_pct']:>5.2f}%  Sharpe={flat['sharpe']}")
 
-    out_path = os.path.join(DATA_DIR, "threshold_sensitivity_summary.json")
+    out_path = os.path.join(DATA_DIR, f"threshold_sensitivity_summary{suffix}.json")
     with open(out_path, "w") as f:
         json.dump(rows, f, indent=2)
     print(f"\nsaved {out_path}")
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    p = argparse.ArgumentParser()
+    p.add_argument("--suffix", type=str, default="")
+    args = p.parse_args()
+    main(args.suffix)
