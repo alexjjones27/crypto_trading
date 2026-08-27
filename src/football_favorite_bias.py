@@ -110,22 +110,42 @@ def load_matches(data_dir: str = FOOTBALL_DATA_DIR) -> list[dict]:
     return matches
 
 
-def build_trades(matches: list[dict], threshold: float, resolve_lag_hours: float = 2.0) -> list[dict]:
-    """Filters to matches where the favorite's raw (vig-included) closing
-    implied probability is >= threshold, and builds trade records in the
-    exact schema run_sim/run_flat_sim (scripts/run_kelly_backtest.py,
-    scripts/run_flat_stake_backtest.py) expect. "Betting the favorite at the
-    closing line" is the football analogue of Polymarket's "buy once price
-    crosses the threshold shortly before resolution" -- both are the last
-    tradeable price before the outcome is revealed.
+def build_trades(matches: list[dict], threshold: float, resolve_lag_hours: float = 2.0,
+                  side: str = "favorite") -> list[dict]:
+    """Filters to matches where the FAVORITE's raw (vig-included) closing
+    implied probability is >= threshold (the match-selection criterion never
+    changes with `side`, so favorite and longshot backtests run over the
+    identical population of games and are directly comparable), and builds
+    trade records in the exact schema run_sim/run_flat_sim
+    (scripts/run_kelly_backtest.py, scripts/run_flat_stake_backtest.py)
+    expect. "Betting at the closing line" is the football analogue of
+    Polymarket's "buy once price crosses the threshold shortly before
+    resolution" -- both are the last tradeable price before the outcome is
+    revealed.
+
+    side="favorite" (default): back the lowest-odds outcome, as before.
+    side="longshot": back the highest-odds (least likely) of the OTHER two
+    outcomes instead -- the classic favorite-longshot-bias literature's
+    other side of the same coin. Tests the hypothesis that if the favorite
+    is overpriced, the longshot must be underpriced; see
+    scripts/run_underdog_backtest.py for why that hypothesis doesn't survive
+    contact with the data (both sides lose to the vig, longshot more so).
     """
+    if side not in ("favorite", "longshot"):
+        raise ValueError(f"side must be 'favorite' or 'longshot', got {side!r}")
     trades = []
     for m in matches:
         sides = [("H", m["odds_h"]), ("D", m["odds_d"]), ("A", m["odds_a"])]
         fav_side, fav_odds = min(sides, key=lambda x: x[1])  # lowest odds = favorite
-        price = 1.0 / fav_odds  # raw implied prob, vig included
-        if price < threshold:
+        fav_price = 1.0 / fav_odds  # raw implied prob, vig included
+        if fav_price < threshold:
             continue
+        if side == "favorite":
+            bet_side, bet_odds = fav_side, fav_odds
+        else:
+            non_fav = [s for s in sides if s[0] != fav_side]
+            bet_side, bet_odds = max(non_fav, key=lambda x: x[1])  # longest odds of the rest
+        price = 1.0 / bet_odds
         entry_dt = m["kickoff_dt"]
         trades.append({
             "league": m["league"],
@@ -141,9 +161,9 @@ def build_trades(matches: list[dict], threshold: float, resolve_lag_hours: float
             "depth_capped": False,
             "cap_shares": None,
             "excluded": False,
-            "won": m["ftr"] == fav_side,
-            "fav_side": fav_side,
-            "fav_odds": fav_odds,
+            "won": m["ftr"] == bet_side,
+            "bet_side": bet_side,
+            "bet_odds": bet_odds,
         })
     trades.sort(key=lambda r: r["entry_dt"])
     return trades

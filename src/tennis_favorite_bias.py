@@ -69,6 +69,7 @@ def load_matches(data_dir: str = TENNIS_DATA_DIR) -> list[dict]:
                 "surface": surface,
                 "match_dt": pd.Timestamp(date).to_pydatetime(),
                 "fav_odds": fav_odds,
+                "dog_odds": max(w_odds, l_odds),
                 "fav_won": bool(fav_won),
                 "winner": row.get("Winner", ""), "loser": row.get("Loser", ""),
                 "tournament": row.get("Tournament", ""),
@@ -76,18 +77,33 @@ def load_matches(data_dir: str = TENNIS_DATA_DIR) -> list[dict]:
     return matches
 
 
-def build_trades(matches: list[dict], threshold: float, resolve_lag_hours: float = 3.0) -> list[dict]:
+def build_trades(matches: list[dict], threshold: float, resolve_lag_hours: float = 3.0,
+                  side: str = "favorite") -> list[dict]:
     """Same schema translation as football_favorite_bias.build_trades, feeding
     run_sim/run_flat_sim (scripts/run_kelly_backtest.py,
     scripts/run_flat_stake_backtest.py) unmodified. report_bucket is
     tour+surface (e.g. "ATP-Hard") rather than football's per-league bucket,
     since surface is the analogous real source of heterogeneity in tennis
-    (clay vs. hard vs. grass materially changes how often favorites hold)."""
+    (clay vs. hard vs. grass materially changes how often favorites hold).
+
+    side="favorite" (default): back the lower-odds side, as before.
+    side="longshot": back the OTHER side instead -- unambiguous in tennis's
+    two-outcome market (there's only one other side), unlike football's
+    3-way version of this same parameter. Match selection still keys off the
+    FAVORITE crossing `threshold`, so favorite and longshot backtests run
+    over the identical population of matches. See
+    scripts/run_underdog_backtest.py for what this tests and why it fails.
+    """
+    if side not in ("favorite", "longshot"):
+        raise ValueError(f"side must be 'favorite' or 'longshot', got {side!r}")
     trades = []
     for m in matches:
-        price = 1.0 / m["fav_odds"]
-        if price < threshold:
+        fav_price = 1.0 / m["fav_odds"]
+        if fav_price < threshold:
             continue
+        bet_odds = m["fav_odds"] if side == "favorite" else m["dog_odds"]
+        price = 1.0 / bet_odds
+        won = m["fav_won"] if side == "favorite" else (not m["fav_won"])
         entry_dt = m["match_dt"]
         bucket = f"{m['tour']}-{m['surface']}"
         trades.append({
@@ -103,8 +119,8 @@ def build_trades(matches: list[dict], threshold: float, resolve_lag_hours: float
             "depth_capped": False,
             "cap_shares": None,
             "excluded": False,
-            "won": m["fav_won"],
-            "fav_odds": m["fav_odds"],
+            "won": won,
+            "bet_odds": bet_odds,
         })
     trades.sort(key=lambda r: r["entry_dt"])
     return trades

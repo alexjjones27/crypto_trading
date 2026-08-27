@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Both Sides of the Vig</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Domine:wght@500;600;700&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --page-bg:        #f5f3ee;
+    --surface:        #fbfaf6;
+    --surface-raised: #ffffff;
+    --ink-primary:    #1b1f1a;
+    --ink-secondary:  #55564e;
+    --ink-muted:      #8f8d80;
+    --gridline:       #e3e0d5;
+    --border:         rgba(27,31,26,0.10);
+    --border-strong:  rgba(27,31,26,0.16);
+    --series-fav:     #0d7ea6;
+    --series-dog:     #93325a;
+    --good: #1f7a4d;
+    --good-wash: rgba(31,122,77,0.10);
+    --bad: #a4433a;
+    --bad-wash: rgba(164,67,58,0.09);
+    --info: #6a4fa0;
+    --info-wash: rgba(106,79,160,0.09);
+    --shadow: 0 1px 2px rgba(27,31,26,0.06), 0 8px 24px -12px rgba(27,31,26,0.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page-bg: #0e1012; --surface: #171a1d; --surface-raised: #1c2023;
+      --ink-primary: #f3f2ee; --ink-secondary: #c7c5ba; --ink-muted: #8b897d;
+      --gridline: #2b2e31; --border: rgba(255,255,255,0.09); --border-strong: rgba(255,255,255,0.15);
+      --series-fav: #34a0cc; --series-dog: #c46a8f;
+      --good: #4bbd85; --good-wash: rgba(75,189,133,0.12);
+      --bad: #e08277; --bad-wash: rgba(224,130,119,0.12);
+      --info: #a48fd6; --info-wash: rgba(164,143,214,0.14);
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page-bg: #0e1012; --surface: #171a1d; --surface-raised: #1c2023;
+    --ink-primary: #f3f2ee; --ink-secondary: #c7c5ba; --ink-muted: #8b897d;
+    --gridline: #2b2e31; --border: rgba(255,255,255,0.09); --border-strong: rgba(255,255,255,0.15);
+    --series-fav: #34a0cc; --series-dog: #c46a8f;
+    --good: #4bbd85; --good-wash: rgba(75,189,133,0.12);
+    --bad: #e08277; --bad-wash: rgba(224,130,119,0.12);
+    --info: #a48fd6; --info-wash: rgba(164,143,214,0.14);
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--page-bg); color: var(--ink-primary);
+    font-family: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 56px 24px 90px; }
+  .eyebrow {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--series-fav); margin: 0 0 16px;
+  }
+  h1 {
+    font-family: "Domine", Georgia, serif; font-weight: 600; font-size: clamp(28px, 4.2vw, 40px);
+    line-height: 1.16; letter-spacing: -0.01em; margin: 0 0 18px; text-wrap: balance;
+  }
+  .dek { font-size: 16.5px; line-height: 1.62; color: var(--ink-secondary); max-width: 68ch; margin: 0 0 6px; }
+  .dek b { color: var(--ink-primary); }
+  .meta-row {
+    display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 22px; padding-top: 18px;
+    border-top: 1px solid var(--border); font-family: "IBM Plex Mono", monospace;
+    font-size: 12.5px; color: var(--ink-muted);
+  }
+  .meta-row b { color: var(--ink-secondary); font-weight: 600; }
+
+  .verdict {
+    margin-top: 34px; background: var(--bad-wash); border: 1px solid rgba(164,67,58,0.22);
+    border-radius: 14px; padding: 22px 24px; display: flex; gap: 16px; align-items: flex-start;
+  }
+  .verdict .mark {
+    flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--bad); color: #fff;
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px;
+    font-family: "IBM Plex Mono", monospace;
+  }
+  .verdict h3 { margin: 0 0 6px; font-family: "Domine", Georgia, serif; font-size: 17px; font-weight: 600; color: var(--bad); }
+  .verdict p { margin: 0; font-size: 14.5px; line-height: 1.65; color: var(--ink-secondary); max-width: 66ch; }
+  .verdict p b { color: var(--ink-primary); }
+
+  section.panel {
+    margin-top: 36px; background: var(--surface-raised); border: 1px solid var(--border);
+    border-radius: 16px; padding: 30px 30px 26px; box-shadow: var(--shadow);
+  }
+  .panel h2 { font-family: "Domine", Georgia, serif; font-weight: 600; font-size: 21px; margin: 0 0 8px; }
+  .panel .panel-note { font-size: 14px; color: var(--ink-secondary); line-height: 1.6; max-width: 68ch; margin: 0 0 22px; }
+  .panel .panel-note b { color: var(--ink-primary); }
+  .sub-h {
+    font-family: "Public Sans", sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 0.03em;
+    text-transform: uppercase; color: var(--ink-secondary); margin: 26px 0 12px;
+  }
+  .sub-h:first-of-type { margin-top: 0; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin: 22px 0; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+  .stat .label { font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px; }
+  .stat .value { font-family: "IBM Plex Mono", monospace; font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .stat .sub { font-size: 12px; color: var(--ink-muted); margin-top: 4px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .table-scroll { overflow-x: auto; }
+  th {
+    text-align: left; font-weight: 700; font-size: 11.5px; letter-spacing: 0.03em; text-transform: uppercase;
+    color: var(--ink-muted); padding: 9px 12px; border-bottom: 1px solid var(--border-strong); white-space: nowrap;
+  }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td.num, th.num { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; text-align: right; }
+  td.neg { color: var(--bad); }
+  tr:last-child td { border-bottom: none; }
+
+  .legend { display: flex; gap: 22px; margin: 4px 0 14px; font-size: 12.5px; color: var(--ink-secondary); flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .swatch { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+  .chart-block { position: relative; margin-top: 6px; }
+  .chart-block svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .axis-label { font-family: "IBM Plex Mono", monospace; font-size: 10.5px; fill: var(--ink-muted); }
+  .grid-line { stroke: var(--gridline); stroke-width: 1; }
+  .tooltip {
+    position: fixed; pointer-events: none; z-index: 40; opacity: 0; transition: opacity 0.1s ease;
+    background: var(--surface-raised); border: 1px solid var(--border-strong); border-radius: 8px;
+    padding: 9px 12px; font-size: 12.5px; box-shadow: var(--shadow); max-width: 240px;
+    font-family: "IBM Plex Mono", monospace; color: var(--ink-primary); line-height: 1.6;
+  }
+  .tooltip .t-head { font-family: "Public Sans", sans-serif; font-weight: 600; color: var(--ink-secondary); font-size: 11px; margin-bottom: 3px; }
+  .tooltip .t-row { display: flex; justify-content: space-between; gap: 14px; }
+  .tooltip .t-row .k { color: var(--ink-muted); display: flex; align-items: center; gap: 6px; }
+  .crosshair { stroke: var(--ink-muted); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0; }
+
+  footer { margin-top: 46px; padding-top: 22px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--ink-muted); line-height: 1.7; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Free-Data Backtest &middot; A Hypothesis Tested And Rejected</p>
+  <h1>Both Sides of the Vig</h1>
+  <p class="dek">
+    The football and tennis reports both found the favorite slightly overpriced (win rate a touch below the
+    quoted price). The obvious next question: if the favorite is overpriced, isn't the <b>other</b> side
+    &mdash; the longshot &mdash; underpriced, and therefore worth backing? Same closing-line data, same games,
+    same Kelly/flat engines, opposite side of the bet.
+  </p>
+  <div class="meta-row">
+    <span><b>Football</b> longshot = least-likely of the two non-favorite outcomes</span>
+    <span><b>Tennis</b> longshot = the only other side (two-outcome market)</span>
+    <span><b>Selection</b> unchanged: still keyed to the favorite crossing the threshold</span>
+  </div>
+
+  <div class="verdict">
+    <div class="mark">&times;</div>
+    <div>
+      <h3>No. The longshot side is worse, not better.</h3>
+      <p>
+        The reasoning that motivated this test was wrong, and it's worth saying why rather than just showing
+        the number: the favorite's mispricing (win rate vs. price) was smaller than the bookmaker's own vig in
+        both sports. Vig is a tax on the <b>whole market</b>, not something that lands only on the favorite's
+        side &mdash; so a favorite edge smaller than the vig doesn't imply the other side clears its own,
+        separately vig-loaded break-even bar. In practice, the longshot side carries even more of that margin
+        than the favorite does (the textbook mechanism behind the favorite-longshot bias itself: bookmakers
+        price the emotionally-appealing long-odds side with extra margin, knowing public money floods there
+        regardless). At the 70% threshold, Kelly sizing against the longshot side wipes the
+        bankroll to <b>$0</b> in both football and tennis.
+      </p>
+    </div>
+  </div>
+
+  <section class="panel">
+    <h2>1. Longshot win rate vs. quoted price</h2>
+    <p class="panel-note">
+      Same diagnostic as both favorite-side reports, run on the other side of the same matches. Negative at
+      every threshold, both sports &mdash; and in tennis, the negative edge actually <b>grows</b> as the
+      threshold rises (the longer the odds, the worse the value), which is the textbook favorite-longshot-bias
+      shape.
+    </p>
+    <div class="sub-h">Football</div>
+    <div class="table-scroll">
+    <table>
+      <thead><tr><th>Threshold</th><th class="num">Matches</th><th class="num">Win rate</th><th class="num">Avg. price</th><th class="num">Edge</th></tr></thead>
+      <tbody><tr>
+          <td>60%</td>
+          <td class="num">12,081</td>
+          <td class="num">10.61%</td>
+          <td class="num">11.63%</td>
+          <td class="num neg">-1.02pp</td>
+        </tr><tr>
+          <td>65%</td>
+          <td class="num">8,874</td>
+          <td class="num">8.88%</td>
+          <td class="num">9.90%</td>
+          <td class="num neg">-1.02pp</td>
+        </tr><tr>
+          <td>70%</td>
+          <td class="num">6,238</td>
+          <td class="num">6.80%</td>
+          <td class="num">8.31%</td>
+          <td class="num neg">-1.52pp</td>
+        </tr><tr>
+          <td>75%</td>
+          <td class="num">4,260</td>
+          <td class="num">5.61%</td>
+          <td class="num">6.98%</td>
+          <td class="num neg">-1.37pp</td>
+        </tr><tr>
+          <td>80%</td>
+          <td class="num">2,671</td>
+          <td class="num">4.61%</td>
+          <td class="num">5.73%</td>
+          <td class="num neg">-1.13pp</td>
+        </tr><tr>
+          <td>85%</td>
+          <td class="num">1,232</td>
+          <td class="num">3.57%</td>
+          <td class="num">4.44%</td>
+          <td class="num neg">-0.87pp</td>
+        </tr><tr>
+          <td>90%</td>
+          <td class="num">409</td>
+          <td class="num">2.93%</td>
+          <td class="num">3.38%</td>
+          <td class="num neg">-0.45pp</td>
+        </tr></tbody>
+    </table>
+    </div>
+    <div class="sub-h">Tennis</div>
+    <div class="table-scroll">
+    <table>
+      <thead><tr><th>Threshold</th><th class="num">Matches</th><th class="num">Win rate</th><th class="num">Avg. price</th><th class="num">Edge</th></tr></thead>
+      <tbody><tr>
+          <td>60%</td>
+          <td class="num">81,071</td>
+          <td class="num">26.27%</td>
+          <td class="num">27.65%</td>
+          <td class="num neg">-1.38pp</td>
+        </tr><tr>
+          <td>65%</td>
+          <td class="num">65,075</td>
+          <td class="num">23.04%</td>
+          <td class="num">24.54%</td>
+          <td class="num neg">-1.50pp</td>
+        </tr><tr>
+          <td>70%</td>
+          <td class="num">50,373</td>
+          <td class="num">19.80%</td>
+          <td class="num">21.37%</td>
+          <td class="num neg">-1.57pp</td>
+        </tr><tr>
+          <td>75%</td>
+          <td class="num">37,782</td>
+          <td class="num">16.74%</td>
+          <td class="num">18.33%</td>
+          <td class="num neg">-1.59pp</td>
+        </tr><tr>
+          <td>80%</td>
+          <td class="num">26,502</td>
+          <td class="num">13.59%</td>
+          <td class="num">15.22%</td>
+          <td class="num neg">-1.64pp</td>
+        </tr><tr>
+          <td>85%</td>
+          <td class="num">16,289</td>
+          <td class="num">10.04%</td>
+          <td class="num">11.85%</td>
+          <td class="num neg">-1.81pp</td>
+        </tr><tr>
+          <td>90%</td>
+          <td class="num">9,091</td>
+          <td class="num">6.83%</td>
+          <td class="num">8.80%</td>
+          <td class="num neg">-1.97pp</td>
+        </tr></tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>2. Threshold sweep: Kelly and flat sizing against the longshot edge</h2>
+    <p class="panel-note">
+      Both engines correctly punish the negative edge. Kelly reaches $0.00 fastest since it sizes up on any
+      transient noisy-positive read from the walk-forward belief before converging; flat staking loses more
+      slowly but just as surely.
+    </p>
+    <div class="sub-h">Football</div>
+    <div class="table-scroll">
+    <table>
+      <thead><tr><th>Threshold</th><th class="num">Trades</th><th class="num">Kelly CAGR</th><th class="num">Kelly final $</th><th class="num">Flat CAGR</th><th class="num">Flat final $</th></tr></thead>
+      <tbody><tr>
+          <td>60%</td>
+          <td class="num">12,081</td>
+          <td class="num neg">-78.24%</td>
+          <td class="num">$0.00</td>
+          <td class="num neg">-76.34%</td>
+          <td class="num">$0.00</td>
+        </tr><tr>
+          <td>65%</td>
+          <td class="num">8,874</td>
+          <td class="num neg">-77.97%</td>
+          <td class="num">$0.00</td>
+          <td class="num neg">-71.78%</td>
+          <td class="num">$0.00</td>
+        </tr><tr>
+          <td>70%</td>
+          <td class="num">6,238</td>
+          <td class="num neg">-78.23%</td>
+          <td class="num">$0.00</td>
+          <td class="num neg">-70.64%</td>
+          <td class="num">$0.00</td>
+        </tr><tr>
+          <td>75%</td>
+          <td class="num">4,260</td>
+          <td class="num neg">-78.24%</td>
+          <td class="num">$0.00</td>
+          <td class="num neg">-59.54%</td>
+          <td class="num">$0.09</td>
+        </tr><tr>
+          <td>80%</td>
+          <td class="num">2,671</td>
+          <td class="num neg">-78.31%</td>
+          <td class="num">$0.00</td>
+          <td class="num neg">-45.09%</td>
+          <td class="num">$4.72</td>
+        </tr><tr>
+          <td>85%</td>
+          <td class="num">1,232</td>
+          <td class="num neg">-63.23%</td>
+          <td class="num">$0.03</td>
+          <td class="num neg">-25.08%</td>
+          <td class="num">$251.40</td>
+        </tr><tr>
+          <td>90%</td>
+          <td class="num">409</td>
+          <td class="num neg">-32.42%</td>
+          <td class="num">$67.79</td>
+          <td class="num neg">-8.35%</td>
+          <td class="num">$3,293.28</td>
+        </tr></tbody>
+    </table>
+    </div>
+    <div class="sub-h">Tennis</div>
+    <div class="table-scroll">
+    <table>
+      <thead><tr><th>Threshold</th><th class="num">Trades</th><th class="num">Kelly CAGR</th><th class="num">Kelly final $</th><th class="num">Flat CAGR</th><th class="num">Flat final $</th></tr></thead>
+      <tbody><tr>
+          <td>60%</td>
+          <td class="num">81,071</td>
+          <td class="num neg">-56.90%</td>
+          <td class="num">$0.00</td>
+          <td class="num neg">-54.57%</td>
+          <td class="num">$0.00</td>
+        </tr><tr>
+          <td>65%</td>
+          <td class="num">65,075</td>
+          <td class="num neg">-56.96%</td>
+          <td class="num">$0.00</td>
+          <td class="num neg">-54.46%</td>
+          <td class="num">$0.00</td>
+        </tr><tr>
+          <td>70%</td>
+          <td class="num">50,373</td>
+          <td class="num neg">-56.52%</td>
+          <td class="num">$0.00</td>
+          <td class="num neg">-54.51%</td>
+          <td class="num">$0.00</td>
+        </tr><tr>
+          <td>75%</td>
+          <td class="num">37,782</td>
+          <td class="num neg">-56.92%</td>
+          <td class="num">$0.00</td>
+          <td class="num neg">-54.55%</td>
+          <td class="num">$0.00</td>
+        </tr><tr>
+          <td>80%</td>
+          <td class="num">26,502</td>
+          <td class="num neg">-56.53%</td>
+          <td class="num">$0.00</td>
+          <td class="num neg">-54.54%</td>
+          <td class="num">$0.00</td>
+        </tr><tr>
+          <td>85%</td>
+          <td class="num">16,289</td>
+          <td class="num neg">-56.48%</td>
+          <td class="num">$0.00</td>
+          <td class="num neg">-54.44%</td>
+          <td class="num">$0.00</td>
+        </tr><tr>
+          <td>90%</td>
+          <td class="num">9,091</td>
+          <td class="num neg">-56.07%</td>
+          <td class="num">$0.00</td>
+          <td class="num neg">-54.42%</td>
+          <td class="num">$0.00</td>
+        </tr></tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>3. Same games, opposite side: 70% threshold head-to-head</h2>
+    <p class="panel-note">
+      Both charts plot quarter-Kelly equity on the identical set of matches used in the corresponding
+      favorite-side report &mdash; the only thing that changes is which side of the bet is taken.
+    </p>
+    <div class="sub-h">Football &middot; 6,238 matches</div>
+    <div class="stats">
+      <div class="stat"><div class="label">Favorite side</div><div class="value" style="color:var(--series-fav)">$20,234.76</div><div class="sub">CAGR +5.65%</div></div>
+      <div class="stat"><div class="label">Longshot side</div><div class="value" style="color:var(--series-dog)">$0.00</div><div class="sub">CAGR -78.23%</div></div>
+    </div>
+    <div class="legend">
+      <span><span class="swatch" style="background:var(--series-fav)"></span>Favorite</span>
+      <span><span class="swatch" style="background:var(--series-dog)"></span>Longshot</span>
+    </div>
+    <div class="chart-block" id="chart-football"></div>
+
+    <div class="sub-h">Tennis &middot; 50,373 matches</div>
+    <div class="stats">
+      <div class="stat"><div class="label">Favorite side</div><div class="value" style="color:var(--series-fav)">$0.00</div><div class="sub">CAGR -48.46%</div></div>
+      <div class="stat"><div class="label">Longshot side</div><div class="value" style="color:var(--series-dog)">$0.00</div><div class="sub">CAGR -56.52%</div></div>
+    </div>
+    <div class="legend">
+      <span><span class="swatch" style="background:var(--series-fav)"></span>Favorite</span>
+      <span><span class="swatch" style="background:var(--series-dog)"></span>Longshot</span>
+    </div>
+    <div class="chart-block" id="chart-tennis"></div>
+  </section>
+
+  <footer>
+    Same data and engines as the favorite-side reports: football-data.co.uk and tennis-data.co.uk closing
+    lines, unmodified <code>run_sim</code> / <code>run_flat_sim</code> from the Polymarket Final-1% project.
+    The only change: <code>src/football_favorite_bias.py</code> and <code>src/tennis_favorite_bias.py</code>
+    now take a <code>side="favorite"|"longshot"</code> parameter, with match selection always keyed to the
+    favorite crossing the threshold, so favorite and longshot backtests are directly comparable. Full numbers:
+    <code>results/underdog_bias/underdog_bias_results.json</code>.
+  </footer>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+function renderChart(containerId, favSeries, dogSeries) {
+  const container = document.getElementById(containerId);
+  const width = container.clientWidth || 900;
+  const height = 280;
+  const pad = { top: 16, right: 16, bottom: 28, left: 64 };
+  const plotW = width - pad.left - pad.right;
+  const plotH = height - pad.top - pad.bottom;
+
+  const allVals = favSeries.concat(dogSeries).map(d => d[1]);
+  const minV = Math.min(...allVals, 0);
+  const maxV = Math.max(...allVals);
+  const n = favSeries.length;
+
+  const x = i => pad.left + (i / (n - 1)) * plotW;
+  const y = v => pad.top + plotH - ((v - minV) / (maxV - minV || 1)) * plotH;
+
+  function pathFor(series) {
+    return series.map((d, i) => `${i === 0 ? 'M' : 'L'} ${x(i).toFixed(2)} ${y(d[1]).toFixed(2)}`).join(' ');
+  }
+
+  const gridCount = 4;
+  let gridLines = '';
+  let axisLabels = '';
+  for (let g = 0; g <= gridCount; g++) {
+    const v = minV + (maxV - minV) * (g / gridCount);
+    const yy = y(v);
+    gridLines += `<line class="grid-line" x1="${pad.left}" x2="${width - pad.right}" y1="${yy}" y2="${yy}"/>`;
+    axisLabels += `<text class="axis-label" x="${pad.left - 8}" y="${yy + 4}" text-anchor="end">$${Math.round(v).toLocaleString()}</text>`;
+  }
+  const yearTicks = 3;
+  for (let t = 0; t <= yearTicks; t++) {
+    const idx = Math.round((n - 1) * t / yearTicks);
+    const xx = x(idx);
+    axisLabels += `<text class="axis-label" x="${xx}" y="${height - 6}" text-anchor="middle">${favSeries[idx][0].slice(0,7)}</text>`;
+  }
+
+  container.innerHTML = `
+    <svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+      ${gridLines}
+      <path d="${pathFor(dogSeries)}" fill="none" stroke="var(--series-dog)" stroke-width="2"/>
+      <path d="${pathFor(favSeries)}" fill="none" stroke="var(--series-fav)" stroke-width="2"/>
+      ${axisLabels}
+      <line class="crosshair" x1="0" x2="0" y1="${pad.top}" y2="${pad.top + plotH}"/>
+      <rect class="hover-rect" x="${pad.left}" y="${pad.top}" width="${plotW}" height="${plotH}" fill="transparent"/>
+    </svg>
+  `;
+
+  const svg = container.querySelector('svg');
+  const hoverRect = container.querySelector('.hover-rect');
+  const crosshair = container.querySelector('.crosshair');
+  const tooltip = document.getElementById('tooltip');
+
+  hoverRect.addEventListener('mousemove', (e) => {
+    const rect = svg.getBoundingClientRect();
+    const scaleX = width / rect.width;
+    const mouseX = (e.clientX - rect.left) * scaleX;
+    let idx = Math.round(((mouseX - pad.left) / plotW) * (n - 1));
+    idx = Math.max(0, Math.min(n - 1, idx));
+    const xx = x(idx);
+    crosshair.setAttribute('x1', xx);
+    crosshair.setAttribute('x2', xx);
+    crosshair.style.opacity = 1;
+    const fv = favSeries[idx][1];
+    const dv = dogSeries[idx][1];
+    tooltip.innerHTML = `
+      <div class="t-head">${favSeries[idx][0]}</div>
+      <div class="t-row"><span class="k"><span class="swatch" style="background:var(--series-fav)"></span>Favorite</span><span>$${fv.toLocaleString(undefined,{maximumFractionDigits:0})}</span></div>
+      <div class="t-row"><span class="k"><span class="swatch" style="background:var(--series-dog)"></span>Longshot</span><span>$${dv.toLocaleString(undefined,{maximumFractionDigits:0})}</span></div>
+    `;
+    tooltip.style.left = (e.clientX + 14) + 'px';
+    tooltip.style.top = (e.clientY + 14) + 'px';
+    tooltip.style.opacity = 1;
+  });
+  hoverRect.addEventListener('mouseleave', () => {
+    crosshair.style.opacity = 0;
+    tooltip.style.opacity = 0;
+  });
+}
+
+const footballFav = [["2012-08-04", 10000.0], ["2012-09-04", 9334.58], ["2012-10-05", 8894.9], ["2012-11-05", 8789.11], ["2012-12-06", 8361.85], ["2013-01-06", 8602.32], ["2013-02-07", 8590.12], ["2013-03-10", 10087.83], ["2013-04-10", 11076.56], ["2013-05-11", 12771.94], ["2013-06-11", 13632.67], ["2013-07-13", 13632.67], ["2013-08-13", 13632.67], ["2013-09-13", 15626.86], ["2013-10-14", 17275.9], ["2013-11-14", 18280.74], ["2013-12-15", 17729.81], ["2014-01-16", 19098.22], ["2014-02-16", 15150.17], ["2014-03-19", 15598.22], ["2014-04-19", 16991.35], ["2014-05-20", 17195.02], ["2014-06-21", 17195.02], ["2014-07-22", 17195.02], ["2014-08-22", 17488.59], ["2014-09-22", 16664.91], ["2014-10-23", 14641.09], ["2014-11-24", 14522.27], ["2014-12-25", 13405.86], ["2015-01-25", 14158.11], ["2015-02-25", 17461.28], ["2015-03-28", 16497.53], ["2015-04-28", 18929.88], ["2015-05-30", 17251.37], ["2015-06-30", 17528.82], ["2015-07-31", 17528.82], ["2015-08-31", 14188.42], ["2015-10-01", 13985.05], ["2015-11-02", 15591.55], ["2015-12-03", 16027.21], ["2016-01-03", 14729.08], ["2016-02-03", 16590.88], ["2016-03-05", 17347.11], ["2016-04-06", 19268.42], ["2016-05-07", 21123.05], ["2016-06-07", 21602.78], ["2016-07-08", 21602.78], ["2016-08-08", 20954.69], ["2016-09-08", 21750.85], ["2016-10-10", 21843.22], ["2016-11-10", 19786.87], ["2016-12-11", 18029.2], ["2017-01-11", 19166.18], ["2017-02-11", 21685.44], ["2017-03-15", 24747.37], ["2017-04-15", 22225.85], ["2017-05-16", 19047.33], ["2017-06-16", 19832.3], ["2017-07-17", 19832.3], ["2017-08-18", 21298.79], ["2017-09-18", 24830.37], ["2017-10-19", 23528.4], ["2017-11-19", 24412.25], ["2017-12-20", 21619.49], ["2018-01-20", 18778.2], ["2018-02-21", 17037.69], ["2018-03-24", 19231.75], ["2018-04-24", 21357.35], ["2018-05-25", 21103.5], ["2018-06-25", 21103.5], ["2018-07-27", 21103.5], ["2018-08-27", 22797.55], ["2018-09-27", 22147.43], ["2018-10-28", 23003.98], ["2018-11-28", 24801.46], ["2018-12-30", 28517.79], ["2019-01-30", 30245.4], ["2019-03-02", 29876.47], ["2019-04-02", 30996.25], ["2019-05-03", 30594.92], ["2019-06-03", 26472.46], ["2019-07-05", 26472.46], ["2019-08-05", 26207.94], ["2019-09-05", 23768.35], ["2019-10-06", 26902.21], ["2019-11-06", 20084.43], ["2019-12-08", 22232.12], ["2020-01-08", 22299.58], ["2020-02-08", 23125.3], ["2020-03-10", 20905.53], ["2020-04-10", 20905.53], ["2020-05-11", 20905.53], ["2020-06-12", 19915.97], ["2020-07-13", 19673.95], ["2020-08-13", 20816.21], ["2020-09-13", 20627.61], ["2020-10-14", 19440.16], ["2020-11-15", 18861.37], ["2020-12-16", 16367.8], ["2021-01-16", 14631.38], ["2021-02-16", 13169.69], ["2021-03-19", 14514.55], ["2021-04-20", 14398.25], ["2021-05-21", 16069.82], ["2021-06-21", 16269.51], ["2021-07-22", 16269.51], ["2021-08-22", 16641.59], ["2021-09-22", 17242.68], ["2021-10-24", 18937.86], ["2021-11-24", 17470.05], ["2021-12-25", 17497.59], ["2022-01-25", 17495.17], ["2022-02-25", 17271.16], ["2022-03-29", 17179.85], ["2022-04-29", 17879.56], ["2022-05-30", 17986.84], ["2022-06-30", 17986.84], ["2022-07-31", 18181.1], ["2022-09-01", 19569.36], ["2022-10-02", 18332.75], ["2022-11-02", 17842.24], ["2022-12-03", 16708.31], ["2023-01-03", 18025.62], ["2023-02-03", 19988.98], ["2023-03-07", 23262.68], ["2023-04-07", 24374.47], ["2023-05-08", 25673.75], ["2023-06-08", 21998.22], ["2023-07-09", 21998.22], ["2023-08-10", 21338.27], ["2023-09-10", 22391.75], ["2023-10-11", 24863.96], ["2023-11-11", 27333.99], ["2023-12-12", 28438.07], ["2024-01-13", 29867.99], ["2024-02-13", 29759.43], ["2024-03-15", 31506.84], ["2024-04-15", 26131.11], ["2024-05-16", 26108.64], ["2024-06-16", 22305.19], ["2024-07-18", 22305.19], ["2024-08-18", 22739.68], ["2024-09-18", 21000.11], ["2024-10-19", 21396.63], ["2024-11-19", 26157.12], ["2024-12-21", 25130.16], ["2025-01-21", 19806.01], ["2025-02-21", 18715.9], ["2025-03-24", 19019.08], ["2025-04-24", 17915.13], ["2025-05-25", 20234.76]];
+const footballDog = [["2012-08-04", 9700.0], ["2012-09-04", 5269.54], ["2012-10-05", 4118.38], ["2012-11-05", 6745.67], ["2012-12-06", 4526.75], ["2013-01-06", 8964.22], ["2013-02-07", 11221.15], ["2013-03-10", 3996.55], ["2013-04-10", 1308.71], ["2013-05-11", 419.82], ["2013-06-11", 547.29], ["2013-07-13", 547.29], ["2013-08-13", 454.54], ["2013-09-13", 156.62], ["2013-10-14", 60.19], ["2013-11-14", 18.06], ["2013-12-15", 6.96], ["2014-01-16", 6.56], ["2014-02-16", 1.88], ["2014-03-19", 1.17], ["2014-04-19", 0.86], ["2014-05-20", 0.5], ["2014-06-21", 0.5], ["2014-07-22", 0.5], ["2014-08-22", 0.4], ["2014-09-22", 0.42], ["2014-10-23", 0.33], ["2014-11-24", 0.33], ["2014-12-25", 0.15], ["2015-01-25", 0.08], ["2015-02-25", 0.05], ["2015-03-28", 0.05], ["2015-04-28", 0.03], ["2015-05-30", 0.02], ["2015-06-30", 0.02], ["2015-07-31", 0.02], ["2015-08-31", 0.02], ["2015-10-01", 0.02], ["2015-11-02", 0.01], ["2015-12-03", 0.01], ["2016-01-03", 0.01], ["2016-02-03", 0.0], ["2016-03-05", 0.01], ["2016-04-06", 0.01], ["2016-05-07", 0.0], ["2016-06-07", 0.0], ["2016-07-08", 0.0], ["2016-08-08", 0.0], ["2016-09-08", 0.0], ["2016-10-10", 0.0], ["2016-11-10", 0.0], ["2016-12-11", 0.0], ["2017-01-11", 0.0], ["2017-02-11", 0.0], ["2017-03-15", 0.0], ["2017-04-15", 0.0], ["2017-05-16", 0.0], ["2017-06-16", 0.0], ["2017-07-17", 0.0], ["2017-08-18", 0.0], ["2017-09-18", 0.0], ["2017-10-19", 0.0], ["2017-11-19", 0.0], ["2017-12-20", 0.0], ["2018-01-20", 0.0], ["2018-02-21", 0.0], ["2018-03-24", 0.0], ["2018-04-24", 0.0], ["2018-05-25", 0.0], ["2018-06-25", 0.0], ["2018-07-27", 0.0], ["2018-08-27", 0.0], ["2018-09-27", 0.0], ["2018-10-28", 0.0], ["2018-11-28", 0.0], ["2018-12-30", 0.0], ["2019-01-30", 0.0], ["2019-03-02", 0.0], ["2019-04-02", 0.0], ["2019-05-03", 0.0], ["2019-06-03", 0.0], ["2019-07-05", 0.0], ["2019-08-05", 0.0], ["2019-09-05", 0.0], ["2019-10-06", 0.0], ["2019-11-06", 0.0], ["2019-12-08", 0.0], ["2020-01-08", 0.0], ["2020-02-08", 0.0], ["2020-03-10", 0.0], ["2020-04-10", 0.0], ["2020-05-11", 0.0], ["2020-06-12", 0.0], ["2020-07-13", 0.0], ["2020-08-13", 0.0], ["2020-09-13", 0.0], ["2020-10-14", 0.0], ["2020-11-15", 0.0], ["2020-12-16", 0.0], ["2021-01-16", 0.0], ["2021-02-16", 0.0], ["2021-03-19", 0.0], ["2021-04-20", 0.0], ["2021-05-21", 0.0], ["2021-06-21", 0.0], ["2021-07-22", 0.0], ["2021-08-22", 0.0], ["2021-09-22", 0.0], ["2021-10-24", 0.0], ["2021-11-24", 0.0], ["2021-12-25", 0.0], ["2022-01-25", 0.0], ["2022-02-25", 0.0], ["2022-03-29", 0.0], ["2022-04-29", 0.0], ["2022-05-30", 0.0], ["2022-06-30", 0.0], ["2022-07-31", 0.0], ["2022-09-01", 0.0], ["2022-10-02", 0.0], ["2022-11-02", 0.0], ["2022-12-03", 0.0], ["2023-01-03", 0.0], ["2023-02-03", 0.0], ["2023-03-07", 0.0], ["2023-04-07", 0.0], ["2023-05-08", 0.0], ["2023-06-08", 0.0], ["2023-07-09", 0.0], ["2023-08-10", 0.0], ["2023-09-10", 0.0], ["2023-10-11", 0.0], ["2023-11-11", 0.0], ["2023-12-12", 0.0], ["2024-01-13", 0.0], ["2024-02-13", 0.0], ["2024-03-15", 0.0], ["2024-04-15", 0.0], ["2024-05-16", 0.0], ["2024-06-16", 0.0], ["2024-07-18", 0.0], ["2024-08-18", 0.0], ["2024-09-18", 0.0], ["2024-10-19", 0.0], ["2024-11-19", 0.0], ["2024-12-21", 0.0], ["2025-01-21", 0.0], ["2025-02-21", 0.0], ["2025-03-24", 0.0], ["2025-04-24", 0.0], ["2025-05-25", 0.0]];
+const tennisFav = [["2002-06-10", 10000.0], ["2002-08-06", 10116.42], ["2002-10-02", 10721.86], ["2002-11-28", 10590.47], ["2003-01-24", 8761.97], ["2003-03-22", 7918.05], ["2003-05-18", 8426.54], ["2003-07-14", 8823.06], ["2003-09-09", 7222.68], ["2003-11-05", 5765.99], ["2004-01-01", 5779.1], ["2004-02-27", 4709.44], ["2004-04-24", 5096.37], ["2004-06-20", 5417.04], ["2004-08-16", 5295.85], ["2004-10-13", 5622.83], ["2004-12-09", 6772.04], ["2005-02-04", 8811.09], ["2005-04-02", 7398.01], ["2005-05-29", 5850.66], ["2005-07-25", 5135.02], ["2005-09-20", 5745.1], ["2005-11-16", 5225.46], ["2006-01-12", 5075.35], ["2006-03-10", 3331.4], ["2006-05-06", 3086.0], ["2006-07-02", 2607.57], ["2006-08-28", 3026.56], ["2006-10-24", 3072.98], ["2006-12-20", 2976.88], ["2007-02-15", 3049.62], ["2007-04-14", 3597.31], ["2007-06-10", 2681.84], ["2007-08-06", 2930.89], ["2007-10-02", 2436.37], ["2007-11-28", 1965.53], ["2008-01-24", 1397.33], ["2008-03-21", 1459.74], ["2008-05-17", 989.73], ["2008-07-13", 842.42], ["2008-09-08", 666.29], ["2008-11-04", 587.47], ["2008-12-31", 607.14], ["2009-02-26", 497.05], ["2009-04-24", 399.99], ["2009-06-20", 313.46], ["2009-08-17", 173.59], ["2009-10-13", 146.35], ["2009-12-09", 92.37], ["2010-02-04", 99.81], ["2010-04-02", 137.63], ["2010-05-29", 159.96], ["2010-07-25", 118.85], ["2010-09-20", 131.7], ["2010-11-16", 109.04], ["2011-01-12", 111.64], ["2011-03-10", 155.36], ["2011-05-06", 107.98], ["2011-07-02", 95.56], ["2011-08-28", 96.55], ["2011-10-24", 91.5], ["2011-12-21", 81.0], ["2012-02-16", 73.93], ["2012-04-13", 48.84], ["2012-06-09", 44.85], ["2012-08-05", 40.48], ["2012-10-01", 38.43], ["2012-11-27", 25.35], ["2013-01-23", 24.06], ["2013-03-21", 23.42], ["2013-05-17", 19.81], ["2013-07-13", 23.6], ["2013-09-08", 29.76], ["2013-11-04", 33.07], ["2013-12-31", 35.14], ["2014-02-26", 27.22], ["2014-04-25", 18.3], ["2014-06-21", 18.26], ["2014-08-17", 12.15], ["2014-10-13", 11.03], ["2014-12-09", 13.2], ["2015-02-04", 16.56], ["2015-04-02", 18.47], ["2015-05-29", 12.14], ["2015-07-25", 7.22], ["2015-09-20", 5.93], ["2015-11-16", 8.48], ["2016-01-12", 7.97], ["2016-03-09", 5.03], ["2016-05-05", 7.35], ["2016-07-01", 7.5], ["2016-08-28", 4.59], ["2016-10-24", 4.23], ["2016-12-20", 4.29], ["2017-02-15", 4.61], ["2017-04-13", 2.54], ["2017-06-09", 2.56], ["2017-08-05", 1.77], ["2017-10-01", 1.09], ["2017-11-27", 0.88], ["2018-01-23", 0.7], ["2018-03-21", 0.61], ["2018-05-17", 0.46], ["2018-07-13", 0.39], ["2018-09-08", 0.28], ["2018-11-04", 0.33], ["2019-01-01", 0.29], ["2019-02-27", 0.27], ["2019-04-25", 0.23], ["2019-06-21", 0.28], ["2019-08-17", 0.29], ["2019-10-13", 0.31], ["2019-12-09", 0.24], ["2020-02-04", 0.25], ["2020-04-01", 0.25], ["2020-05-28", 0.25], ["2020-07-24", 0.25], ["2020-09-19", 0.2], ["2020-11-15", 0.15], ["2021-01-11", 0.16], ["2021-03-09", 0.12], ["2021-05-06", 0.16], ["2021-07-02", 0.14], ["2021-08-28", 0.12], ["2021-10-24", 0.11], ["2021-12-20", 0.11], ["2022-02-15", 0.17], ["2022-04-13", 0.17], ["2022-06-09", 0.12], ["2022-08-05", 0.08], ["2022-10-01", 0.04], ["2022-11-27", 0.04], ["2023-01-23", 0.04], ["2023-03-21", 0.03], ["2023-05-17", 0.02], ["2023-07-13", 0.01], ["2023-09-09", 0.01], ["2023-11-05", 0.01], ["2024-01-01", 0.01], ["2024-02-27", 0.01], ["2024-04-24", 0.01], ["2024-06-20", 0.01], ["2024-08-16", 0.01], ["2024-10-12", 0.01], ["2024-12-08", 0.01], ["2025-02-03", 0.01], ["2025-04-01", 0.0], ["2025-05-28", 0.0], ["2025-07-24", 0.0], ["2025-09-19", 0.0], ["2025-11-15", 0.0]];
+const tennisDog = [["2002-06-10", 9400.0], ["2002-08-06", 4350.14], ["2002-10-02", 2115.36], ["2002-11-28", 1274.59], ["2003-01-24", 928.2], ["2003-03-22", 677.91], ["2003-05-18", 483.84], ["2003-07-14", 201.34], ["2003-09-09", 77.41], ["2003-11-05", 61.39], ["2004-01-01", 61.39], ["2004-02-27", 21.5], ["2004-04-24", 19.12], ["2004-06-20", 13.62], ["2004-08-16", 4.38], ["2004-10-13", 2.93], ["2004-12-09", 2.32], ["2005-02-04", 2.0], ["2005-04-02", 1.04], ["2005-05-29", 0.24], ["2005-07-25", 0.14], ["2005-09-20", 0.18], ["2005-11-16", 0.14], ["2006-01-12", 0.17], ["2006-03-10", 0.14], ["2006-05-06", 0.06], ["2006-07-02", 0.02], ["2006-08-28", 0.02], ["2006-10-24", 0.0], ["2006-12-20", 0.0], ["2007-02-15", 0.0], ["2007-04-14", 0.0], ["2007-06-10", 0.0], ["2007-08-06", 0.0], ["2007-10-02", 0.0], ["2007-11-28", 0.0], ["2008-01-24", 0.0], ["2008-03-21", 0.0], ["2008-05-17", 0.0], ["2008-07-13", 0.0], ["2008-09-08", 0.0], ["2008-11-04", 0.0], ["2008-12-31", 0.0], ["2009-02-26", 0.0], ["2009-04-24", 0.0], ["2009-06-20", 0.0], ["2009-08-17", 0.0], ["2009-10-13", 0.0], ["2009-12-09", 0.0], ["2010-02-04", 0.0], ["2010-04-02", 0.0], ["2010-05-29", 0.0], ["2010-07-25", 0.0], ["2010-09-20", 0.0], ["2010-11-16", 0.0], ["2011-01-12", 0.0], ["2011-03-10", 0.0], ["2011-05-06", 0.0], ["2011-07-02", 0.0], ["2011-08-28", 0.0], ["2011-10-24", 0.0], ["2011-12-21", 0.0], ["2012-02-16", 0.0], ["2012-04-13", 0.0], ["2012-06-09", 0.0], ["2012-08-05", 0.0], ["2012-10-01", 0.0], ["2012-11-27", 0.0], ["2013-01-23", 0.0], ["2013-03-21", 0.0], ["2013-05-17", 0.0], ["2013-07-13", 0.0], ["2013-09-08", 0.0], ["2013-11-04", 0.0], ["2013-12-31", 0.0], ["2014-02-26", 0.0], ["2014-04-25", 0.0], ["2014-06-21", 0.0], ["2014-08-17", 0.0], ["2014-10-13", 0.0], ["2014-12-09", 0.0], ["2015-02-04", 0.0], ["2015-04-02", 0.0], ["2015-05-29", 0.0], ["2015-07-25", 0.0], ["2015-09-20", 0.0], ["2015-11-16", 0.0], ["2016-01-12", 0.0], ["2016-03-09", 0.0], ["2016-05-05", 0.0], ["2016-07-01", 0.0], ["2016-08-28", 0.0], ["2016-10-24", 0.0], ["2016-12-20", 0.0], ["2017-02-15", 0.0], ["2017-04-13", 0.0], ["2017-06-09", 0.0], ["2017-08-05", 0.0], ["2017-10-01", 0.0], ["2017-11-27", 0.0], ["2018-01-23", 0.0], ["2018-03-21", 0.0], ["2018-05-17", 0.0], ["2018-07-13", 0.0], ["2018-09-08", 0.0], ["2018-11-04", 0.0], ["2019-01-01", 0.0], ["2019-02-27", 0.0], ["2019-04-25", 0.0], ["2019-06-21", 0.0], ["2019-08-17", 0.0], ["2019-10-13", 0.0], ["2019-12-09", 0.0], ["2020-02-04", 0.0], ["2020-04-01", 0.0], ["2020-05-28", 0.0], ["2020-07-24", 0.0], ["2020-09-19", 0.0], ["2020-11-15", 0.0], ["2021-01-11", 0.0], ["2021-03-09", 0.0], ["2021-05-06", 0.0], ["2021-07-02", 0.0], ["2021-08-28", 0.0], ["2021-10-24", 0.0], ["2021-12-20", 0.0], ["2022-02-15", 0.0], ["2022-04-13", 0.0], ["2022-06-09", 0.0], ["2022-08-05", 0.0], ["2022-10-01", 0.0], ["2022-11-27", 0.0], ["2023-01-23", 0.0], ["2023-03-21", 0.0], ["2023-05-17", 0.0], ["2023-07-13", 0.0], ["2023-09-09", 0.0], ["2023-11-05", 0.0], ["2024-01-01", 0.0], ["2024-02-27", 0.0], ["2024-04-24", 0.0], ["2024-06-20", 0.0], ["2024-08-16", 0.0], ["2024-10-12", 0.0], ["2024-12-08", 0.0], ["2025-02-03", 0.0], ["2025-04-01", 0.0], ["2025-05-28", 0.0], ["2025-07-24", 0.0], ["2025-09-19", 0.0], ["2025-11-15", 0.0]];
+
+function renderAll() {
+  renderChart('chart-football', footballFav, footballDog);
+  renderChart('chart-tennis', tennisFav, tennisDog);
+}
+renderAll();
+window.addEventListener('resize', renderAll);
+</script>
+</body>
+</html>

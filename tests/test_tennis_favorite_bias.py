@@ -37,7 +37,8 @@ def test_odds_rejects_non_positive_or_subunity_values():
 
 def _match(w_odds, l_odds, fav_won, dt=datetime(2020, 1, 1), tour="ATP", surface="Hard"):
     fav_odds = min(w_odds, l_odds)
-    return {"tour": tour, "surface": surface, "match_dt": dt, "fav_odds": fav_odds,
+    dog_odds = max(w_odds, l_odds)
+    return {"tour": tour, "surface": surface, "match_dt": dt, "fav_odds": fav_odds, "dog_odds": dog_odds,
             "fav_won": fav_won, "winner": "A", "loser": "B", "tournament": "Test Open"}
 
 
@@ -74,6 +75,25 @@ def test_build_trades_schema_matches_kelly_engine_expectations():
     assert t["resolve_dt"] > t["entry_dt"]
     assert t["fee_frac"] == 0.0
     assert t["excluded"] is False
+
+
+def test_build_trades_longshot_side_backs_the_other_player():
+    m = _match(1.20, 6.00, fav_won=False)  # favorite (1.20) loses, so the longshot (6.00) won
+    t = tfb.build_trades([m], threshold=0.70, side="longshot")[0]
+    assert abs(t["entry_price"] - 1 / 6.00) < 1e-9
+    assert t["won"] is True
+
+
+def test_build_trades_longshot_side_selection_still_keyed_by_favorite():
+    m = _match(2.00, 2.00, fav_won=False)  # favorite implied prob = 50%, below 70%
+    assert tfb.build_trades([m], threshold=0.70, side="longshot") == []
+
+
+def test_build_trades_rejects_unknown_side():
+    m = _match(1.20, 6.00, fav_won=True)
+    import pytest
+    with pytest.raises(ValueError):
+        tfb.build_trades([m], threshold=0.70, side="draw")
 
 
 def test_build_trades_sorted_by_entry_time():

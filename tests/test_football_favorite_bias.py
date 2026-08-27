@@ -62,7 +62,7 @@ def test_build_trades_picks_lowest_odds_as_favorite():
     trades = ffb.build_trades([m], threshold=0.70)
     assert len(trades) == 1
     t = trades[0]
-    assert t["fav_side"] == "H"
+    assert t["bet_side"] == "H"
     assert abs(t["entry_price"] - 1 / 1.30) < 1e-9
     assert t["won"] is True
 
@@ -77,7 +77,31 @@ def test_build_trades_marks_loss_when_favorite_does_not_win():
     m = _match(1.30, 5.00, 8.00, ftr="A")  # heavy home favorite, away wins instead
     trades = ffb.build_trades([m], threshold=0.70)
     assert trades[0]["won"] is False
-    assert trades[0]["fav_side"] == "H"
+    assert trades[0]["bet_side"] == "H"
+
+
+def test_build_trades_longshot_side_picks_least_likely_of_the_other_two():
+    # Home is favorite (1.30). Of the remaining two, Away (8.00) is longer
+    # than Draw (5.00), so the longshot side is Away, not Draw.
+    m = _match(1.30, 5.00, 8.00, ftr="A")
+    t = ffb.build_trades([m], threshold=0.70, side="longshot")[0]
+    assert t["bet_side"] == "A"
+    assert abs(t["entry_price"] - 1 / 8.00) < 1e-9
+    assert t["won"] is True
+
+
+def test_build_trades_longshot_side_selection_still_keyed_by_favorite():
+    # Favorite (Home, 1.30) still has to clear the threshold for the match
+    # to be included at all, even though we're betting a different side.
+    m = _match(2.00, 3.30, 4.00, ftr="A")  # favorite implied prob = 50%, below 70%
+    assert ffb.build_trades([m], threshold=0.70, side="longshot") == []
+
+
+def test_build_trades_rejects_unknown_side():
+    m = _match(1.30, 5.00, 8.00, ftr="H")
+    import pytest
+    with pytest.raises(ValueError):
+        ffb.build_trades([m], threshold=0.70, side="draw")
 
 
 def test_build_trades_schema_matches_kelly_engine_expectations():
