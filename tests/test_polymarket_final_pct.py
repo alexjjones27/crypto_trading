@@ -19,6 +19,7 @@ from polymarket_final_pct import (
     FillAssumptions,
     GasAssumptions,
     SignalConfig,
+    _dedupe_by_id,
     categorize_flip,
     classify_fee_category,
     classify_report_bucket,
@@ -29,6 +30,7 @@ from polymarket_final_pct import (
     maker_fee_frac_of_notional,
     resolved_outcome_index,
     simulate_trade,
+    stratified_sample_markets,
     taker_fee_frac_of_notional,
     wilson_interval,
 )
@@ -316,3 +318,50 @@ def test_categorize_flip_flags_disputed_status():
 def test_categorize_flip_defaults_to_manual_review():
     m = {"id": "1", "question": "x", "umaResolutionStatus": "resolved", "umaResolutionStatuses": "[]"}
     assert categorize_flip(m)["heuristic_category"] == "needs_manual_review"
+
+
+# ---------------------------------------------------------------------------
+# Stratified sampling -- stability under a growing census
+# ---------------------------------------------------------------------------
+# Regression coverage for a real bug found by hand: two threshold-sweep runs
+# a day apart, both with the documented fixed seed=42, shared only ~1% of
+# their sampled markets because (a) fetch_resolved_markets_census's dedup
+# preserved non-deterministic ThreadPoolExecutor completion order, and (b) a
+# single RNG stream shared sequentially across the groupby loop meant any
+# upstream group's size changing (new markets resolving elsewhere) desynced
+# every later group's draw. The fix: dedupe sorted by id, and a per-group
+# seed with shuffle-then-slice (prefix-stable as each group's own k drifts).
+
+def _mk_market(i: int, end_date: str, bucket_hint: str) -> dict:
+    return {
+        "id": str(i), "question": f"{bucket_hint} market {i}", "slug": f"m-{i}",
+        "endDate": end_date, "startDate": "2023-01-01T00:00:00Z", "events": [],
+    }
+
+
+def test_dedupe_by_id_is_order_independent():
+    a = {"id": "1", "v": "a"}
+    b = {"id": "2", "v": "b"}
+    assert _dedupe_by_id([a, b]) == _dedupe_by_id([b, a])
+
+
+def test_stratified_sample_is_deterministic_for_a_fixed_census():
+    census = [_mk_market(i, "2024-02-15T00:00:00Z", "nba game") for i in range(200)]
+    s1 = sorted(m["id"] for m in stratified_sample_markets(census, n_target=50))
+    s2 = sorted(m["id"] for m in stratified_sample_markets(census, n_target=50))
+    assert s1 == s2
+
+
+def test_stratified_sample_is_subset_stable_as_census_grows():
+    old = [_mk_market(i, "2024-02-15T00:00:00Z", "nba game") for i in range(500)] + \
+          [_mk_market(i, "2024-05-15T00:00:00Z", "election") for i in range(500, 1000)]
+    grown = old + [_mk_market(i, "2026-08-15T00:00:00Z", "bitcoin price") for i in range(1000, 1300)]
+
+    before = set(m["id"] for m in stratified_sample_markets(old, n_target=200))
+    after = set(m["id"] for m in stratified_sample_markets(grown, n_target=200))
+    old_ids_after = {i for i in after if int(i) < 1000}
+
+    # a group untouched by the new markets shrinks (frac drops as the total
+    # census grows) but must never scramble into an unrelated random subset
+    assert old_ids_after.issubset(before)
+    assert len(old_ids_after) > 0

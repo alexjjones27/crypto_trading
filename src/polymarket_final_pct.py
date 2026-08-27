@@ -85,6 +85,7 @@ documented here because they drove real design decisions:
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import re
@@ -324,7 +325,13 @@ def _dedupe_by_id(markets: list[dict]) -> list[dict]:
     seen = {}
     for m in markets:
         seen[m["id"]] = m
-    return list(seen.values())
+    # Sorted by id for a deterministic row order: the raw `markets` list's
+    # order depends on which ThreadPoolExecutor future happened to complete
+    # first (non-deterministic across runs), which otherwise silently
+    # propagates into stratified_sample_markets's per-group index arrays --
+    # discovered when two threshold-sweep runs a day apart shared only 1%
+    # of their sampled markets despite an identical fixed seed.
+    return [seen[k] for k in sorted(seen.keys(), key=str)]
 
 
 # ---------------------------------------------------------------------------
@@ -1058,13 +1065,45 @@ def stratified_sample_markets(census: list[dict], n_target: int, seed: int = 42)
 
     frac = min(1.0, n_target / max(len(df), 1))
     parts = []
-    rng = np.random.default_rng(seed)
-    for _, grp in df.groupby(["quarter", "bucket"]):
+    for (quarter, bucket), grp in df.groupby(["quarter", "bucket"]):
         k = max(1, round(len(grp) * frac)) if len(grp) else 0
         k = min(k, len(grp))
         if k <= 0:
             continue
-        idx = rng.choice(grp.index.to_numpy(), size=k, replace=False)
+        # A per-group deterministic seed, not one shared RNG advanced
+        # sequentially across the whole groupby loop: with a single shared
+        # stream, any change to an EARLIER group's size (e.g. new markets
+        # resolving into an unrelated quarter/category) shifts how many
+        # draws it consumes, desyncing every later group's output even
+        # though its own candidate pool never changed. Hashing the group's
+        # own key isolates each group's draw from everything else.
+        #
+        # A full deterministic shuffle-then-take-first-k, not rng.choice(...,
+        # size=k) directly: `frac` (= n_target / total census size) drifts
+        # every time the census grows, so a since-unchanged group's own `k`
+        # shifts by a market or two even though its candidate pool didn't
+        # change -- and rng.choice's replace=False output for k=77 is NOT a
+        # subset of its own output for k=100 with the same seed, so that
+        # alone re-scrambles the whole selection. Shuffling once and slicing
+        # is prefix-stable: a small change in k only adds/drops markets at
+        # the margin instead of picking an unrelated random subset.
+        # Confirmed both fixes are needed together, with a synthetic
+        # before/after-growth test: per-group seeding alone still only got
+        # two nominally-identical-seed census snapshots to ~14% overlap on
+        # an untouched group (k drifts as the total census grows, and
+        # rng.choice's own output for a smaller k isn't a subset of its
+        # output for a larger k with the same seed). With both fixes, an
+        # untouched group's shrinking selection is verified to be an exact
+        # SUBSET of its earlier, larger selection -- not full overlap
+        # (fewer markets get sampled from a fixed-size group as the total
+        # census grows and `frac` drops), but the right property: consistent
+        # shrink/grow, never an unrelated reshuffle.
+        group_seed = int.from_bytes(
+            hashlib.sha256(f"{seed}|{quarter}|{bucket}".encode()).digest()[:8], "big"
+        )
+        rng = np.random.default_rng(group_seed)
+        shuffled = rng.permutation(grp.index.to_numpy())
+        idx = shuffled[:k]
         parts.append(grp.loc[idx])
     sampled = pd.concat(parts) if parts else df.iloc[0:0]
     return sampled.to_dict("records")
