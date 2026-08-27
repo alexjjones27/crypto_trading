@@ -15,3 +15,7 @@ data/raw/polymarket/
 # deterministic download. Kept out of git; re-fetch via
 # scripts/download_football_data.py.
 data/football_data/
+
+# tennis-data.co.uk odds cache (~45 files): same deal, re-fetch via
+# scripts/download_tennis_data.py.
+data/tennis_data/
