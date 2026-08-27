@@ -10,3 +10,8 @@ __pycache__/
 # scripts/run_polymarket_final_pct.py (populates data/raw/polymarket/ from
 # the live public APIs, cached to disk for subsequent local runs).
 data/raw/polymarket/
+
+# football-data.co.uk closing-line cache (~15MB, 117 CSVs): free, public,
+# deterministic download. Kept out of git; re-fetch via
+# scripts/download_football_data.py.
+data/football_data/

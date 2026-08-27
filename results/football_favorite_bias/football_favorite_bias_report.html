@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Betting the Board Favorite</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Domine:wght@500;600;700&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --page-bg:        #f5f3ee;
+    --surface:        #fbfaf6;
+    --surface-raised: #ffffff;
+    --ink-primary:    #1b1f1a;
+    --ink-secondary:  #55564e;
+    --ink-muted:      #8f8d80;
+    --gridline:       #e3e0d5;
+    --border:         rgba(27,31,26,0.10);
+    --border-strong:  rgba(27,31,26,0.16);
+    --series-kelly:   #0d7ea6;
+    --series-kelly-wash: rgba(13,126,166,0.11);
+    --series-flat:    #93325a;
+    --series-flat-wash: rgba(147,50,90,0.08);
+    --good: #1f7a4d;
+    --good-wash: rgba(31,122,77,0.10);
+    --bad: #a4433a;
+    --bad-wash: rgba(164,67,58,0.09);
+    --info: #6a4fa0;
+    --info-wash: rgba(106,79,160,0.09);
+    --shadow: 0 1px 2px rgba(27,31,26,0.06), 0 8px 24px -12px rgba(27,31,26,0.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page-bg: #0e1012; --surface: #171a1d; --surface-raised: #1c2023;
+      --ink-primary: #f3f2ee; --ink-secondary: #c7c5ba; --ink-muted: #8b897d;
+      --gridline: #2b2e31; --border: rgba(255,255,255,0.09); --border-strong: rgba(255,255,255,0.15);
+      --series-kelly: #34a0cc; --series-kelly-wash: rgba(52,160,204,0.14);
+      --series-flat: #c46a8f; --series-flat-wash: rgba(196,106,143,0.10);
+      --good: #4bbd85; --good-wash: rgba(75,189,133,0.12);
+      --bad: #e08277; --bad-wash: rgba(224,130,119,0.12);
+      --info: #a48fd6; --info-wash: rgba(164,143,214,0.14);
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page-bg: #0e1012; --surface: #171a1d; --surface-raised: #1c2023;
+    --ink-primary: #f3f2ee; --ink-secondary: #c7c5ba; --ink-muted: #8b897d;
+    --gridline: #2b2e31; --border: rgba(255,255,255,0.09); --border-strong: rgba(255,255,255,0.15);
+    --series-kelly: #34a0cc; --series-kelly-wash: rgba(52,160,204,0.14);
+    --series-flat: #c46a8f; --series-flat-wash: rgba(196,106,143,0.10);
+    --good: #4bbd85; --good-wash: rgba(75,189,133,0.12);
+    --bad: #e08277; --bad-wash: rgba(224,130,119,0.12);
+    --info: #a48fd6; --info-wash: rgba(164,143,214,0.14);
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--page-bg); color: var(--ink-primary);
+    font-family: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 56px 24px 90px; }
+  .eyebrow {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--series-kelly); margin: 0 0 16px;
+  }
+  h1 {
+    font-family: "Domine", Georgia, serif; font-weight: 600; font-size: clamp(28px, 4.2vw, 40px);
+    line-height: 1.16; letter-spacing: -0.01em; margin: 0 0 18px; text-wrap: balance;
+  }
+  .dek { font-size: 16.5px; line-height: 1.62; color: var(--ink-secondary); max-width: 68ch; margin: 0 0 6px; }
+  .dek b { color: var(--ink-primary); }
+  .meta-row {
+    display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 22px; padding-top: 18px;
+    border-top: 1px solid var(--border); font-family: "IBM Plex Mono", monospace;
+    font-size: 12.5px; color: var(--ink-muted);
+  }
+  .meta-row b { color: var(--ink-secondary); font-weight: 600; }
+
+  .verdict {
+    margin-top: 34px; background: var(--bad-wash); border: 1px solid rgba(164,67,58,0.22);
+    border-radius: 14px; padding: 22px 24px; display: flex; gap: 16px; align-items: flex-start;
+  }
+  .verdict .mark {
+    flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--bad); color: #fff;
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px;
+    font-family: "IBM Plex Mono", monospace;
+  }
+  .verdict h3 { margin: 0 0 6px; font-family: "Domine", Georgia, serif; font-size: 17px; font-weight: 600; color: var(--bad); }
+  .verdict p { margin: 0; font-size: 14.5px; line-height: 1.65; color: var(--ink-secondary); max-width: 66ch; }
+  .verdict p b { color: var(--ink-primary); }
+
+  section.panel {
+    margin-top: 36px; background: var(--surface-raised); border: 1px solid var(--border);
+    border-radius: 16px; padding: 30px 30px 26px; box-shadow: var(--shadow);
+  }
+  .panel h2 { font-family: "Domine", Georgia, serif; font-weight: 600; font-size: 21px; margin: 0 0 8px; }
+  .panel .panel-note { font-size: 14px; color: var(--ink-secondary); line-height: 1.6; max-width: 68ch; margin: 0 0 22px; }
+  .panel .panel-note b { color: var(--ink-primary); }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-top: 22px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+  .stat .label { font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px; }
+  .stat .value { font-family: "IBM Plex Mono", monospace; font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .stat .sub { font-size: 12px; color: var(--ink-muted); margin-top: 4px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .table-scroll { overflow-x: auto; }
+  th {
+    text-align: left; font-weight: 700; font-size: 11.5px; letter-spacing: 0.03em; text-transform: uppercase;
+    color: var(--ink-muted); padding: 9px 12px; border-bottom: 1px solid var(--border-strong); white-space: nowrap;
+  }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td.num, th.num { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; text-align: right; }
+  td.pos { color: var(--good); }
+  td.neg { color: var(--bad); }
+  tr:last-child td { border-bottom: none; }
+  tr.highlight td { background: var(--series-kelly-wash); font-weight: 600; }
+
+  .legend { display: flex; gap: 22px; margin: 4px 0 14px; font-size: 12.5px; color: var(--ink-secondary); flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .swatch { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+  .chart-block { position: relative; margin-top: 6px; }
+  .chart-block svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .axis-label { font-family: "IBM Plex Mono", monospace; font-size: 10.5px; fill: var(--ink-muted); }
+  .grid-line { stroke: var(--gridline); stroke-width: 1; }
+  .tooltip {
+    position: fixed; pointer-events: none; z-index: 40; opacity: 0; transition: opacity 0.1s ease;
+    background: var(--surface-raised); border: 1px solid var(--border-strong); border-radius: 8px;
+    padding: 9px 12px; font-size: 12.5px; box-shadow: var(--shadow); max-width: 240px;
+    font-family: "IBM Plex Mono", monospace; color: var(--ink-primary); line-height: 1.6;
+  }
+  .tooltip .t-head { font-family: "Public Sans", sans-serif; font-weight: 600; color: var(--ink-secondary); font-size: 11px; margin-bottom: 3px; }
+  .tooltip .t-row { display: flex; justify-content: space-between; gap: 14px; }
+  .tooltip .t-row .k { color: var(--ink-muted); display: flex; align-items: center; gap: 6px; }
+  .crosshair { stroke: var(--ink-muted); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0; }
+
+  .split-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 20px; }
+  .split-card { border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; background: var(--surface); }
+  .split-card .ctitle { font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 2px; }
+  .split-card .crange { font-size: 12px; color: var(--ink-muted); margin-bottom: 16px; font-family: "IBM Plex Mono", monospace; }
+  .split-card .cheadline { font-family: "IBM Plex Mono", monospace; font-size: 26px; font-weight: 600; margin-bottom: 14px; font-variant-numeric: tabular-nums; }
+  .split-card.good .cheadline { color: var(--good); }
+  .split-card.bad .cheadline { color: var(--bad); }
+  .split-row { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .split-row:last-child { border-bottom: none; }
+  .split-row .k { color: var(--ink-secondary); }
+  .split-row .v { font-family: "IBM Plex Mono", monospace; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  footer { margin-top: 46px; padding-top: 22px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--ink-muted); line-height: 1.7; }
+
+  @media (max-width: 640px) { .split-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Free-Data Backtest &middot; Football Closing Lines</p>
+  <h1>Does the Favorite-Longshot Edge Survive a Switch to a Sharp Bookmaker?</h1>
+  <p class="dek">
+    Polymarket's Final-1% strategy found a persistent, exploitable edge in backing extreme favorites on a thin,
+    retail-heavy prediction market. This re-runs the <b>same 70%-threshold, walk-forward Kelly methodology</b> on
+    <b>41,314</b> football matches across <b>9</b> European leagues (2012/13&ndash;2024/25), using
+    free closing-line odds from football-data.co.uk, anchored to Pinnacle &mdash; the sports-betting industry's
+    reference "sharp" book.
+  </p>
+  <div class="meta-row">
+    <span><b>Source</b> football-data.co.uk, free CSV, no account</span>
+    <span><b>Price</b> Pinnacle closing odds (vig included, no fee added on top)</span>
+    <span><b>Method</b> identical run_sim / run_flat_sim engines from the Polymarket project</span>
+  </div>
+
+  <div class="verdict">
+    <div class="mark">&times;</div>
+    <div>
+      <h3>The edge does not survive an out-of-sample split</h3>
+      <p>
+        Backed on the full 2012&ndash;2025 sample, the 70% threshold strategy looks like a real discovery
+        (<b>quarter-Kelly turns $10,000 into $20,235</b>). But splitting the sample in half by
+        date &mdash; each half re-starting its walk-forward belief from a cold prior, so nothing leaks across
+        the split &mdash; shows the "edge" was <b>+1.02pp</b> in 2012&ndash;2019 and <b>-0.74pp</b> in
+        2019&ndash;2025: it flips sign. That is the signature of a sample-period artifact, not a structural
+        mispricing, and it's the opposite of what the Polymarket project found when it ran the same check.
+      </p>
+    </div>
+  </div>
+
+  <section class="panel">
+    <h2>1. Does the raw closing price already predict the outcome?</h2>
+    <p class="panel-note">
+      Before any staking model: at each threshold, is the favorite's realized win rate above or below what the
+      vig-inclusive closing price implies? A trader profits only where <b>win rate &gt; price</b> &mdash;
+      anywhere else, the bookmaker's built-in margin (mean overround <b>2.59%</b> across this sample) is enough
+      on its own to beat the bettor.
+    </p>
+    <div class="table-scroll">
+    <table>
+      <thead><tr><th>Threshold</th><th class="num">Matches</th><th class="num">Win rate</th><th class="num">Avg. closing price</th><th class="num">Edge</th></tr></thead>
+      <tbody><tr>
+          <td>60%</td>
+          <td class="num">12,081</td>
+          <td class="num">71.67%</td>
+          <td class="num">72.19%</td>
+          <td class="num neg">-0.52pp</td>
+        </tr><tr>
+          <td>65%</td>
+          <td class="num">8,874</td>
+          <td class="num">75.25%</td>
+          <td class="num">75.71%</td>
+          <td class="num neg">-0.46pp</td>
+        </tr><tr>
+          <td>70%</td>
+          <td class="num">6,238</td>
+          <td class="num">79.37%</td>
+          <td class="num">79.18%</td>
+          <td class="num pos">+0.18pp</td>
+        </tr><tr>
+          <td>75%</td>
+          <td class="num">4,260</td>
+          <td class="num">82.00%</td>
+          <td class="num">82.29%</td>
+          <td class="num neg">-0.29pp</td>
+        </tr><tr>
+          <td>80%</td>
+          <td class="num">2,671</td>
+          <td class="num">85.02%</td>
+          <td class="num">85.30%</td>
+          <td class="num neg">-0.27pp</td>
+        </tr><tr>
+          <td>85%</td>
+          <td class="num">1,232</td>
+          <td class="num">87.91%</td>
+          <td class="num">88.81%</td>
+          <td class="num neg">-0.90pp</td>
+        </tr><tr>
+          <td>90%</td>
+          <td class="num">409</td>
+          <td class="num">91.44%</td>
+          <td class="num">91.94%</td>
+          <td class="num neg">-0.50pp</td>
+        </tr><tr>
+          <td>95%</td>
+          <td class="num">29</td>
+          <td class="num">100.00%</td>
+          <td class="num">95.62%</td>
+          <td class="num pos">+4.38pp</td>
+        </tr></tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>2. Threshold sweep: quarter-Kelly vs. flat 1%-of-equity</h2>
+    <p class="panel-note">
+      Same walk-forward, per-league Bayesian Kelly engine used throughout the Polymarket project, with a prior
+      re-centered for this population (Beta(5,15), mean 25% loss rate, vs. Polymarket's Beta(1,300) tuned for
+      99%+ near-certainties &mdash; reusing that prior here would have wildly oversized the first bets in every
+      league before the belief caught up). 70% is the only threshold with a clean pooled edge and enough sample
+      to size meaningfully; everything else is presented for context, not cherry-picked after the fact.
+    </p>
+    <div class="table-scroll">
+    <table>
+      <thead><tr><th>Threshold</th><th class="num">Trades</th><th class="num">Kelly CAGR</th><th class="num">Kelly Sharpe</th><th class="num">Kelly MaxDD</th><th class="num">Flat CAGR</th><th class="num">Flat Sharpe</th><th class="num">Flat MaxDD</th></tr></thead>
+      <tbody><tr>
+          <td>60%</td>
+          <td class="num">12,081</td>
+          <td class="num neg">-22.00%</td>
+          <td class="num">-0.32</td>
+          <td class="num">96.0%</td>
+          <td class="num neg">-9.03%</td>
+          <td class="num">-0.38</td>
+          <td class="num">70.8%</td>
+        </tr><tr>
+          <td>65%</td>
+          <td class="num">8,874</td>
+          <td class="num neg">-13.12%</td>
+          <td class="num">-0.23</td>
+          <td class="num">88.3%</td>
+          <td class="num neg">-5.76%</td>
+          <td class="num">-0.3</td>
+          <td class="num">60.3%</td>
+        </tr><tr>
+          <td>70%</td>
+          <td class="num">6,238</td>
+          <td class="num pos">+5.65%</td>
+          <td class="num">0.34</td>
+          <td class="num">60.7%</td>
+          <td class="num pos">+0.69%</td>
+          <td class="num">0.12</td>
+          <td class="num">39.5%</td>
+        </tr><tr>
+          <td>75%</td>
+          <td class="num">4,260</td>
+          <td class="num neg">-2.07%</td>
+          <td class="num">-0.02</td>
+          <td class="num">73.6%</td>
+          <td class="num neg">-1.56%</td>
+          <td class="num">-0.13</td>
+          <td class="num">43.2%</td>
+        </tr><tr>
+          <td>80%</td>
+          <td class="num">2,671</td>
+          <td class="num neg">-0.43%</td>
+          <td class="num">0.02</td>
+          <td class="num">51.0%</td>
+          <td class="num neg">-0.82%</td>
+          <td class="num">-0.1</td>
+          <td class="num">25.4%</td>
+        </tr><tr>
+          <td>85%</td>
+          <td class="num">1,232</td>
+          <td class="num neg">-0.51%</td>
+          <td class="num">-0.13</td>
+          <td class="num">15.7%</td>
+          <td class="num neg">-1.07%</td>
+          <td class="num">-0.28</td>
+          <td class="num">22.4%</td>
+        </tr><tr>
+          <td>90%</td>
+          <td class="num">409</td>
+          <td class="num neg">+0.00%</td>
+          <td class="num">—</td>
+          <td class="num">0.0%</td>
+          <td class="num neg">-0.20%</td>
+          <td class="num">-0.11</td>
+          <td class="num">6.0%</td>
+        </tr><tr>
+          <td>95%</td>
+          <td class="num">29</td>
+          <td class="num neg">+0.00%</td>
+          <td class="num">—</td>
+          <td class="num">0.0%</td>
+          <td class="num pos">+0.12%</td>
+          <td class="num">1.59</td>
+          <td class="num">0.0%</td>
+        </tr></tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>3. The headline case: 70% threshold, full sample</h2>
+    <p class="panel-note">
+      Read alongside the verdict above &mdash; these are the numbers that look good in isolation and don't
+      survive the split-sample check in Section 4.
+    </p>
+    <div class="stats">
+      <div class="stat"><div class="label">Kelly, quarter-fraction</div><div class="value" style="color:var(--series-kelly)">$20,235</div><div class="sub">3,354 trades taken &middot; CAGR +5.65% &middot; Sharpe 0.34 &middot; MaxDD 60.7%</div></div>
+      <div class="stat"><div class="label">Flat 1%-of-equity</div><div class="value" style="color:var(--series-flat)">$10,919</div><div class="sub">6,238 trades taken &middot; CAGR +0.69% &middot; Sharpe 0.12 &middot; MaxDD 39.5%</div></div>
+      <div class="stat"><div class="label">Starting bankroll</div><div class="value">$10,000</div><div class="sub">2012-08-04 &rarr; 2025-05-25</div></div>
+    </div>
+    <div class="legend">
+      <span><span class="swatch" style="background:var(--series-kelly)"></span>Quarter-Kelly</span>
+      <span><span class="swatch" style="background:var(--series-flat)"></span>Flat 1%</span>
+    </div>
+    <div class="chart-block" id="chart"></div>
+  </section>
+
+  <section class="panel">
+    <h2>4. Split-sample robustness &mdash; the check that overturns Section 3</h2>
+    <p class="panel-note">
+      Each half below re-starts the per-league walk-forward belief from a cold Beta(5,15) prior at the split
+      date, so nothing about the "edge" in one half is informed by the other. A structural mispricing should
+      show up in both; an edge that appears in one lucky decade and vanishes in the next is not something to
+      trade live money on. (Same spirit as this repo's <code>leakage_check.py</code> for the Polymarket
+      project, applied here as a train/test time split instead of a lookahead check.)
+    </p>
+    <div class="split-grid">
+      <div class="split-card good">
+        <div class="ctitle">2012 &ndash; 2019</div>
+        <div class="crange">2012-08-04 to 2019-05-26 &middot; n=3282</div>
+        <div class="cheadline">+15.37% CAGR</div>
+        <div class="split-row"><span class="k">Win rate vs. price</span><span class="v">+1.02pp</span></div>
+        <div class="split-row"><span class="k">Kelly Sharpe</span><span class="v">0.69</span></div>
+      </div>
+      <div class="split-card bad">
+        <div class="ctitle">2019 &ndash; 2025</div>
+        <div class="crange">2019-08-03 to 2025-05-25 &middot; n=2956</div>
+        <div class="cheadline">-7.01% CAGR</div>
+        <div class="split-row"><span class="k">Win rate vs. price</span><span class="v">-0.74pp</span></div>
+        <div class="split-row"><span class="k">Kelly Sharpe</span><span class="v">-0.2</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>5. Per-league breakdown (70% threshold, full sample)</h2>
+    <p class="panel-note">
+      The pooled edge is small and, per Section 4, unstable over time &mdash; but it's also not spread evenly
+      across leagues. Portugal, Spain and Italy show a consistent positive edge; Germany and the Netherlands show
+      a consistent negative one. That heterogeneity is a more plausible place to look for a real, narrower effect
+      than the pooled 70% number, but testing that would need its own split-sample check per league before it's
+      trustworthy &mdash; not done here, flagged as the natural next step.
+    </p>
+    <div class="table-scroll">
+    <table>
+      <thead><tr><th>League</th><th class="num">Matches</th><th class="num">Win rate</th><th class="num">Avg. price</th><th class="num">Edge</th></tr></thead>
+      <tbody><tr>
+          <td>Portugal - Liga Portugal</td>
+          <td class="num">870</td>
+          <td class="num">82.87%</td>
+          <td class="num">79.96%</td>
+          <td class="num pos">+2.92pp</td>
+        </tr><tr>
+          <td>Italy - Serie A</td>
+          <td class="num">777</td>
+          <td class="num">79.02%</td>
+          <td class="num">77.39%</td>
+          <td class="num pos">+1.63pp</td>
+        </tr><tr>
+          <td>Spain - La Liga</td>
+          <td class="num">824</td>
+          <td class="num">81.43%</td>
+          <td class="num">79.98%</td>
+          <td class="num pos">+1.46pp</td>
+        </tr><tr>
+          <td>France - Ligue 1</td>
+          <td class="num">523</td>
+          <td class="num">79.16%</td>
+          <td class="num">78.43%</td>
+          <td class="num pos">+0.73pp</td>
+        </tr><tr>
+          <td>Scotland - Premiership</td>
+          <td class="num">587</td>
+          <td class="num">80.07%</td>
+          <td class="num">80.56%</td>
+          <td class="num neg">-0.49pp</td>
+        </tr><tr>
+          <td>England - Premier League</td>
+          <td class="num">918</td>
+          <td class="num">78.10%</td>
+          <td class="num">78.60%</td>
+          <td class="num neg">-0.50pp</td>
+        </tr><tr>
+          <td>England - Championship</td>
+          <td class="num">206</td>
+          <td class="num">74.27%</td>
+          <td class="num">74.93%</td>
+          <td class="num neg">-0.66pp</td>
+        </tr><tr>
+          <td>Germany - Bundesliga</td>
+          <td class="num">633</td>
+          <td class="num">77.88%</td>
+          <td class="num">79.64%</td>
+          <td class="num neg">-1.75pp</td>
+        </tr><tr>
+          <td>Netherlands - Eredivisie</td>
+          <td class="num">900</td>
+          <td class="num">77.56%</td>
+          <td class="num">80.05%</td>
+          <td class="num neg">-2.49pp</td>
+        </tr></tbody>
+    </table>
+    </div>
+  </section>
+
+  <footer>
+    Data: free historical results + closing odds from football-data.co.uk (Pinnacle preferred, Bet365 / market
+    Max &amp; Avg as fallback for the ~0.1% of matches Pinnacle didn't quote). No account or API key required to
+    reproduce &mdash; see <code>scripts/download_football_data.py</code>. Backtest engine: unmodified
+    <code>run_sim</code> / <code>run_flat_sim</code> from the Polymarket Final-1% project, with the Beta prior
+    parameterized (<code>prior_a</code>/<code>prior_b</code>) rather than hardcoded, so the same walk-forward
+    Kelly logic serves both projects without duplication. Full numbers: <code>results/football_favorite_bias/football_favorite_bias_results.json</code>.
+  </footer>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+const kellySeries = [["2012-08-04", 10000.0], ["2012-08-29", 9400.21], ["2012-09-24", 8959.41], ["2012-10-20", 9125.77], ["2012-11-15", 9189.07], ["2012-12-11", 8416.14], ["2013-01-06", 8602.32], ["2013-02-01", 9102.94], ["2013-02-27", 9569.71], ["2013-03-25", 10696.6], ["2013-04-20", 12013.27], ["2013-05-16", 13577.47], ["2013-06-11", 13632.67], ["2013-07-07", 13632.67], ["2013-08-02", 13632.67], ["2013-08-28", 15190.91], ["2013-09-23", 16492.28], ["2013-10-19", 16643.6], ["2013-11-14", 18280.74], ["2013-12-10", 17209.35], ["2014-01-05", 17809.22], ["2014-01-31", 15419.54], ["2014-02-26", 14175.78], ["2014-03-24", 16132.07], ["2014-04-19", 16991.35], ["2014-05-15", 16727.21], ["2014-06-10", 17195.02], ["2014-07-06", 17195.02], ["2014-08-01", 17195.02], ["2014-08-27", 17815.39], ["2014-09-22", 16664.91], ["2014-10-18", 14323.11], ["2014-11-13", 14596.15], ["2014-12-09", 14620.59], ["2015-01-04", 13173.58], ["2015-01-30", 14323.76], ["2015-02-25", 17461.28], ["2015-03-23", 16497.53], ["2015-04-18", 19104.8], ["2015-05-14", 17866.77], ["2015-06-09", 17528.82], ["2015-07-05", 17528.82], ["2015-07-31", 17528.82], ["2015-08-26", 15145.89], ["2015-09-21", 14707.46], ["2015-10-17", 14744.17], ["2015-11-12", 16083.32], ["2015-12-08", 15198.37], ["2016-01-03", 14729.08], ["2016-01-29", 15698.48], ["2016-02-24", 17668.61], ["2016-03-21", 18985.17], ["2016-04-16", 19500.47], ["2016-05-12", 20774.23], ["2016-06-07", 21602.78], ["2016-07-03", 21602.78], ["2016-07-29", 21602.78], ["2016-08-24", 21553.63], ["2016-09-19", 21617.01], ["2016-10-15", 20934.39], ["2016-11-10", 19786.87], ["2016-12-06", 18486.26], ["2017-01-01", 19927.03], ["2017-01-27", 20151.18], ["2017-02-22", 23860.89], ["2017-03-20", 26317.29], ["2017-04-15", 22225.85], ["2017-05-11", 19629.79], ["2017-06-06", 19832.3], ["2017-07-02", 19832.3], ["2017-07-28", 19832.3], ["2017-08-23", 21715.81], ["2017-09-18", 24830.37], ["2017-10-14", 23528.4], ["2017-11-09", 24241.28], ["2017-12-05", 22768.61], ["2017-12-31", 19706.65], ["2018-01-26", 18942.34], ["2018-02-21", 17037.69], ["2018-03-19", 19231.75], ["2018-04-14", 19651.02], ["2018-05-10", 21042.08], ["2018-06-05", 21103.5], ["2018-07-01", 21103.5], ["2018-07-27", 21103.5], ["2018-08-22", 22262.21], ["2018-09-17", 21665.53], ["2018-10-13", 22614.93], ["2018-11-08", 23600.64], ["2018-12-04", 25286.45], ["2018-12-30", 28517.79], ["2019-01-24", 30202.21], ["2019-02-19", 29913.22], ["2019-03-17", 29634.4], ["2019-04-12", 29948.09], ["2019-05-08", 29881.45], ["2019-06-03", 26472.46], ["2019-06-29", 26472.46], ["2019-07-25", 26472.46], ["2019-08-20", 25635.7], ["2019-09-15", 25227.96], ["2019-10-11", 26902.21], ["2019-11-06", 20084.43], ["2019-12-02", 22111.5], ["2019-12-28", 22364.46], ["2020-01-23", 23321.38], ["2020-02-18", 23445.04], ["2020-03-15", 20905.53], ["2020-04-10", 20905.53], ["2020-05-06", 20905.53], ["2020-06-01", 20052.94], ["2020-06-27", 18741.35], ["2020-07-23", 19860.92], ["2020-08-18", 20816.21], ["2020-09-13", 20627.61], ["2020-10-09", 19440.16], ["2020-11-04", 18335.76], ["2020-11-30", 18442.71], ["2020-12-26", 15980.83], ["2021-01-21", 14074.95], ["2021-02-16", 13169.69], ["2021-03-14", 14342.44], ["2021-04-09", 14212.4], ["2021-05-05", 15744.14], ["2021-05-31", 16269.51], ["2021-06-26", 16269.51], ["2021-07-22", 16269.51], ["2021-08-17", 16185.8], ["2021-09-12", 16898.86], ["2021-10-08", 17629.7], ["2021-11-03", 18238.05], ["2021-11-29", 17227.99], ["2021-12-25", 17497.59], ["2022-01-20", 17467.02], ["2022-02-15", 19102.41], ["2022-03-13", 16893.86], ["2022-04-08", 16545.99], ["2022-05-04", 19001.14], ["2022-05-30", 17986.84], ["2022-06-25", 17986.84], ["2022-07-21", 17986.84], ["2022-08-16", 18381.25], ["2022-09-11", 19391.79], ["2022-10-07", 18332.75], ["2022-11-02", 17842.24], ["2022-11-28", 16708.31], ["2022-12-24", 17063.33], ["2023-01-19", 18203.98], ["2023-02-14", 21215.55], ["2023-03-12", 24748.94], ["2023-04-07", 24374.47], ["2023-05-03", 25347.31], ["2023-05-29", 23402.36], ["2023-06-24", 21998.22], ["2023-07-20", 21998.22], ["2023-08-15", 21522.18], ["2023-09-10", 22391.75], ["2023-10-06", 24702.16], ["2023-11-01", 27435.3], ["2023-11-27", 28300.38], ["2023-12-23", 28757.08], ["2024-01-18", 31103.12], ["2024-02-13", 29759.43], ["2024-03-10", 31506.84], ["2024-04-05", 28627.38], ["2024-05-01", 26534.28], ["2024-05-27", 22305.19], ["2024-06-22", 22305.19], ["2024-07-18", 22305.19], ["2024-08-13", 22276.97], ["2024-09-08", 20409.84], ["2024-10-04", 21641.45], ["2024-10-30", 24006.09], ["2024-11-25", 27665.44], ["2024-12-21", 25130.16], ["2025-01-16", 19391.43], ["2025-02-11", 19506.38], ["2025-03-09", 18694.85], ["2025-04-04", 19884.35], ["2025-04-30", 17780.96], ["2025-05-25", 20234.76]];
+const flatSeries = [["2012-08-04", 10030.0], ["2012-08-29", 9710.46], ["2012-09-24", 9747.72], ["2012-10-20", 9918.39], ["2012-11-15", 10134.51], ["2012-12-11", 9691.81], ["2013-01-06", 9470.7], ["2013-02-01", 9446.98], ["2013-02-27", 9435.29], ["2013-03-25", 10113.88], ["2013-04-20", 10536.69], ["2013-05-16", 11128.21], ["2013-06-11", 11268.7], ["2013-07-07", 11268.7], ["2013-08-02", 11284.48], ["2013-08-28", 11778.39], ["2013-09-23", 12298.49], ["2013-10-19", 12715.23], ["2013-11-14", 12648.91], ["2013-12-10", 12361.75], ["2014-01-05", 12929.22], ["2014-01-31", 12456.63], ["2014-02-26", 12184.31], ["2014-03-24", 12817.03], ["2014-04-19", 12640.71], ["2014-05-15", 11844.31], ["2014-06-10", 12085.81], ["2014-07-06", 12085.81], ["2014-08-01", 12085.81], ["2014-08-27", 12232.81], ["2014-09-22", 11755.19], ["2014-10-18", 11247.53], ["2014-11-13", 11208.32], ["2014-12-09", 11394.85], ["2015-01-04", 10683.04], ["2015-01-30", 11461.5], ["2015-02-25", 11935.71], ["2015-03-23", 11859.17], ["2015-04-18", 12549.91], ["2015-05-14", 12178.69], ["2015-06-09", 12109.82], ["2015-07-05", 12109.82], ["2015-07-31", 12109.82], ["2015-08-26", 11612.08], ["2015-09-21", 11637.45], ["2015-10-17", 11525.05], ["2015-11-12", 12201.56], ["2015-12-08", 12250.54], ["2016-01-03", 11924.28], ["2016-01-29", 12160.92], ["2016-02-24", 12978.49], ["2016-03-21", 13091.22], ["2016-04-16", 13486.38], ["2016-05-12", 13501.08], ["2016-06-07", 13763.99], ["2016-07-03", 13763.99], ["2016-07-29", 13763.99], ["2016-08-24", 13494.71], ["2016-09-19", 13640.31], ["2016-10-15", 13625.99], ["2016-11-10", 12995.89], ["2016-12-06", 12885.79], ["2017-01-01", 13800.88], ["2017-01-27", 14279.53], ["2017-02-22", 14935.42], ["2017-03-20", 15357.64], ["2017-04-15", 15079.01], ["2017-05-11", 14376.73], ["2017-06-06", 14598.96], ["2017-07-02", 14598.96], ["2017-07-28", 14598.96], ["2017-08-23", 15254.54], ["2017-09-18", 15535.08], ["2017-10-14", 14804.59], ["2017-11-09", 15050.81], ["2017-12-05", 14425.51], ["2017-12-31", 13953.21], ["2018-01-26", 13959.81], ["2018-02-21", 13493.65], ["2018-03-19", 14229.01], ["2018-04-14", 14537.15], ["2018-05-10", 13818.96], ["2018-06-05", 13686.59], ["2018-07-01", 13686.59], ["2018-07-27", 13686.59], ["2018-08-22", 14253.64], ["2018-09-17", 14152.69], ["2018-10-13", 14063.0], ["2018-11-08", 14334.86], ["2018-12-04", 14441.44], ["2018-12-30", 15531.52], ["2019-01-24", 15701.83], ["2019-02-19", 15445.72], ["2019-03-17", 15653.29], ["2019-04-12", 15433.43], ["2019-05-08", 15410.54], ["2019-06-03", 14990.16], ["2019-06-29", 14990.16], ["2019-07-25", 14990.16], ["2019-08-20", 14995.41], ["2019-09-15", 14957.26], ["2019-10-11", 14913.89], ["2019-11-06", 13436.52], ["2019-12-02", 13674.05], ["2019-12-28", 13753.86], ["2020-01-23", 13782.92], ["2020-02-18", 13758.44], ["2020-03-15", 13435.85], ["2020-04-10", 13435.85], ["2020-05-06", 13435.85], ["2020-06-01", 13313.93], ["2020-06-27", 12872.13], ["2020-07-23", 12859.4], ["2020-08-18", 12960.66], ["2020-09-13", 13108.48], ["2020-10-09", 12778.78], ["2020-11-04", 12668.64], ["2020-11-30", 12650.68], ["2020-12-26", 11930.83], ["2021-01-21", 11151.59], ["2021-02-16", 10765.99], ["2021-03-14", 11248.11], ["2021-04-09", 11164.34], ["2021-05-05", 11108.16], ["2021-05-31", 11022.37], ["2021-06-26", 11022.37], ["2021-07-22", 11022.37], ["2021-08-17", 11109.44], ["2021-09-12", 11473.02], ["2021-10-08", 11180.18], ["2021-11-03", 10915.47], ["2021-11-29", 10679.9], ["2021-12-25", 10973.75], ["2022-01-20", 11124.6], ["2022-02-15", 11213.74], ["2022-03-13", 10348.95], ["2022-04-08", 10457.09], ["2022-05-04", 10911.93], ["2022-05-30", 10479.0], ["2022-06-25", 10479.0], ["2022-07-21", 10479.0], ["2022-08-16", 10527.0], ["2022-09-11", 10796.38], ["2022-10-07", 10280.97], ["2022-11-02", 10161.14], ["2022-11-28", 9900.18], ["2022-12-24", 10054.46], ["2023-01-19", 10144.07], ["2023-02-14", 10804.61], ["2023-03-12", 11700.92], ["2023-04-07", 11696.21], ["2023-05-03", 11743.17], ["2023-05-29", 11552.29], ["2023-06-24", 11216.93], ["2023-07-20", 11216.93], ["2023-08-15", 11219.52], ["2023-09-10", 11221.39], ["2023-10-06", 11873.79], ["2023-11-01", 12521.57], ["2023-11-27", 12302.1], ["2023-12-23", 12128.25], ["2024-01-18", 12599.88], ["2024-02-13", 12391.43], ["2024-03-10", 13014.84], ["2024-04-05", 12748.58], ["2024-05-01", 11962.87], ["2024-05-27", 11462.56], ["2024-06-22", 11462.56], ["2024-07-18", 11462.56], ["2024-08-13", 11287.19], ["2024-09-08", 11239.57], ["2024-10-04", 11750.53], ["2024-10-30", 12329.2], ["2024-11-25", 12759.33], ["2024-12-21", 11875.25], ["2025-01-16", 11071.87], ["2025-02-11", 11080.26], ["2025-03-09", 10726.6], ["2025-04-04", 10981.0], ["2025-04-30", 10634.76], ["2025-05-25", 10918.89]];
+
+function renderChart() {
+  const container = document.getElementById('chart');
+  const width = container.clientWidth || 900;
+  const height = 320;
+  const pad = { top: 16, right: 16, bottom: 28, left: 64 };
+  const plotW = width - pad.left - pad.right;
+  const plotH = height - pad.top - pad.bottom;
+
+  const allVals = kellySeries.concat(flatSeries).map(d => d[1]);
+  const minV = Math.min(...allVals, 0);
+  const maxV = Math.max(...allVals);
+  const n = kellySeries.length;
+
+  const x = i => pad.left + (i / (n - 1)) * plotW;
+  const y = v => pad.top + plotH - ((v - minV) / (maxV - minV)) * plotH;
+
+  function pathFor(series) {
+    return series.map((d, i) => `${i === 0 ? 'M' : 'L'} ${x(i).toFixed(2)} ${y(d[1]).toFixed(2)}`).join(' ');
+  }
+
+  const gridCount = 5;
+  let gridLines = '';
+  let axisLabels = '';
+  for (let g = 0; g <= gridCount; g++) {
+    const v = minV + (maxV - minV) * (g / gridCount);
+    const yy = y(v);
+    gridLines += `<line class="grid-line" x1="${pad.left}" x2="${width - pad.right}" y1="${yy}" y2="${yy}"/>`;
+    axisLabels += `<text class="axis-label" x="${pad.left - 8}" y="${yy + 4}" text-anchor="end">$${Math.round(v).toLocaleString()}</text>`;
+  }
+  const yearTicks = 4;
+  for (let t = 0; t <= yearTicks; t++) {
+    const idx = Math.round((n - 1) * t / yearTicks);
+    const xx = x(idx);
+    axisLabels += `<text class="axis-label" x="${xx}" y="${height - 6}" text-anchor="middle">${kellySeries[idx][0].slice(0,7)}</text>`;
+  }
+
+  container.innerHTML = `
+    <svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+      ${gridLines}
+      <path d="${pathFor(flatSeries)}" fill="none" stroke="var(--series-flat)" stroke-width="2"/>
+      <path d="${pathFor(kellySeries)}" fill="none" stroke="var(--series-kelly)" stroke-width="2"/>
+      ${axisLabels}
+      <line id="crosshair" class="crosshair" x1="0" x2="0" y1="${pad.top}" y2="${pad.top + plotH}"/>
+      <rect id="hover-rect" x="${pad.left}" y="${pad.top}" width="${plotW}" height="${plotH}" fill="transparent"/>
+    </svg>
+  `;
+
+  const svg = container.querySelector('svg');
+  const hoverRect = container.querySelector('#hover-rect');
+  const crosshair = container.querySelector('#crosshair');
+  const tooltip = document.getElementById('tooltip');
+
+  hoverRect.addEventListener('mousemove', (e) => {
+    const rect = svg.getBoundingClientRect();
+    const scaleX = width / rect.width;
+    const mouseX = (e.clientX - rect.left) * scaleX;
+    let idx = Math.round(((mouseX - pad.left) / plotW) * (n - 1));
+    idx = Math.max(0, Math.min(n - 1, idx));
+    const xx = x(idx);
+    crosshair.setAttribute('x1', xx);
+    crosshair.setAttribute('x2', xx);
+    crosshair.style.opacity = 1;
+    const kv = kellySeries[idx][1];
+    const fv = flatSeries[idx][1];
+    tooltip.innerHTML = `
+      <div class="t-head">${kellySeries[idx][0]}</div>
+      <div class="t-row"><span class="k"><span class="swatch" style="background:var(--series-kelly)"></span>Kelly</span><span>$${kv.toLocaleString(undefined,{maximumFractionDigits:0})}</span></div>
+      <div class="t-row"><span class="k"><span class="swatch" style="background:var(--series-flat)"></span>Flat 1%</span><span>$${fv.toLocaleString(undefined,{maximumFractionDigits:0})}</span></div>
+    `;
+    tooltip.style.left = (e.clientX + 14) + 'px';
+    tooltip.style.top = (e.clientY + 14) + 'px';
+    tooltip.style.opacity = 1;
+  });
+  hoverRect.addEventListener('mouseleave', () => {
+    crosshair.style.opacity = 0;
+    tooltip.style.opacity = 0;
+  });
+}
+
+renderChart();
+window.addEventListener('resize', renderChart);
+</script>
+</body>
+</html>

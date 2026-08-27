@@ -41,7 +41,8 @@ START_BANKROLL = 10000.0
 FRACTIONS = [1.0, 0.5, 0.25, 0.125, 0.0625, 0.03125]
 
 
-def run_sim(all_trades, fraction, max_pos_pct=MAX_POS_PCT, agg_cap_pct=AGG_CAP_PCT, cat_cap_pct=CAT_CAP_PCT, track_trades=False):
+def run_sim(all_trades, fraction, max_pos_pct=MAX_POS_PCT, agg_cap_pct=AGG_CAP_PCT, cat_cap_pct=CAT_CAP_PCT,
+            track_trades=False, prior_a=PRIOR_A, prior_b=PRIOR_B):
     tradeable = [r for r in all_trades if not r['excluded']]
     events = []
     for r in tradeable:
@@ -61,7 +62,7 @@ def run_sim(all_trades, fraction, max_pos_pct=MAX_POS_PCT, agg_cap_pct=AGG_CAP_P
     def qh(bucket):
         k = bucket_flips.get(bucket, 0)
         n = bucket_n.get(bucket, 0)
-        return (PRIOR_A + k) / (PRIOR_A + PRIOR_B + n)
+        return (prior_a + k) / (prior_a + prior_b + n)
 
     cash = START_BANKROLL
     committed = {}
