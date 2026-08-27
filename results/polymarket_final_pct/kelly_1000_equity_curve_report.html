@@ -1,0 +1,306 @@
+<title>Turning $1,000 Into $1,294</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Domine:wght@500;600;700&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    color-scheme: light;
+    --page-bg:        #f5f3ee;
+    --surface-raised: #ffffff;
+    --ink-primary:    #1b1f1a;
+    --ink-secondary:  #55564e;
+    --ink-muted:      #8f8d80;
+    --gridline:       #e3e0d5;
+    --border:         rgba(27,31,26,0.10);
+    --border-strong:  rgba(27,31,26,0.16);
+    --series-primary:      #0d7ea6;
+    --series-primary-wash: rgba(13,126,166,0.11);
+    --good: #1f7a4d;
+    --shadow: 0 1px 2px rgba(27,31,26,0.06), 0 8px 24px -12px rgba(27,31,26,0.18);
+    --shadow-lg: 0 2px 4px rgba(27,31,26,0.05), 0 24px 48px -20px rgba(27,31,26,0.22);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page-bg:        #0e1012;
+      --surface-raised: #1c2023;
+      --ink-primary:    #f3f2ee;
+      --ink-secondary:  #c7c5ba;
+      --ink-muted:      #8b897d;
+      --gridline:       #2b2e31;
+      --border:         rgba(255,255,255,0.09);
+      --border-strong:  rgba(255,255,255,0.15);
+      --series-primary:      #34a0cc;
+      --series-primary-wash: rgba(52,160,204,0.14);
+      --good: #4bbd85;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+      --shadow-lg: 0 2px 4px rgba(0,0,0,0.3), 0 24px 48px -20px rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page-bg:        #0e1012;
+    --surface-raised: #1c2023;
+    --ink-primary:    #f3f2ee;
+    --ink-secondary:  #c7c5ba;
+    --ink-muted:      #8b897d;
+    --gridline:       #2b2e31;
+    --border:         rgba(255,255,255,0.09);
+    --border-strong:  rgba(255,255,255,0.15);
+    --series-primary:      #34a0cc;
+    --series-primary-wash: rgba(52,160,204,0.14);
+    --good: #4bbd85;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    --shadow-lg: 0 2px 4px rgba(0,0,0,0.3), 0 24px 48px -20px rgba(0,0,0,0.6);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--page-bg); color: var(--ink-primary);
+    font-family: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 56px 24px 90px; }
+
+  .eyebrow {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--series-primary); margin: 0 0 16px;
+  }
+  h1 {
+    font-family: "Domine", Georgia, serif; font-weight: 600; font-size: clamp(28px, 4.4vw, 42px);
+    line-height: 1.14; letter-spacing: -0.01em; margin: 0 0 18px; text-wrap: balance;
+  }
+  h1 .arrow { color: var(--ink-muted); font-weight: 400; padding: 0 4px; }
+  h1 .end { color: var(--good); }
+  .dek { font-size: 16.5px; line-height: 1.62; color: var(--ink-secondary); max-width: 64ch; margin: 0 0 6px; }
+  .dek b { color: var(--ink-primary); }
+  .meta-row {
+    display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 22px; padding-top: 18px;
+    border-top: 1px solid var(--border); font-family: "IBM Plex Mono", monospace;
+    font-size: 12.5px; color: var(--ink-muted);
+  }
+  .meta-row b { color: var(--ink-secondary); font-weight: 600; }
+
+  .hero-panel {
+    margin-top: 32px; background: var(--surface-raised); border: 1px solid var(--border);
+    border-radius: 18px; padding: 26px 28px 20px; box-shadow: var(--shadow-lg);
+  }
+  .hero-head h2 { font-family: "Domine", Georgia, serif; font-size: 17px; font-weight: 600; margin: 0 0 3px; }
+  .hero-head .cap-note { font-size: 12.5px; color: var(--ink-muted); }
+  .chart-block { position: relative; margin-top: 16px; }
+  .chart-block svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .axis-label { font-family: "IBM Plex Mono", monospace; font-size: 10.5px; fill: var(--ink-muted); }
+  .grid-line { stroke: var(--gridline); stroke-width: 1; }
+  .crosshair-line { stroke: var(--ink-muted); stroke-width: 1; stroke-dasharray: 2 3; opacity: 0; pointer-events: none; }
+
+  .tooltip {
+    position: fixed; pointer-events: none; z-index: 40; opacity: 0; transition: opacity 0.08s ease;
+    background: var(--surface-raised); border: 1px solid var(--border-strong); border-radius: 8px;
+    padding: 10px 13px; font-size: 12.5px; box-shadow: var(--shadow); min-width: 170px;
+    font-family: "IBM Plex Mono", monospace; color: var(--ink-primary); line-height: 1.65;
+  }
+  .tooltip .t-head { font-family: "Public Sans", sans-serif; font-weight: 600; color: var(--ink-secondary); font-size: 11px; margin-bottom: 4px; }
+  .tooltip .t-row { display: flex; justify-content: space-between; gap: 16px; }
+  .tooltip .t-row .k { color: var(--ink-muted); }
+
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+    background: var(--border); border: 1px solid var(--border); border-radius: 14px;
+    overflow: hidden; margin: 32px 0 8px; box-shadow: var(--shadow);
+  }
+  .stat { background: var(--surface-raised); padding: 18px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .stat .label { font-size: 10.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-muted); }
+  .stat .value { font-family: "IBM Plex Mono", monospace; font-size: 23px; font-weight: 600; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+  .stat .sub { font-size: 12px; color: var(--ink-secondary); line-height: 1.4; }
+
+  section.panel {
+    margin-top: 36px; background: var(--surface-raised); border: 1px solid var(--border);
+    border-radius: 16px; padding: 26px 28px 22px; box-shadow: var(--shadow);
+  }
+  .panel h2 { font-family: "Domine", Georgia, serif; font-weight: 600; font-size: 19px; margin: 0 0 8px; }
+  .panel p { font-size: 14px; color: var(--ink-secondary); line-height: 1.65; max-width: 68ch; margin: 0 0 10px; }
+  .panel p b { color: var(--ink-primary); }
+  .panel p:last-child { margin-bottom: 0; }
+
+  table.cmp-table { width: 100%; border-collapse: collapse; font-size: 13.5px; font-family: "IBM Plex Mono", monospace; margin-top: 14px; }
+  table.cmp-table th, table.cmp-table td { padding: 9px 12px; text-align: right; font-variant-numeric: tabular-nums; }
+  table.cmp-table th:first-child, table.cmp-table td:first-child { text-align: left; font-family: "Public Sans", sans-serif; }
+  table.cmp-table thead th { color: var(--ink-muted); font-weight: 600; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--border-strong); font-family: "Public Sans", sans-serif; }
+  table.cmp-table tbody tr { border-bottom: 1px solid var(--border); }
+  table.cmp-table tbody tr:last-child { border-bottom: none; }
+
+  footer {
+    margin-top: 48px; padding-top: 22px; border-top: 1px solid var(--border);
+    font-size: 13px; line-height: 1.7; color: var(--ink-muted);
+  }
+  footer p { margin: 0 0 12px; max-width: 70ch; }
+  footer code { font-family: "IBM Plex Mono", monospace; font-size: 12px; background: var(--page-bg); padding: 1px 5px; border-radius: 4px; color: var(--ink-secondary); }
+
+  @media (max-width: 640px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+</style>
+
+<div class="wrap">
+
+  <p class="eyebrow">Polymarket Final&#8209;1% &middot; $1,000 Portfolio</p>
+  <h1><span class="num">$1,000</span><span class="arrow">&rarr;</span><span class="num end">$1,294.33</span></h1>
+  <p class="dek">
+    The same recommended configuration used throughout this project &mdash; quarter&#8209;Kelly sizing off a
+    walk&#8209;forward flip&#8209;rate belief, 3% per&#8209;trade / 50% aggregate / 25% per&#8209;category caps
+    &mdash; re&#8209;run at a <b>$1,000</b> starting bankroll instead of $10,000, over the identical
+    3,364&#8209;trade Final&#8209;1% population.
+  </p>
+  <div class="meta-row">
+    <span><b>Mar 2023</b> &ndash; <b>Aug 2026</b></span>
+    <span><b>2,241</b> trades taken</span>
+    <span><b>3</b> flips</span>
+    <span>maker fills, $0 fee + rebate</span>
+  </div>
+
+  <div class="hero-panel">
+    <div class="hero-head">
+      <h2>Bankroll over time</h2>
+      <p class="cap-note">Quarter&#8209;Kelly, 3% per&#8209;trade / 50% aggregate / 25% category caps, $1,000 start</p>
+    </div>
+    <div class="chart-block" id="chart-hero"></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="label">Total return</div>
+      <div class="value" style="color:var(--good)">+29.43%</div>
+      <div class="sub">$1,000 &rarr; $1,294.33</div>
+    </div>
+    <div class="stat">
+      <div class="label">CAGR</div>
+      <div class="value">7.71%</div>
+      <div class="sub">annualized, over 1,268 days</div>
+    </div>
+    <div class="stat">
+      <div class="label">Max drawdown</div>
+      <div class="value">3.21%</div>
+      <div class="sub">peak&#8209;to&#8209;trough on bankroll</div>
+    </div>
+    <div class="stat">
+      <div class="label">Sharpe ratio</div>
+      <div class="value">2.59</div>
+      <div class="sub">daily returns, annualized</div>
+    </div>
+  </div>
+
+  <section class="panel">
+    <h2>This isn't just the $10,000 curve divided by 10</h2>
+    <p>The position caps (3% per trade, 50% aggregate, 25% per category) are expressed as <b>percentages of
+      current equity</b>, so in principle a $1,000 run should trace the same shape as the $10,000 run. In practice
+      it doesn't land on exactly the same numbers, because of one thing that does <b>not</b> scale with bankroll:
+      liquidity depth caps. Fill sizes are capped by a proxy for real transactable volume near each crossing (a
+      fixed number of shares from the public trade tape, not a percentage) &mdash; so a 3%&#8209;of&#8209;equity
+      position that's $300 at the $10,000 scale occasionally exceeds an illiquid market's real depth and gets
+      trimmed down, while the same 3% at the $1,000 scale ($30) almost never does.</p>
+    <table class="cmp-table">
+      <thead><tr><th>Bankroll</th><th>Final equity</th><th>Total return</th><th>CAGR</th><th>Max DD</th><th>Sharpe</th><th>Trades taken</th><th>Skip&#8209;capital</th></tr></thead>
+      <tbody>
+        <tr><td>$1,000</td><td>$1,294.33</td><td>+29.43%</td><td>7.71%</td><td>3.21%</td><td>2.59</td><td>2,241</td><td>126</td></tr>
+        <tr><td>$10,000</td><td>$12,472.18</td><td>+24.72%</td><td>6.57%</td><td>3.38%</td><td>2.24</td><td>2,287</td><td>80</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:14px;">Both runs draw from the exact same 2,367&#8209;trade qualifying pool
+      (2,241 + 126 = 2,287 + 80 = 2,367) &mdash; the smaller bankroll just gets depth&#8209;capped less often,
+      so slightly more of its positions land at their full intended Kelly size. The difference is real but modest;
+      treat both as the same strategy, not two different ones.</p>
+  </section>
+
+  <footer>
+    <p><b style="color:var(--ink-secondary)">Reading this correctly.</b> This is a historical backtest on resolved
+      Polymarket markets, not a live track record &mdash; no trades were placed. Fill prices are the last observed
+      CLOB snapshot before entry, not a guaranteed executable quote. The underlying edge rests on a 3&#8209;flip
+      sample; see the flip&#8209;rate confidence interval analysis and bootstrap CI elsewhere in this project for
+      how wide that uncertainty really is before sizing real capital against it.</p>
+    <p>Source: <code>scripts/run_kelly_backtest.py</code> (<code>run_sim</code>, START_BANKROLL=1000) over
+      <code>results/polymarket_final_pct/trades_maker.csv</code>.</p>
+  </footer>
+
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+const CURVE = [["2023-03-05",1000.0],["2023-03-07",1000.0],["2023-03-09",1000.0],["2023-03-11",1000.0],["2023-03-13",1000.0],["2023-03-15",1000.0],["2023-03-17",1000.0],["2023-03-19",1000.0],["2023-03-21",1000.0],["2023-03-23",1000.0],["2023-03-25",1000.0],["2023-03-27",1000.0],["2023-03-29",1000.0],["2023-03-31",1000.3],["2023-04-02",1000.3],["2023-04-04",1000.3],["2023-04-06",1000.3],["2023-04-08",1000.3],["2023-04-10",1000.3],["2023-04-12",1000.3],["2023-04-14",1000.3],["2023-04-16",1000.3],["2023-04-18",1000.3],["2023-04-20",1000.3],["2023-04-22",1000.3],["2023-04-24",1000.3],["2023-04-26",1000.3],["2023-04-28",1000.3],["2023-04-30",1000.3],["2023-05-02",1000.3],["2023-05-04",1000.3],["2023-05-06",1000.3],["2023-05-08",1000.3],["2023-05-10",1000.3],["2023-05-12",1000.3],["2023-05-14",1000.3],["2023-05-16",1000.3],["2023-05-18",1000.3],["2023-05-20",1000.3],["2023-05-22",1000.3],["2023-05-24",1000.3],["2023-05-26",1000.3],["2023-05-28",1000.3],["2023-05-30",1000.3],["2023-06-01",1000.3],["2023-06-03",1000.3],["2023-06-05",1000.3],["2023-06-07",1000.3],["2023-06-09",1000.3],["2023-06-11",1000.3],["2023-06-13",1000.3],["2023-06-15",1000.3],["2023-06-17",1000.3],["2023-06-19",1000.3],["2023-06-21",1000.3],["2023-06-23",1000.3],["2023-06-25",1000.3],["2023-06-27",1000.3],["2023-06-29",1000.3],["2023-07-01",1000.3],["2023-07-03",1000.3],["2023-07-05",1000.3],["2023-07-07",1000.3],["2023-07-09",1000.61],["2023-07-11",1000.61],["2023-07-13",1000.61],["2023-07-15",1000.61],["2023-07-17",1000.61],["2023-07-19",1000.61],["2023-07-21",1000.61],["2023-07-23",1000.61],["2023-07-25",1000.61],["2023-07-27",1000.61],["2023-07-29",1000.61],["2023-07-31",1000.61],["2023-08-02",1000.91],["2023-08-04",1000.91],["2023-08-06",1000.91],["2023-08-08",1000.91],["2023-08-10",1000.91],["2023-08-12",1000.91],["2023-08-14",1000.91],["2023-08-16",1000.91],["2023-08-18",1000.91],["2023-08-20",1000.91],["2023-08-22",1000.91],["2023-08-24",1000.91],["2023-08-26",1000.91],["2023-08-28",1000.91],["2023-08-30",1000.91],["2023-09-01",1000.91],["2023-09-03",1000.91],["2023-09-05",1000.91],["2023-09-07",1000.91],["2023-09-09",1000.91],["2023-09-11",1000.91],["2023-09-13",1000.91],["2023-09-15",1000.91],["2023-09-17",1000.91],["2023-09-19",1000.91],["2023-09-21",1000.91],["2023-09-23",1000.91],["2023-09-25",1000.91],["2023-09-27",1000.91],["2023-09-29",1000.91],["2023-10-01",1000.91],["2023-10-03",1000.91],["2023-10-05",1000.91],["2023-10-07",1000.91],["2023-10-09",1000.91],["2023-10-11",1000.91],["2023-10-13",1000.91],["2023-10-15",1000.91],["2023-10-17",1000.91],["2023-10-19",1000.91],["2023-10-21",1000.91],["2023-10-23",1000.91],["2023-10-25",1000.91],["2023-10-27",1000.91],["2023-10-29",1000.91],["2023-10-31",1000.91],["2023-11-02",1000.91],["2023-11-04",1000.91],["2023-11-06",1000.91],["2023-11-08",1000.91],["2023-11-10",1000.91],["2023-11-12",1000.91],["2023-11-14",1000.91],["2023-11-16",1000.91],["2023-11-18",1000.91],["2023-11-20",1000.91],["2023-11-22",1000.91],["2023-11-24",1000.91],["2023-11-26",1000.91],["2023-11-28",1000.91],["2023-11-30",1000.91],["2023-12-02",1000.91],["2023-12-04",1000.91],["2023-12-06",1000.91],["2023-12-08",1000.91],["2023-12-10",1000.91],["2023-12-12",1000.91],["2023-12-14",1000.91],["2023-12-16",1000.91],["2023-12-18",1000.91],["2023-12-20",1000.91],["2023-12-22",1000.91],["2023-12-24",1000.91],["2023-12-26",1000.91],["2023-12-28",1000.91],["2023-12-30",1000.91],["2024-01-01",1001.21],["2024-01-03",1001.21],["2024-01-05",1001.21],["2024-01-07",1001.21],["2024-01-09",1001.21],["2024-01-11",1001.21],["2024-01-13",1001.21],["2024-01-15",1001.21],["2024-01-17",1001.21],["2024-01-19",1001.21],["2024-01-21",1001.21],["2024-01-23",1001.21],["2024-01-25",1001.21],["2024-01-27",1001.21],["2024-01-29",1001.21],["2024-01-31",1001.21],["2024-02-02",1001.21],["2024-02-04",1001.21],["2024-02-06",1001.21],["2024-02-08",1001.21],["2024-02-10",1001.21],["2024-02-12",1001.52],["2024-02-14",1001.52],["2024-02-16",1001.52],["2024-02-18",1001.52],["2024-02-20",1001.52],["2024-02-22",1001.52],["2024-02-24",1001.52],["2024-02-26",1001.52],["2024-02-28",1001.52],["2024-03-01",1001.52],["2024-03-03",1001.79],["2024-03-05",1001.79],["2024-03-07",1001.79],["2024-03-09",1001.79],["2024-03-11",1001.79],["2024-03-13",1001.79],["2024-03-15",1001.79],["2024-03-17",1001.79],["2024-03-19",1001.79],["2024-03-21",1001.79],["2024-03-23",1002.03],["2024-03-25",1002.03],["2024-03-27",1002.03],["2024-03-29",1002.03],["2024-03-31",1002.03],["2024-04-02",1002.03],["2024-04-04",1002.03],["2024-04-06",1002.03],["2024-04-08",1002.03],["2024-04-10",1002.03],["2024-04-12",1002.33],["2024-04-14",1002.33],["2024-04-16",1002.33],["2024-04-18",1002.33],["2024-04-20",1002.33],["2024-04-22",1002.33],["2024-04-24",1002.33],["2024-04-26",1002.33],["2024-04-28",1002.33],["2024-04-30",1002.33],["2024-05-02",1002.33],["2024-05-04",1002.33],["2024-05-06",1002.5],["2024-05-08",1002.5],["2024-05-10",1002.5],["2024-05-12",1002.5],["2024-05-14",1002.5],["2024-05-16",1002.5],["2024-05-18",1002.5],["2024-05-20",1002.5],["2024-05-22",1002.5],["2024-05-24",1002.5],["2024-05-26",1002.5],["2024-05-28",1002.5],["2024-05-30",1002.5],["2024-06-01",1002.5],["2024-06-03",1002.5],["2024-06-05",1002.5],["2024-06-07",1002.5],["2024-06-09",1002.5],["2024-06-11",1002.5],["2024-06-13",1002.5],["2024-06-15",1002.5],["2024-06-17",1002.5],["2024-06-19",1002.5],["2024-06-21",1002.5],["2024-06-23",1002.5],["2024-06-25",1002.5],["2024-06-27",1002.65],["2024-06-29",1002.65],["2024-07-01",1002.65],["2024-07-03",1002.65],["2024-07-05",1002.65],["2024-07-07",1002.65],["2024-07-09",1002.96],["2024-07-11",1002.96],["2024-07-13",1002.96],["2024-07-15",1002.96],["2024-07-17",1002.96],["2024-07-19",1002.96],["2024-07-21",1003.43],["2024-07-23",1003.43],["2024-07-25",1003.43],["2024-07-27",1003.43],["2024-07-29",1003.43],["2024-07-31",1003.43],["2024-08-02",1003.58],["2024-08-04",1003.85],["2024-08-06",1004.16],["2024-08-08",1004.16],["2024-08-10",1004.16],["2024-08-12",1004.16],["2024-08-14",1004.16],["2024-08-16",1004.16],["2024-08-18",1004.16],["2024-08-20",1004.16],["2024-08-22",1004.16],["2024-08-24",1004.31],["2024-08-26",1004.31],["2024-08-28",1004.31],["2024-08-30",1004.31],["2024-09-01",1004.56],["2024-09-03",1004.56],["2024-09-05",1004.56],["2024-09-07",1004.94],["2024-09-09",1005.19],["2024-09-11",1005.4],["2024-09-13",1005.4],["2024-09-15",1005.4],["2024-09-17",1005.55],["2024-09-19",1005.55],["2024-09-21",1005.55],["2024-09-23",1005.55],["2024-09-25",1005.85],["2024-09-27",1005.85],["2024-09-29",1005.85],["2024-10-01",1005.85],["2024-10-03",1006.17],["2024-10-05",1006.17],["2024-10-07",1006.17],["2024-10-09",1006.42],["2024-10-11",1006.57],["2024-10-13",1006.68],["2024-10-15",1006.68],["2024-10-17",1006.68],["2024-10-19",1006.68],["2024-10-21",1006.83],["2024-10-23",1006.98],["2024-10-25",1007.13],["2024-10-27",1007.28],["2024-10-29",1007.45],["2024-10-31",1007.61],["2024-11-02",1007.61],["2024-11-04",977.58],["2024-11-06",977.93],["2024-11-08",977.93],["2024-11-10",977.93],["2024-11-12",977.93],["2024-11-14",977.93],["2024-11-16",977.93],["2024-11-18",977.93],["2024-11-20",977.93],["2024-11-22",977.93],["2024-11-24",978.08],["2024-11-26",978.08],["2024-11-28",978.22],["2024-11-30",978.83],["2024-12-02",978.83],["2024-12-04",978.83],["2024-12-06",978.83],["2024-12-08",978.83],["2024-12-10",978.83],["2024-12-12",978.83],["2024-12-14",978.97],["2024-12-16",979.11],["2024-12-18",979.32],["2024-12-20",979.32],["2024-12-22",979.32],["2024-12-24",979.32],["2024-12-26",979.32],["2024-12-28",979.47],["2024-12-30",979.47],["2025-01-01",979.67],["2025-01-03",979.67],["2025-01-05",979.67],["2025-01-07",979.97],["2025-01-09",980.19],["2025-01-11",980.19],["2025-01-13",980.43],["2025-01-15",980.58],["2025-01-17",980.88],["2025-01-19",981.02],["2025-01-21",981.35],["2025-01-23",981.6],["2025-01-25",981.6],["2025-01-27",981.6],["2025-01-29",981.6],["2025-01-31",981.89],["2025-02-02",982.83],["2025-02-04",983.12],["2025-02-06",983.26],["2025-02-08",983.26],["2025-02-10",983.71],["2025-02-12",983.71],["2025-02-14",984.15],["2025-02-16",984.18],["2025-02-18",984.33],["2025-02-20",984.33],["2025-02-22",984.33],["2025-02-24",984.63],["2025-02-26",984.63],["2025-02-28",984.78],["2025-03-02",985.08],["2025-03-04",985.19],["2025-03-06",985.19],["2025-03-08",985.72],["2025-03-10",985.72],["2025-03-12",985.72],["2025-03-14",986.44],["2025-03-16",986.74],["2025-03-18",986.74],["2025-03-20",986.74],["2025-03-22",986.92],["2025-03-24",987.07],["2025-03-26",987.07],["2025-03-28",987.31],["2025-03-30",987.56],["2025-04-01",987.86],["2025-04-03",987.86],["2025-04-05",988.31],["2025-04-07",988.75],["2025-04-09",988.75],["2025-04-11",989.19],["2025-04-13",989.44],["2025-04-15",989.44],["2025-04-17",989.44],["2025-04-19",989.44],["2025-04-21",989.65],["2025-04-23",990.07],["2025-04-25",990.07],["2025-04-27",990.07],["2025-04-29",990.07],["2025-05-01",991.24],["2025-05-03",991.24],["2025-05-05",991.45],["2025-05-07",991.87],["2025-05-09",992.24],["2025-05-11",992.24],["2025-05-13",992.77],["2025-05-15",992.77],["2025-05-17",992.77],["2025-05-19",992.77],["2025-05-21",993.08],["2025-05-23",993.08],["2025-05-25",993.24],["2025-05-27",993.67],["2025-05-29",993.67],["2025-05-31",993.98],["2025-06-02",994.5],["2025-06-04",994.67],["2025-06-06",994.67],["2025-06-08",994.67],["2025-06-10",994.72],["2025-06-12",994.96],["2025-06-14",994.96],["2025-06-16",995.49],["2025-06-18",995.64],["2025-06-20",995.64],["2025-06-22",996.18],["2025-06-24",997.29],["2025-06-26",997.61],["2025-06-28",998.35],["2025-06-30",998.5],["2025-07-02",998.96],["2025-07-04",999.18],["2025-07-06",999.72],["2025-07-08",999.87],["2025-07-10",1000.02],["2025-07-12",1000.04],["2025-07-14",1000.43],["2025-07-16",1000.9],["2025-07-18",1001.22],["2025-07-20",1001.53],["2025-07-22",1001.86],["2025-07-24",1002.04],["2025-07-26",1002.13],["2025-07-28",1002.36],["2025-07-30",1002.66],["2025-08-01",1003.49],["2025-08-03",1003.65],["2025-08-05",1003.93],["2025-08-07",1003.93],["2025-08-09",1004.08],["2025-08-11",1005.12],["2025-08-13",975.55],["2025-08-15",975.98],["2025-08-17",976.59],["2025-08-19",977.09],["2025-08-21",978.04],["2025-08-23",979.08],["2025-08-25",979.42],["2025-08-27",979.72],["2025-08-29",980.46],["2025-08-31",980.46],["2025-09-02",982.17],["2025-09-04",982.38],["2025-09-06",983.64],["2025-09-08",984.36],["2025-09-10",985.46],["2025-09-12",986.26],["2025-09-14",987.04],["2025-09-16",987.87],["2025-09-18",988.79],["2025-09-20",990.0],["2025-09-22",991.91],["2025-09-24",993.14],["2025-09-26",994.49],["2025-09-28",996.27],["2025-09-30",997.17],["2025-10-02",998.35],["2025-10-04",999.47],["2025-10-06",1000.55],["2025-10-08",1001.01],["2025-10-10",1002.87],["2025-10-12",1004.18],["2025-10-14",1004.97],["2025-10-16",1006.36],["2025-10-18",1007.52],["2025-10-20",1009.19],["2025-10-22",1010.7],["2025-10-24",1011.48],["2025-10-26",1014.24],["2025-10-28",1014.76],["2025-10-30",1016.29],["2025-11-01",1018.09],["2025-11-03",1020.36],["2025-11-05",1022.67],["2025-11-07",1024.43],["2025-11-09",1026.64],["2025-11-11",1028.58],["2025-11-13",1029.87],["2025-11-15",1031.68],["2025-11-17",1034.45],["2025-11-19",1034.85],["2025-11-21",1037.32],["2025-11-23",1039.86],["2025-11-25",1041.71],["2025-11-27",1043.03],["2025-11-29",1044.1],["2025-12-01",1044.9],["2025-12-03",1045.45],["2025-12-05",1045.65],["2025-12-07",1045.92],["2025-12-09",1048.36],["2025-12-11",1049.77],["2025-12-13",1052.13],["2025-12-15",1053.73],["2025-12-17",1055.98],["2025-12-19",1057.09],["2025-12-21",1059.53],["2025-12-23",1061.0],["2025-12-25",1061.44],["2025-12-27",1061.92],["2025-12-29",1063.14],["2025-12-31",1064.16],["2026-01-02",1066.09],["2026-01-04",1068.07],["2026-01-06",1071.47],["2026-01-08",1074.12],["2026-01-10",1075.81],["2026-01-12",1078.18],["2026-01-14",1080.35],["2026-01-16",1082.63],["2026-01-18",1084.37],["2026-01-20",1085.87],["2026-01-22",1087.95],["2026-01-24",1091.03],["2026-01-26",1093.95],["2026-01-28",1095.73],["2026-01-30",1097.32],["2026-02-01",1098.82],["2026-02-03",1102.57],["2026-02-05",1104.05],["2026-02-07",1105.7],["2026-02-09",1108.82],["2026-02-11",1110.82],["2026-02-13",1112.73],["2026-02-15",1114.23],["2026-02-17",1115.5],["2026-02-19",1116.64],["2026-02-21",1118.76],["2026-02-23",1121.52],["2026-02-25",1123.81],["2026-02-27",1127.59],["2026-03-01",1130.13],["2026-03-03",1132.49],["2026-03-05",1135.07],["2026-03-07",1138.46],["2026-03-09",1140.78],["2026-03-11",1142.33],["2026-03-13",1144.92],["2026-03-15",1148.19],["2026-03-17",1150.6],["2026-03-19",1151.98],["2026-03-21",1156.03],["2026-03-23",1157.94],["2026-03-25",1159.59],["2026-03-27",1161.72],["2026-03-29",1163.62],["2026-03-31",1165.66],["2026-04-02",1168.31],["2026-04-04",1170.4],["2026-04-06",1172.95],["2026-04-08",1175.53],["2026-04-10",1177.91],["2026-04-12",1179.66],["2026-04-14",1181.93],["2026-04-16",1184.78],["2026-04-18",1187.39],["2026-04-20",1190.12],["2026-04-22",1193.37],["2026-04-24",1196.94],["2026-04-26",1199.01],["2026-04-28",1202.28],["2026-04-30",1204.54],["2026-05-02",1207.23],["2026-05-04",1209.59],["2026-05-06",1211.64],["2026-05-08",1213.44],["2026-05-10",1215.74],["2026-05-12",1219.06],["2026-05-14",1220.85],["2026-05-16",1223.68],["2026-05-18",1225.8],["2026-05-20",1230.61],["2026-05-22",1235.21],["2026-05-24",1236.97],["2026-05-26",1238.87],["2026-05-28",1241.96],["2026-05-30",1244.66],["2026-06-01",1246.92],["2026-06-03",1250.76],["2026-06-05",1254.39],["2026-06-07",1257.97],["2026-06-09",1222.95],["2026-06-11",1228.13],["2026-06-13",1231.51],["2026-06-15",1234.46],["2026-06-17",1238.29],["2026-06-19",1241.27],["2026-06-21",1242.94],["2026-06-23",1243.69],["2026-06-25",1246.56],["2026-06-27",1248.88],["2026-06-29",1251.15],["2026-07-01",1253.91],["2026-07-03",1254.46],["2026-07-05",1257.14],["2026-07-07",1259.13],["2026-07-09",1261.02],["2026-07-11",1262.14],["2026-07-13",1262.18],["2026-07-15",1263.83],["2026-07-17",1265.72],["2026-07-19",1268.16],["2026-07-21",1270.16],["2026-07-23",1272.4],["2026-07-25",1274.75],["2026-07-27",1276.06],["2026-07-29",1276.19],["2026-07-31",1278.01],["2026-08-02",1281.16],["2026-08-04",1281.9],["2026-08-06",1282.7],["2026-08-08",1283.81],["2026-08-10",1285.7],["2026-08-12",1286.46],["2026-08-14",1288.05],["2026-08-16",1288.55],["2026-08-18",1289.27],["2026-08-20",1291.96],["2026-08-22",1292.93],["2026-08-24",1294.33]];
+
+const fmtMoney = v => '$' + v.toLocaleString('en-US', {maximumFractionDigits:0});
+const fmtDate = s => {
+  const d = new Date(s + 'T00:00:00Z');
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric', timeZone:'UTC'});
+};
+const tooltip = document.getElementById('tooltip');
+
+function showTip(evt, html) {
+  tooltip.innerHTML = html;
+  tooltip.style.opacity = 1;
+  const pad = 16;
+  let left = evt.clientX + pad, top = evt.clientY + pad;
+  if (left + 200 > window.innerWidth) left = evt.clientX - 200 - pad;
+  if (top + 100 > window.innerHeight) top = evt.clientY - 100 - pad;
+  tooltip.style.left = left + 'px';
+  tooltip.style.top = top + 'px';
+}
+function hideTip() { tooltip.style.opacity = 0; document.getElementById('crosshair').style.opacity = 0; document.getElementById('hover-dot').style.opacity = 0; }
+
+function renderHero(containerId, curve) {
+  const W = 900, marginL = 56, marginR = 20, marginT = 16, marginB = 30;
+  const plotW = W - marginL - marginR, H = 380, plotH = H - marginT - marginB;
+  const n = curve.length;
+  const yMin = 920, yMax = Math.max(...curve.map(d => d[1])) * 1.06;
+  const xAt = i => marginL + (i / (n - 1)) * plotW;
+  const yAt = v => marginT + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Equity curve: $1,000 to $1,294" id="hero-svg">`;
+
+  const ticks = [1000, 1100, 1200, 1300].filter(v => v <= yMax + 20);
+  ticks.forEach(v => {
+    const y = yAt(v);
+    svg += `<line class="grid-line" x1="${marginL}" x2="${W-marginR}" y1="${y}" y2="${y}"/>`;
+    svg += `<text class="axis-label" x="${marginL-10}" y="${y+3}" text-anchor="end">${fmtMoney(v)}</text>`;
+  });
+  const y1k = yAt(1000);
+  svg += `<line x1="${marginL}" x2="${W-marginR}" y1="${y1k}" y2="${y1k}" stroke="var(--border-strong)" stroke-width="1"/>`;
+
+  let area = `M${xAt(0)} ${yAt(1000)} L` + curve.map((d,i) => `${xAt(i)} ${yAt(d[1])}`).join(' L') + ` L${xAt(n-1)} ${yAt(1000)} Z`;
+  svg += `<path d="${area}" fill="var(--series-primary-wash)" stroke="none"/>`;
+  let path = curve.map((d,i) => (i===0?'M':'L') + xAt(i) + ' ' + yAt(d[1])).join(' ');
+  svg += `<path d="${path}" fill="none" stroke="var(--series-primary)" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>`;
+
+  const last = curve[n-1];
+  svg += `<circle cx="${xAt(n-1)}" cy="${yAt(last[1])}" r="4.5" fill="var(--series-primary)" stroke="var(--surface-raised)" stroke-width="2"/>`;
+  svg += `<text x="${xAt(n-1)-6}" y="${yAt(last[1])-12}" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="12" font-weight="600" fill="var(--series-primary)">${fmtMoney(last[1])}</text>`;
+
+  const xTickIdx = [0, Math.round((n-1)*0.28), Math.round((n-1)*0.53), Math.round((n-1)*0.78), n-1];
+  xTickIdx.forEach(i => { svg += `<text class="axis-label" x="${xAt(i)}" y="${H-6}" text-anchor="middle">${fmtDate(curve[i][0])}</text>`; });
+
+  svg += `<line id="crosshair" class="crosshair-line" x1="0" x2="0" y1="${marginT}" y2="${marginT+plotH}"/>`;
+  svg += `<circle id="hover-dot" r="5" fill="var(--series-primary)" stroke="var(--surface-raised)" stroke-width="2" opacity="0"/>`;
+  svg += `<rect x="${marginL}" y="${marginT}" width="${plotW}" height="${plotH}" fill="transparent" id="hit-rect" style="cursor:crosshair"/>`;
+  svg += `</svg>`;
+  document.getElementById(containerId).innerHTML = svg;
+
+  const hitRect = document.getElementById('hit-rect');
+  const crosshair = document.getElementById('crosshair');
+  const dot = document.getElementById('hover-dot');
+  const svgEl = document.getElementById('hero-svg');
+
+  hitRect.addEventListener('mousemove', evt => {
+    const pt = svgEl.createSVGPoint();
+    pt.x = evt.clientX; pt.y = evt.clientY;
+    const loc = pt.matrixTransform(svgEl.getScreenCTM().inverse());
+    let i = Math.round(((loc.x - marginL) / plotW) * (n - 1));
+    i = Math.max(0, Math.min(n - 1, i));
+    const x = xAt(i);
+    crosshair.setAttribute('x1', x); crosshair.setAttribute('x2', x); crosshair.style.opacity = 1;
+    dot.setAttribute('cx', x); dot.setAttribute('cy', yAt(curve[i][1])); dot.style.opacity = 1;
+    showTip(evt, `<div class="t-head">${fmtDate(curve[i][0])}</div><div class="t-row"><span class="k">Equity</span><span>${fmtMoney(curve[i][1])}</span></div>`);
+  });
+  hitRect.addEventListener('mouseleave', hideTip);
+}
+
+renderHero('chart-hero', CURVE);
+</script>
