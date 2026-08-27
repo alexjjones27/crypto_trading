@@ -27,6 +27,7 @@ from polymarket_final_pct import (
     compute_metrics,
     compute_with_vs_without_flips,
     detect_crossing,
+    estimate_vwap_fill,
     maker_fee_frac_of_notional,
     resolved_outcome_index,
     simulate_trade,
@@ -350,6 +351,45 @@ def test_stratified_sample_is_deterministic_for_a_fixed_census():
     s1 = sorted(m["id"] for m in stratified_sample_markets(census, n_target=50))
     s2 = sorted(m["id"] for m in stratified_sample_markets(census, n_target=50))
     assert s1 == s2
+
+
+def test_estimate_vwap_fill_walks_the_tape_in_price_order(monkeypatch):
+    import polymarket_final_pct as pmf
+    trades = [
+        {"asset": "tok", "side": "BUY", "timestamp": 1000, "price": 0.99, "size": 40.0},
+        {"asset": "tok", "side": "BUY", "timestamp": 1010, "price": 0.995, "size": 40.0},
+        {"asset": "tok", "side": "BUY", "timestamp": 1020, "price": 0.999, "size": 40.0},
+        {"asset": "other-tok", "side": "BUY", "timestamp": 1005, "price": 0.5, "size": 1000.0},  # different token, ignored
+        {"asset": "tok", "side": "SELL", "timestamp": 1005, "price": 0.98, "size": 1000.0},  # sell side, ignored
+        {"asset": "tok", "side": "BUY", "timestamp": 990, "price": 0.98, "size": 1000.0},  # before entry, ignored
+    ]
+    monkeypatch.setattr(pmf, "fetch_market_trades", lambda condition_id: trades)
+
+    r = estimate_vwap_fill("cid", "tok", entry_time_s=1000, desired_shares=60.0)
+    assert r is not None
+    # fills 40 @ 0.99 then 20 @ 0.995, in chronological (not price) order
+    expected_vwap = (40 * 0.99 + 20 * 0.995) / 60
+    assert r["vwap"] == pytest.approx(expected_vwap)
+    assert r["filled_shares"] == pytest.approx(60.0)
+    assert r["fill_ratio"] == pytest.approx(1.0)
+
+
+def test_estimate_vwap_fill_reports_partial_fill_ratio(monkeypatch):
+    import polymarket_final_pct as pmf
+    trades = [{"asset": "tok", "side": "BUY", "timestamp": 1000, "price": 0.99, "size": 10.0}]
+    monkeypatch.setattr(pmf, "fetch_market_trades", lambda condition_id: trades)
+
+    r = estimate_vwap_fill("cid", "tok", entry_time_s=1000, desired_shares=100.0)
+    assert r is not None
+    assert r["filled_shares"] == pytest.approx(10.0)
+    assert r["fill_ratio"] == pytest.approx(0.10)
+    assert r["vwap"] == pytest.approx(0.99)
+
+
+def test_estimate_vwap_fill_returns_none_with_no_matching_trades(monkeypatch):
+    import polymarket_final_pct as pmf
+    monkeypatch.setattr(pmf, "fetch_market_trades", lambda condition_id: [])
+    assert estimate_vwap_fill("cid", "tok", entry_time_s=1000, desired_shares=10.0) is None
 
 
 def test_stratified_sample_is_subset_stable_as_census_grows():

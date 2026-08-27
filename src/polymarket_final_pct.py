@@ -749,6 +749,66 @@ def estimate_available_shares(
     return float(sum(t.get("size", 0.0) for t in near))
 
 
+def estimate_vwap_fill(
+    condition_id: str, token_id: str, entry_time_s: int, desired_shares: float,
+    window_s: int = DEPTH_WINDOW_S,
+) -> Optional[dict]:
+    """Real, data-grounded taker slippage estimate -- not an assumed
+    percentage. `estimate_available_shares` already caps position SIZE by
+    realized nearby volume but assumes zero price impact for whatever size
+    gets through; this instead "walks the tape" of the real BUY-side prints
+    (other takers hitting the ask book) that occurred at or after the
+    crossing, in their actual chronological order and at their actual
+    prices, accumulating volume until `desired_shares` is reached. The
+    resulting volume-weighted average price is what a taker order of that
+    size would plausibly have paid, using realized flow as the only
+    available proxy for order-book depth (same limitation as the existing
+    depth cap: no historical order book exists for resolved markets).
+
+    Only BUY-side prints are used (SELL prints reflect bid-side liquidity,
+    irrelevant to what a buy order walks through), and only from
+    entry_time_s forward (a hypothetical order placed at the signal can
+    only consume liquidity that arrives after it, not trades that already
+    happened before it existed).
+
+    Returns None if there's no BUY-side trade data at all in the window
+    (unknown, not "zero slippage"). `fill_ratio` < 1 means even the
+    available realized flow couldn't fully fill the desired size within
+    the window -- a stronger illiquidity signal than the depth cap alone."""
+    trades = fetch_market_trades(condition_id)
+    if not trades:
+        return None
+    near = sorted(
+        (t for t in trades
+         if t.get("asset") == token_id and t.get("side") == "BUY"
+         and entry_time_s <= t.get("timestamp", -1) <= entry_time_s + window_s),
+        key=lambda t: t.get("timestamp", 0),
+    )
+    if not near:
+        return None
+
+    remaining = desired_shares
+    cost = 0.0
+    filled = 0.0
+    for t in near:
+        take = min(remaining, float(t.get("size", 0.0)))
+        if take <= 0:
+            continue
+        cost += take * float(t.get("price", 0.0))
+        filled += take
+        remaining -= take
+        if remaining <= 1e-9:
+            break
+    if filled <= 0:
+        return None
+    return {
+        "vwap": cost / filled,
+        "filled_shares": filled,
+        "fill_ratio": min(1.0, filled / desired_shares) if desired_shares > 0 else None,
+        "n_prints_used": len(near),
+    }
+
+
 def simulate_trade(
     crossing: dict,
     market: dict,
