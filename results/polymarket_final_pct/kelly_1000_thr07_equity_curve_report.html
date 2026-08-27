@@ -1,0 +1,321 @@
+<title>Turning $1,000 Into $8,253</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Domine:wght@500;600;700&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    color-scheme: light;
+    --page-bg:        #f5f3ee;
+    --surface-raised: #ffffff;
+    --ink-primary:    #1b1f1a;
+    --ink-secondary:  #55564e;
+    --ink-muted:      #8f8d80;
+    --gridline:       #e3e0d5;
+    --border:         rgba(27,31,26,0.10);
+    --border-strong:  rgba(27,31,26,0.16);
+    --series-primary:      #0d7ea6;
+    --series-primary-wash: rgba(13,126,166,0.11);
+    --good: #1f7a4d;
+    --shadow: 0 1px 2px rgba(27,31,26,0.06), 0 8px 24px -12px rgba(27,31,26,0.18);
+    --shadow-lg: 0 2px 4px rgba(27,31,26,0.05), 0 24px 48px -20px rgba(27,31,26,0.22);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page-bg:        #0e1012;
+      --surface-raised: #1c2023;
+      --ink-primary:    #f3f2ee;
+      --ink-secondary:  #c7c5ba;
+      --ink-muted:      #8b897d;
+      --gridline:       #2b2e31;
+      --border:         rgba(255,255,255,0.09);
+      --border-strong:  rgba(255,255,255,0.15);
+      --series-primary:      #34a0cc;
+      --series-primary-wash: rgba(52,160,204,0.14);
+      --good: #4bbd85;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+      --shadow-lg: 0 2px 4px rgba(0,0,0,0.3), 0 24px 48px -20px rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page-bg:        #0e1012;
+    --surface-raised: #1c2023;
+    --ink-primary:    #f3f2ee;
+    --ink-secondary:  #c7c5ba;
+    --ink-muted:      #8b897d;
+    --gridline:       #2b2e31;
+    --border:         rgba(255,255,255,0.09);
+    --border-strong:  rgba(255,255,255,0.15);
+    --series-primary:      #34a0cc;
+    --series-primary-wash: rgba(52,160,204,0.14);
+    --good: #4bbd85;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    --shadow-lg: 0 2px 4px rgba(0,0,0,0.3), 0 24px 48px -20px rgba(0,0,0,0.6);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--page-bg); color: var(--ink-primary);
+    font-family: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 56px 24px 90px; }
+
+  .eyebrow {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--series-primary); margin: 0 0 16px;
+  }
+  h1 {
+    font-family: "Domine", Georgia, serif; font-weight: 600; font-size: clamp(28px, 4.4vw, 42px);
+    line-height: 1.14; letter-spacing: -0.01em; margin: 0 0 18px; text-wrap: balance;
+  }
+  h1 .arrow { color: var(--ink-muted); font-weight: 400; padding: 0 4px; }
+  h1 .end { color: var(--good); }
+  .dek { font-size: 16.5px; line-height: 1.62; color: var(--ink-secondary); max-width: 64ch; margin: 0 0 6px; }
+  .dek b { color: var(--ink-primary); }
+  .meta-row {
+    display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 22px; padding-top: 18px;
+    border-top: 1px solid var(--border); font-family: "IBM Plex Mono", monospace;
+    font-size: 12.5px; color: var(--ink-muted);
+  }
+  .meta-row b { color: var(--ink-secondary); font-weight: 600; }
+
+  .hero-panel {
+    margin-top: 32px; background: var(--surface-raised); border: 1px solid var(--border);
+    border-radius: 18px; padding: 26px 28px 20px; box-shadow: var(--shadow-lg);
+  }
+  .hero-head h2 { font-family: "Domine", Georgia, serif; font-size: 17px; font-weight: 600; margin: 0 0 3px; }
+  .hero-head .cap-note { font-size: 12.5px; color: var(--ink-muted); }
+  .chart-block { position: relative; margin-top: 16px; }
+  .chart-block svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .axis-label { font-family: "IBM Plex Mono", monospace; font-size: 10.5px; fill: var(--ink-muted); }
+  .grid-line { stroke: var(--gridline); stroke-width: 1; }
+  .crosshair-line { stroke: var(--ink-muted); stroke-width: 1; stroke-dasharray: 2 3; opacity: 0; pointer-events: none; }
+
+  .tooltip {
+    position: fixed; pointer-events: none; z-index: 40; opacity: 0; transition: opacity 0.08s ease;
+    background: var(--surface-raised); border: 1px solid var(--border-strong); border-radius: 8px;
+    padding: 10px 13px; font-size: 12.5px; box-shadow: var(--shadow); min-width: 170px;
+    font-family: "IBM Plex Mono", monospace; color: var(--ink-primary); line-height: 1.65;
+  }
+  .tooltip .t-head { font-family: "Public Sans", sans-serif; font-weight: 600; color: var(--ink-secondary); font-size: 11px; margin-bottom: 4px; }
+  .tooltip .t-row { display: flex; justify-content: space-between; gap: 16px; }
+  .tooltip .t-row .k { color: var(--ink-muted); }
+
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+    background: var(--border); border: 1px solid var(--border); border-radius: 14px;
+    overflow: hidden; margin: 32px 0 8px; box-shadow: var(--shadow);
+  }
+  .stat { background: var(--surface-raised); padding: 18px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .stat .label { font-size: 10.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-muted); }
+  .stat .value { font-family: "IBM Plex Mono", monospace; font-size: 23px; font-weight: 600; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+  .stat .sub { font-size: 12px; color: var(--ink-secondary); line-height: 1.4; }
+
+  section.panel {
+    margin-top: 36px; background: var(--surface-raised); border: 1px solid var(--border);
+    border-radius: 16px; padding: 26px 28px 22px; box-shadow: var(--shadow);
+  }
+  .panel h2 { font-family: "Domine", Georgia, serif; font-weight: 600; font-size: 19px; margin: 0 0 8px; }
+  .panel p { font-size: 14px; color: var(--ink-secondary); line-height: 1.65; max-width: 68ch; margin: 0 0 10px; }
+  .panel p b { color: var(--ink-primary); }
+  .panel p:last-child { margin-bottom: 0; }
+
+  table.cmp-table { width: 100%; border-collapse: collapse; font-size: 13.5px; font-family: "IBM Plex Mono", monospace; margin-top: 14px; }
+  table.cmp-table th, table.cmp-table td { padding: 9px 12px; text-align: right; font-variant-numeric: tabular-nums; }
+  table.cmp-table th:first-child, table.cmp-table td:first-child { text-align: left; font-family: "Public Sans", sans-serif; }
+  table.cmp-table thead th { color: var(--ink-muted); font-weight: 600; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--border-strong); font-family: "Public Sans", sans-serif; }
+  table.cmp-table tbody tr { border-bottom: 1px solid var(--border); }
+  table.cmp-table tbody tr:last-child { border-bottom: none; }
+
+  footer {
+    margin-top: 48px; padding-top: 22px; border-top: 1px solid var(--border);
+    font-size: 13px; line-height: 1.7; color: var(--ink-muted);
+  }
+  footer p { margin: 0 0 12px; max-width: 70ch; }
+  footer code { font-family: "IBM Plex Mono", monospace; font-size: 12px; background: var(--page-bg); padding: 1px 5px; border-radius: 4px; color: var(--ink-secondary); }
+
+  @media (max-width: 640px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+</style>
+
+<div class="wrap">
+
+  <p class="eyebrow">Polymarket Final&#8209;1% &middot; 70% Threshold &middot; $1,000 Portfolio</p>
+  <h1><span class="num">$1,000</span><span class="arrow">&rarr;</span><span class="num end">$8,252.68</span></h1>
+  <p class="dek">
+    The looser 70% entry threshold (buy once a token crosses 70% and holds for 3 consecutive snapshots, not
+    99%+), quarter&#8209;Kelly sizing off the same walk&#8209;forward flip&#8209;rate belief, 3% per&#8209;trade /
+    50% aggregate / 25% per&#8209;category caps &mdash; run at a <b>$1,000</b> starting bankroll, over the
+    corrected, internally&#8209;consistent 70%&#8209;threshold trade population (3,819 signals).
+  </p>
+  <div class="meta-row">
+    <span><b>Mar 2023</b> &ndash; <b>Aug 2026</b></span>
+    <span><b>1,948</b> trades taken</span>
+    <span><b>345</b> flips</span>
+    <span>maker fills, $0 fee + rebate</span>
+  </div>
+
+  <div class="hero-panel">
+    <div class="hero-head">
+      <h2>Bankroll over time</h2>
+      <p class="cap-note">Quarter&#8209;Kelly, 70% threshold, 3% per&#8209;trade / 50% aggregate / 25% category caps, $1,000 start</p>
+    </div>
+    <div class="chart-block" id="chart-hero"></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="label">Total return</div>
+      <div class="value" style="color:var(--good)">+725.27%</div>
+      <div class="sub">$1,000 &rarr; $8,252.68</div>
+    </div>
+    <div class="stat">
+      <div class="label">CAGR</div>
+      <div class="value">85.48%</div>
+      <div class="sub">annualized, over 1,268 days</div>
+    </div>
+    <div class="stat">
+      <div class="label">Max drawdown</div>
+      <div class="value" style="color:var(--bad)">30.79%</div>
+      <div class="sub">peak&#8209;to&#8209;trough on bankroll</div>
+    </div>
+    <div class="stat">
+      <div class="label">Sharpe ratio</div>
+      <div class="value">2.22</div>
+      <div class="sub">daily returns, annualized</div>
+    </div>
+  </div>
+
+  <section class="panel">
+    <h2>Why $1,000 outgrows $10,000 by so much here</h2>
+    <p>At the 99% threshold, a $1,000 run and a $10,000 run land close together (7.7% vs 6.6% CAGR). At 70%
+      they diverge enormously &mdash; 85.5% CAGR at $1,000 vs 66.4% at $10,000, on <b>almost the identical trade
+      population</b> (1,948 taken / 345 flips at $1,000 vs 1,965 taken / 351 flips at $10,000, from the same
+      3,819&#8209;signal pool). The outcomes aren't different because different bets were won or lost &mdash;
+      they're different because of how often a fixed, real&#8209;world liquidity ceiling throttles the position
+      size below what Kelly actually wants.</p>
+    <p>Checked directly rather than assumed: at $10,000, <b>21.8%</b> of taken trades were sized below 1% of
+      equity despite the model wanting more (depth&#8209;capped by the public trade tape's real transactable
+      volume near each crossing, a fixed dollar ceiling, not a percentage). At $1,000, only <b>16.7%</b> of
+      trades hit that same throttle. A five&#8209;point gap in how often positions get clipped sounds small, but
+      compounded across ~2,000 sequential trades over 3.5 years &mdash; where getting a fuller position size
+      <i>early</i> lets that edge compound for years longer &mdash; it snowballs into a very large gap in final
+      equity. This threshold takes far more trades than the 99% case (3,819 signals vs 2,367), which is exactly
+      why the effect is so much more visible here: more trades means more compounding cycles for a small
+      per&#8209;trade advantage to multiply through.</p>
+    <table class="cmp-table">
+      <thead><tr><th>Bankroll</th><th>Final equity</th><th>Total return</th><th>CAGR</th><th>Max DD</th><th>Sharpe</th><th>Trades taken</th><th>Flips</th><th>Throttled &lt;1%</th></tr></thead>
+      <tbody>
+        <tr><td>$1,000</td><td>$8,252.68</td><td>+725.27%</td><td>85.48%</td><td>30.79%</td><td>2.22</td><td>1,948</td><td>345</td><td>16.7%</td></tr>
+        <tr><td>$10,000</td><td>$56,932.11</td><td>+469.32%</td><td>66.38%</td><td>28.61%</td><td>1.90</td><td>1,965</td><td>351</td><td>21.8%</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:14px;">One important thing this does <b>not</b> mean: that a small account has some
+      inherent structural edge worth chasing on its own. It means a fixed, historically&#8209;estimated liquidity
+      ceiling (itself only a proxy, since real order&#8209;book depth for resolved markets isn't recoverable)
+      binds less against a smaller bankroll's smaller absolute position sizes &mdash; a real effect in this
+      backtest, but one that would erode as an account grows, and one that's only as trustworthy as the
+      liquidity proxy itself.</p>
+  </section>
+
+  <footer>
+    <p><b style="color:var(--ink-secondary)">Reading this correctly.</b> This is a historical backtest on resolved
+      Polymarket markets, not a live track record &mdash; no trades were placed. Fill prices are the last observed
+      CLOB snapshot before entry, not a guaranteed executable quote. At this looser threshold the Kelly sizing
+      also uses the same flip&#8209;rate prior calibrated for the ~99%+ population, which is badly miscalibrated
+      for 70%'s much higher true flip rate (12.5% vs under 0.2%) &mdash; sizing here is more aggressive early in
+      the backtest than a properly threshold&#8209;aware prior would allow. See the Favorite&#8209;Longshot Bias
+      report for the full threshold sensitivity picture and this caveat in more depth.</p>
+    <p>Source: <code>scripts/run_kelly_backtest.py</code> (<code>run_sim</code>, START_BANKROLL=1000) over
+      <code>results/polymarket_final_pct/trades_maker_thr07_v2.csv</code>.</p>
+  </footer>
+
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+const CURVE = [["2023-03-29",1000.0],["2023-03-31",1012.86],["2023-04-02",1012.86],["2023-04-04",1012.86],["2023-04-06",1012.86],["2023-04-08",1012.86],["2023-04-10",1012.86],["2023-04-12",1012.86],["2023-04-14",1012.86],["2023-04-16",1012.86],["2023-04-18",1012.86],["2023-04-20",1012.86],["2023-04-22",1015.86],["2023-04-24",1015.86],["2023-04-26",1015.86],["2023-04-28",1015.86],["2023-04-30",1015.86],["2023-05-02",1015.86],["2023-05-04",1015.86],["2023-05-06",1015.86],["2023-05-08",1015.86],["2023-05-10",1015.86],["2023-05-12",1015.86],["2023-05-14",1015.86],["2023-05-16",1015.86],["2023-05-18",1015.86],["2023-05-20",1015.86],["2023-05-22",1015.86],["2023-05-24",1015.86],["2023-05-26",1015.86],["2023-05-28",1015.86],["2023-05-30",1015.86],["2023-06-01",1015.86],["2023-06-03",1015.86],["2023-06-05",1015.86],["2023-06-07",1015.86],["2023-06-09",1015.86],["2023-06-11",1015.86],["2023-06-13",1015.86],["2023-06-15",1015.86],["2023-06-17",1015.86],["2023-06-19",1015.86],["2023-06-21",1015.86],["2023-06-23",1015.86],["2023-06-25",1015.86],["2023-06-27",1015.86],["2023-06-29",1015.86],["2023-07-01",1015.86],["2023-07-03",1015.86],["2023-07-05",1015.86],["2023-07-07",1015.86],["2023-07-09",1015.86],["2023-07-11",1015.86],["2023-07-13",1015.86],["2023-07-15",1015.86],["2023-07-17",1015.86],["2023-07-19",1015.86],["2023-07-21",1015.86],["2023-07-23",1015.86],["2023-07-25",1015.86],["2023-07-27",1015.86],["2023-07-29",1015.86],["2023-07-31",1015.86],["2023-08-02",1015.86],["2023-08-04",1015.86],["2023-08-06",1018.33],["2023-08-08",1018.33],["2023-08-10",1018.33],["2023-08-12",1018.33],["2023-08-14",1018.33],["2023-08-16",1018.33],["2023-08-18",1018.33],["2023-08-20",1018.33],["2023-08-22",1018.33],["2023-08-24",1018.33],["2023-08-26",1018.33],["2023-08-28",1018.33],["2023-08-30",1018.33],["2023-09-01",1018.33],["2023-09-03",1018.33],["2023-09-05",1018.33],["2023-09-07",1018.33],["2023-09-09",1018.33],["2023-09-11",990.26],["2023-09-13",990.26],["2023-09-15",990.26],["2023-09-17",990.26],["2023-09-19",990.26],["2023-09-21",990.26],["2023-09-23",990.26],["2023-09-25",990.26],["2023-09-27",990.26],["2023-09-29",970.46],["2023-10-01",970.46],["2023-10-03",970.46],["2023-10-05",970.46],["2023-10-07",970.46],["2023-10-09",970.46],["2023-10-11",970.46],["2023-10-13",970.46],["2023-10-15",970.46],["2023-10-17",970.46],["2023-10-19",953.82],["2023-10-21",953.82],["2023-10-23",953.82],["2023-10-25",953.82],["2023-10-27",953.82],["2023-10-29",953.82],["2023-10-31",953.82],["2023-11-02",953.82],["2023-11-04",953.82],["2023-11-06",953.82],["2023-11-08",953.82],["2023-11-10",953.82],["2023-11-12",953.82],["2023-11-14",953.82],["2023-11-16",953.82],["2023-11-18",953.82],["2023-11-20",953.82],["2023-11-22",953.82],["2023-11-24",953.82],["2023-11-26",953.82],["2023-11-28",953.82],["2023-11-30",953.82],["2023-12-02",953.82],["2023-12-04",953.82],["2023-12-06",953.82],["2023-12-08",953.82],["2023-12-10",953.82],["2023-12-12",953.82],["2023-12-14",953.82],["2023-12-16",953.82],["2023-12-18",953.82],["2023-12-20",953.82],["2023-12-22",953.82],["2023-12-24",953.82],["2023-12-26",953.82],["2023-12-28",953.82],["2023-12-30",953.82],["2024-01-01",957.1],["2024-01-03",957.1],["2024-01-05",957.1],["2024-01-07",957.1],["2024-01-09",962.77],["2024-01-11",962.77],["2024-01-13",962.77],["2024-01-15",962.77],["2024-01-17",962.77],["2024-01-19",962.77],["2024-01-21",962.77],["2024-01-23",962.77],["2024-01-25",962.77],["2024-01-27",962.77],["2024-01-29",962.77],["2024-01-31",962.77],["2024-02-02",968.4],["2024-02-04",968.4],["2024-02-06",968.4],["2024-02-08",968.4],["2024-02-10",968.4],["2024-02-12",968.4],["2024-02-14",968.4],["2024-02-16",968.4],["2024-02-18",968.4],["2024-02-20",968.4],["2024-02-22",968.4],["2024-02-24",968.4],["2024-02-26",968.4],["2024-02-28",968.4],["2024-03-01",968.4],["2024-03-03",968.4],["2024-03-05",944.68],["2024-03-07",915.63],["2024-03-09",915.63],["2024-03-11",915.63],["2024-03-13",915.63],["2024-03-15",915.63],["2024-03-17",915.63],["2024-03-19",915.63],["2024-03-21",916.05],["2024-03-23",916.05],["2024-03-25",916.05],["2024-03-27",916.05],["2024-03-29",917.04],["2024-03-31",917.04],["2024-04-02",917.04],["2024-04-04",917.04],["2024-04-06",917.04],["2024-04-08",917.04],["2024-04-10",917.04],["2024-04-12",896.45],["2024-04-14",896.45],["2024-04-16",896.45],["2024-04-18",896.45],["2024-04-20",870.66],["2024-04-22",870.66],["2024-04-24",870.66],["2024-04-26",872.93],["2024-04-28",872.93],["2024-04-30",872.93],["2024-05-02",872.93],["2024-05-04",872.93],["2024-05-06",872.93],["2024-05-08",872.93],["2024-05-10",872.93],["2024-05-12",872.93],["2024-05-14",872.93],["2024-05-16",873.35],["2024-05-18",873.35],["2024-05-20",874.44],["2024-05-22",874.44],["2024-05-24",874.44],["2024-05-26",874.44],["2024-05-28",874.44],["2024-05-30",874.44],["2024-06-01",874.44],["2024-06-03",874.44],["2024-06-05",874.44],["2024-06-07",874.44],["2024-06-09",876.87],["2024-06-11",876.87],["2024-06-13",876.87],["2024-06-15",876.87],["2024-06-17",877.85],["2024-06-19",877.85],["2024-06-21",877.85],["2024-06-23",877.85],["2024-06-25",877.85],["2024-06-27",877.85],["2024-06-29",877.85],["2024-07-01",877.85],["2024-07-03",877.85],["2024-07-05",877.85],["2024-07-07",877.85],["2024-07-09",877.85],["2024-07-11",877.85],["2024-07-13",877.85],["2024-07-15",877.85],["2024-07-17",877.85],["2024-07-19",877.85],["2024-07-21",880.78],["2024-07-23",880.78],["2024-07-25",860.35],["2024-07-27",860.35],["2024-07-29",860.35],["2024-07-31",834.54],["2024-08-02",835.86],["2024-08-04",835.86],["2024-08-06",836.95],["2024-08-08",836.95],["2024-08-10",836.95],["2024-08-12",836.95],["2024-08-14",836.95],["2024-08-16",836.95],["2024-08-18",836.95],["2024-08-20",836.95],["2024-08-22",836.95],["2024-08-24",836.95],["2024-08-26",836.95],["2024-08-28",836.95],["2024-08-30",836.95],["2024-09-01",812.95],["2024-09-03",812.95],["2024-09-05",816.65],["2024-09-07",824.39],["2024-09-09",808.12],["2024-09-11",808.12],["2024-09-13",808.12],["2024-09-15",808.12],["2024-09-17",790.13],["2024-09-19",770.58],["2024-09-21",770.58],["2024-09-23",770.58],["2024-09-25",778.28],["2024-09-27",764.47],["2024-09-29",764.47],["2024-10-01",764.47],["2024-10-03",765.94],["2024-10-05",780.65],["2024-10-07",789.15],["2024-10-09",789.15],["2024-10-11",804.16],["2024-10-13",804.16],["2024-10-15",804.16],["2024-10-17",804.16],["2024-10-19",806.26],["2024-10-21",806.26],["2024-10-23",811.39],["2024-10-25",818.26],["2024-10-27",818.26],["2024-10-29",818.26],["2024-10-31",818.26],["2024-11-02",757.88],["2024-11-04",743.16],["2024-11-06",749.14],["2024-11-08",737.99],["2024-11-10",743.92],["2024-11-12",743.92],["2024-11-14",743.92],["2024-11-16",743.92],["2024-11-18",743.92],["2024-11-20",743.92],["2024-11-22",745.73],["2024-11-24",761.09],["2024-11-26",761.09],["2024-11-28",761.09],["2024-11-30",766.98],["2024-12-02",770.47],["2024-12-04",770.47],["2024-12-06",770.47],["2024-12-08",760.57],["2024-12-10",760.57],["2024-12-12",763.0],["2024-12-14",764.72],["2024-12-16",764.72],["2024-12-18",764.72],["2024-12-20",774.55],["2024-12-22",774.55],["2024-12-24",765.66],["2024-12-26",765.66],["2024-12-28",765.66],["2024-12-30",763.2],["2025-01-01",775.73],["2025-01-03",775.73],["2025-01-05",775.73],["2025-01-07",775.73],["2025-01-09",775.73],["2025-01-11",754.87],["2025-01-13",762.62],["2025-01-15",762.62],["2025-01-17",762.62],["2025-01-19",762.62],["2025-01-21",784.22],["2025-01-23",801.47],["2025-01-25",819.39],["2025-01-27",819.39],["2025-01-29",832.83],["2025-01-31",827.65],["2025-02-02",827.65],["2025-02-04",813.71],["2025-02-06",837.97],["2025-02-08",841.36],["2025-02-10",866.07],["2025-02-12",877.2],["2025-02-14",861.45],["2025-02-16",872.52],["2025-02-18",872.52],["2025-02-20",887.83],["2025-02-22",908.36],["2025-02-24",917.2],["2025-02-26",917.2],["2025-02-28",917.2],["2025-03-02",928.84],["2025-03-04",928.84],["2025-03-06",928.84],["2025-03-08",932.78],["2025-03-10",904.79],["2025-03-12",913.84],["2025-03-14",897.78],["2025-03-16",925.85],["2025-03-18",935.11],["2025-03-20",937.36],["2025-03-22",937.36],["2025-03-24",937.36],["2025-03-26",951.81],["2025-03-28",940.83],["2025-03-30",951.81],["2025-04-01",961.21],["2025-04-03",974.95],["2025-04-05",1010.79],["2025-04-07",1011.18],["2025-04-09",1011.18],["2025-04-11",1042.17],["2025-04-13",1043.65],["2025-04-15",1012.92],["2025-04-17",994.49],["2025-04-19",994.49],["2025-04-21",994.49],["2025-04-23",1007.69],["2025-04-25",1007.69],["2025-04-27",1010.26],["2025-04-29",1010.26],["2025-05-01",1033.69],["2025-05-03",1039.0],["2025-05-05",991.53],["2025-05-07",964.19],["2025-05-09",977.04],["2025-05-11",987.08],["2025-05-13",946.93],["2025-05-15",950.99],["2025-05-17",932.75],["2025-05-19",932.75],["2025-05-21",904.77],["2025-05-23",904.77],["2025-05-25",862.69],["2025-05-27",868.06],["2025-05-29",840.07],["2025-05-31",865.82],["2025-06-02",849.59],["2025-06-04",857.64],["2025-06-06",876.02],["2025-06-08",895.11],["2025-06-10",895.11],["2025-06-12",913.19],["2025-06-14",919.83],["2025-06-16",928.96],["2025-06-18",910.29],["2025-06-20",925.03],["2025-06-22",925.03],["2025-06-24",885.25],["2025-06-26",822.47],["2025-06-28",836.76],["2025-06-30",861.67],["2025-07-02",883.18],["2025-07-04",885.18],["2025-07-06",885.18],["2025-07-08",909.32],["2025-07-10",942.15],["2025-07-12",949.97],["2025-07-14",911.92],["2025-07-16",906.16],["2025-07-18",899.11],["2025-07-20",890.43],["2025-07-22",912.26],["2025-07-24",923.44],["2025-07-26",923.44],["2025-07-28",919.23],["2025-07-30",942.92],["2025-08-01",953.38],["2025-08-03",937.21],["2025-08-05",983.31],["2025-08-07",994.5],["2025-08-09",985.97],["2025-08-11",985.97],["2025-08-13",987.52],["2025-08-15",992.75],["2025-08-17",971.51],["2025-08-19",1003.91],["2025-08-21",1019.58],["2025-08-23",1034.78],["2025-08-25",984.38],["2025-08-27",970.59],["2025-08-29",991.79],["2025-08-31",963.19],["2025-09-02",931.99],["2025-09-04",937.05],["2025-09-06",931.02],["2025-09-08",1006.57],["2025-09-10",1013.96],["2025-09-12",1035.72],["2025-09-14",1014.39],["2025-09-16",1002.89],["2025-09-18",957.45],["2025-09-20",978.43],["2025-09-22",986.81],["2025-09-24",966.45],["2025-09-26",978.14],["2025-09-28",973.22],["2025-09-30",963.83],["2025-10-02",924.08],["2025-10-04",899.67],["2025-10-06",868.73],["2025-10-08",871.54],["2025-10-10",877.45],["2025-10-12",873.56],["2025-10-14",780.56],["2025-10-16",780.95],["2025-10-18",748.03],["2025-10-20",783.67],["2025-10-22",766.28],["2025-10-24",755.4],["2025-10-26",723.39],["2025-10-28",723.39],["2025-10-30",762.54],["2025-11-01",738.05],["2025-11-03",762.52],["2025-11-05",808.16],["2025-11-07",834.94],["2025-11-09",831.97],["2025-11-11",852.3],["2025-11-13",854.0],["2025-11-15",832.91],["2025-11-17",923.05],["2025-11-19",936.49],["2025-11-21",944.27],["2025-11-23",958.2],["2025-11-25",981.32],["2025-11-27",1046.94],["2025-11-29",1063.34],["2025-12-01",1127.05],["2025-12-03",1101.25],["2025-12-05",1121.55],["2025-12-07",1161.74],["2025-12-09",1154.2],["2025-12-11",1252.15],["2025-12-13",1262.96],["2025-12-15",1399.67],["2025-12-17",1415.45],["2025-12-19",1459.75],["2025-12-21",1515.9],["2025-12-23",1470.03],["2025-12-25",1527.11],["2025-12-27",1443.43],["2025-12-29",1384.27],["2025-12-31",1384.27],["2026-01-02",1453.7],["2026-01-04",1440.68],["2026-01-06",1489.62],["2026-01-08",1574.16],["2026-01-10",1525.97],["2026-01-12",1492.6],["2026-01-14",1443.21],["2026-01-16",1562.35],["2026-01-18",1534.53],["2026-01-20",1526.93],["2026-01-22",1540.82],["2026-01-24",1593.63],["2026-01-26",1516.82],["2026-01-28",1530.21],["2026-01-30",1519.25],["2026-02-01",1569.37],["2026-02-03",1598.01],["2026-02-05",1652.41],["2026-02-07",1651.75],["2026-02-09",1641.65],["2026-02-11",1609.27],["2026-02-13",1666.21],["2026-02-15",1683.56],["2026-02-17",1690.13],["2026-02-19",1734.54],["2026-02-21",1754.69],["2026-02-23",1797.78],["2026-02-25",1715.38],["2026-02-27",1634.49],["2026-03-01",1519.9],["2026-03-03",1536.37],["2026-03-05",1582.7],["2026-03-07",1591.5],["2026-03-09",1719.53],["2026-03-11",1740.27],["2026-03-13",1626.61],["2026-03-15",1618.04],["2026-03-17",1656.15],["2026-03-19",1659.98],["2026-03-21",1720.99],["2026-03-23",1717.61],["2026-03-25",1750.42],["2026-03-27",1732.04],["2026-03-29",1749.27],["2026-03-31",1713.6],["2026-04-02",1649.93],["2026-04-04",1652.38],["2026-04-06",1695.08],["2026-04-08",1699.05],["2026-04-10",1755.51],["2026-04-12",1809.92],["2026-04-14",1874.93],["2026-04-16",2075.09],["2026-04-18",2140.43],["2026-04-20",2168.19],["2026-04-22",2304.98],["2026-04-24",2485.91],["2026-04-26",2516.22],["2026-04-28",2534.47],["2026-04-30",2597.44],["2026-05-02",2588.14],["2026-05-04",2699.79],["2026-05-06",2954.52],["2026-05-08",3003.43],["2026-05-10",3135.0],["2026-05-12",3057.81],["2026-05-14",3132.97],["2026-05-16",3143.59],["2026-05-18",3343.48],["2026-05-20",3478.48],["2026-05-22",3634.85],["2026-05-24",3590.04],["2026-05-26",3581.11],["2026-05-28",3726.5],["2026-05-30",3762.62],["2026-06-01",3872.8],["2026-06-03",3929.54],["2026-06-05",4266.17],["2026-06-07",4622.43],["2026-06-09",4732.65],["2026-06-11",4978.8],["2026-06-13",5207.56],["2026-06-15",5207.39],["2026-06-17",4983.32],["2026-06-19",5067.82],["2026-06-21",5095.33],["2026-06-23",5200.76],["2026-06-25",5542.42],["2026-06-27",5926.6],["2026-06-29",6222.54],["2026-07-01",5906.18],["2026-07-03",6130.27],["2026-07-05",6058.79],["2026-07-07",6469.89],["2026-07-09",6448.94],["2026-07-11",6375.65],["2026-07-13",6629.86],["2026-07-15",6400.22],["2026-07-17",6548.72],["2026-07-19",6719.87],["2026-07-21",6824.56],["2026-07-23",6361.92],["2026-07-25",6759.83],["2026-07-27",6990.18],["2026-07-29",7040.69],["2026-07-31",7073.71],["2026-08-02",6781.06],["2026-08-04",7071.3],["2026-08-06",7336.2],["2026-08-08",7531.65],["2026-08-10",7934.65],["2026-08-12",8415.1],["2026-08-14",8657.01],["2026-08-16",8765.2],["2026-08-18",8691.39],["2026-08-20",7829.37],["2026-08-22",7725.58],["2026-08-24",8105.59],["2026-08-26",8268.81],["2026-08-27",8252.68]];
+
+const fmtMoney = v => '$' + v.toLocaleString('en-US', {maximumFractionDigits:0});
+const fmtDate = s => {
+  const d = new Date(s + 'T00:00:00Z');
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric', timeZone:'UTC'});
+};
+const tooltip = document.getElementById('tooltip');
+
+function showTip(evt, html) {
+  tooltip.innerHTML = html;
+  tooltip.style.opacity = 1;
+  const pad = 16;
+  let left = evt.clientX + pad, top = evt.clientY + pad;
+  if (left + 200 > window.innerWidth) left = evt.clientX - 200 - pad;
+  if (top + 100 > window.innerHeight) top = evt.clientY - 100 - pad;
+  tooltip.style.left = left + 'px';
+  tooltip.style.top = top + 'px';
+}
+function hideTip() { tooltip.style.opacity = 0; document.getElementById('crosshair').style.opacity = 0; document.getElementById('hover-dot').style.opacity = 0; }
+
+function renderHero(containerId, curve) {
+  const W = 900, marginL = 56, marginR = 20, marginT = 16, marginB = 30;
+  const plotW = W - marginL - marginR, H = 380, plotH = H - marginT - marginB;
+  const n = curve.length;
+  const vals = curve.map(d => d[1]);
+  const yMin = Math.min(600, Math.min(...vals) * 0.9);
+  const yMax = Math.max(...vals) * 1.06;
+  const xAt = i => marginL + (i / (n - 1)) * plotW;
+  const yAt = v => marginT + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Equity curve: $1,000 to $8,253" id="hero-svg">`;
+
+  const tickCount = 5;
+  const ticks = Array.from({length: tickCount + 1}, (_, i) => Math.round(yMin + (yMax - yMin) * i / tickCount / 100) * 100);
+  ticks.forEach(v => {
+    const y = yAt(v);
+    svg += `<line class="grid-line" x1="${marginL}" x2="${W-marginR}" y1="${y}" y2="${y}"/>`;
+    svg += `<text class="axis-label" x="${marginL-10}" y="${y+3}" text-anchor="end">${fmtMoney(v)}</text>`;
+  });
+  const y1k = yAt(1000);
+  svg += `<line x1="${marginL}" x2="${W-marginR}" y1="${y1k}" y2="${y1k}" stroke="var(--border-strong)" stroke-width="1"/>`;
+
+  let area = `M${xAt(0)} ${yAt(1000)} L` + curve.map((d,i) => `${xAt(i)} ${yAt(d[1])}`).join(' L') + ` L${xAt(n-1)} ${yAt(1000)} Z`;
+  svg += `<path d="${area}" fill="var(--series-primary-wash)" stroke="none"/>`;
+  let path = curve.map((d,i) => (i===0?'M':'L') + xAt(i) + ' ' + yAt(d[1])).join(' ');
+  svg += `<path d="${path}" fill="none" stroke="var(--series-primary)" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>`;
+
+  const last = curve[n-1];
+  svg += `<circle cx="${xAt(n-1)}" cy="${yAt(last[1])}" r="4.5" fill="var(--series-primary)" stroke="var(--surface-raised)" stroke-width="2"/>`;
+  svg += `<text x="${xAt(n-1)-6}" y="${yAt(last[1])-12}" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="12" font-weight="600" fill="var(--series-primary)">${fmtMoney(last[1])}</text>`;
+
+  const xTickIdx = [0, Math.round((n-1)*0.28), Math.round((n-1)*0.53), Math.round((n-1)*0.78), n-1];
+  xTickIdx.forEach(i => { svg += `<text class="axis-label" x="${xAt(i)}" y="${H-6}" text-anchor="middle">${fmtDate(curve[i][0])}</text>`; });
+
+  svg += `<line id="crosshair" class="crosshair-line" x1="0" x2="0" y1="${marginT}" y2="${marginT+plotH}"/>`;
+  svg += `<circle id="hover-dot" r="5" fill="var(--series-primary)" stroke="var(--surface-raised)" stroke-width="2" opacity="0"/>`;
+  svg += `<rect x="${marginL}" y="${marginT}" width="${plotW}" height="${plotH}" fill="transparent" id="hit-rect" style="cursor:crosshair"/>`;
+  svg += `</svg>`;
+  document.getElementById(containerId).innerHTML = svg;
+
+  const hitRect = document.getElementById('hit-rect');
+  const crosshair = document.getElementById('crosshair');
+  const dot = document.getElementById('hover-dot');
+  const svgEl = document.getElementById('hero-svg');
+
+  hitRect.addEventListener('mousemove', evt => {
+    const pt = svgEl.createSVGPoint();
+    pt.x = evt.clientX; pt.y = evt.clientY;
+    const loc = pt.matrixTransform(svgEl.getScreenCTM().inverse());
+    let i = Math.round(((loc.x - marginL) / plotW) * (n - 1));
+    i = Math.max(0, Math.min(n - 1, i));
+    const x = xAt(i);
+    crosshair.setAttribute('x1', x); crosshair.setAttribute('x2', x); crosshair.style.opacity = 1;
+    dot.setAttribute('cx', x); dot.setAttribute('cy', yAt(curve[i][1])); dot.style.opacity = 1;
+    showTip(evt, `<div class="t-head">${fmtDate(curve[i][0])}</div><div class="t-row"><span class="k">Equity</span><span>${fmtMoney(curve[i][1])}</span></div>`);
+  });
+  hitRect.addEventListener('mouseleave', hideTip);
+}
+
+renderHero('chart-hero', CURVE);
+</script>
