@@ -1,0 +1,441 @@
+<title>The Favorite-Longshot Bias</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Domine:wght@500;600;700&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    color-scheme: light;
+    --page-bg:        #f5f3ee;
+    --surface:        #fbfaf6;
+    --surface-raised: #ffffff;
+    --ink-primary:    #1b1f1a;
+    --ink-secondary:  #55564e;
+    --ink-muted:      #8f8d80;
+    --gridline:       #e3e0d5;
+    --border:         rgba(27,31,26,0.10);
+    --border-strong:  rgba(27,31,26,0.16);
+    --series-primary:      #0d7ea6;
+    --series-primary-wash: rgba(13,126,166,0.11);
+    --series-secondary:    #93325a;
+    --series-secondary-wash: rgba(147,50,90,0.08);
+    --good: #1f7a4d;
+    --good-wash: rgba(31,122,77,0.10);
+    --bad: #a4433a;
+    --bad-wash: rgba(164,67,58,0.09);
+    --info: #6a4fa0;
+    --info-wash: rgba(106,79,160,0.09);
+    --shadow: 0 1px 2px rgba(27,31,26,0.06), 0 8px 24px -12px rgba(27,31,26,0.18);
+    --shadow-lg: 0 2px 4px rgba(27,31,26,0.05), 0 24px 48px -20px rgba(27,31,26,0.22);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page-bg:        #0e1012;
+      --surface:        #171a1d;
+      --surface-raised: #1c2023;
+      --ink-primary:    #f3f2ee;
+      --ink-secondary:  #c7c5ba;
+      --ink-muted:      #8b897d;
+      --gridline:       #2b2e31;
+      --border:         rgba(255,255,255,0.09);
+      --border-strong:  rgba(255,255,255,0.15);
+      --series-primary:      #34a0cc;
+      --series-primary-wash: rgba(52,160,204,0.14);
+      --series-secondary:    #c46a8f;
+      --series-secondary-wash: rgba(196,106,143,0.10);
+      --good: #4bbd85;
+      --good-wash: rgba(75,189,133,0.12);
+      --bad: #e08277;
+      --bad-wash: rgba(224,130,119,0.12);
+      --info: #a48fd6;
+      --info-wash: rgba(164,143,214,0.14);
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+      --shadow-lg: 0 2px 4px rgba(0,0,0,0.3), 0 24px 48px -20px rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page-bg:        #0e1012;
+    --surface:        #171a1d;
+    --surface-raised: #1c2023;
+    --ink-primary:    #f3f2ee;
+    --ink-secondary:  #c7c5ba;
+    --ink-muted:      #8b897d;
+    --gridline:       #2b2e31;
+    --border:         rgba(255,255,255,0.09);
+    --border-strong:  rgba(255,255,255,0.15);
+    --series-primary:      #34a0cc;
+    --series-primary-wash: rgba(52,160,204,0.14);
+    --series-secondary:    #c46a8f;
+    --series-secondary-wash: rgba(196,106,143,0.10);
+    --good: #4bbd85;
+    --good-wash: rgba(75,189,133,0.12);
+    --bad: #e08277;
+    --bad-wash: rgba(224,130,119,0.12);
+    --info: #a48fd6;
+    --info-wash: rgba(164,143,214,0.14);
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    --shadow-lg: 0 2px 4px rgba(0,0,0,0.3), 0 24px 48px -20px rgba(0,0,0,0.6);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--page-bg); color: var(--ink-primary);
+    font-family: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 56px 24px 90px; }
+
+  .eyebrow {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--series-primary); margin: 0 0 16px;
+  }
+  h1 {
+    font-family: "Domine", Georgia, serif; font-weight: 600; font-size: clamp(28px, 4.2vw, 42px);
+    line-height: 1.16; letter-spacing: -0.01em; margin: 0 0 18px; text-wrap: balance;
+  }
+  .dek { font-size: 16.5px; line-height: 1.62; color: var(--ink-secondary); max-width: 66ch; margin: 0 0 6px; }
+  .dek b { color: var(--ink-primary); }
+  .meta-row {
+    display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 22px; padding-top: 18px;
+    border-top: 1px solid var(--border); font-family: "IBM Plex Mono", monospace;
+    font-size: 12.5px; color: var(--ink-muted);
+  }
+  .meta-row b { color: var(--ink-secondary); font-weight: 600; }
+
+  section.panel {
+    margin-top: 40px; background: var(--surface-raised); border: 1px solid var(--border);
+    border-radius: 16px; padding: 30px 30px 26px; box-shadow: var(--shadow);
+  }
+  .panel h2 { font-family: "Domine", Georgia, serif; font-weight: 600; font-size: 21px; margin: 0 0 8px; }
+  .panel .panel-note { font-size: 14px; color: var(--ink-secondary); line-height: 1.6; max-width: 68ch; margin: 0 0 22px; }
+  .panel .panel-note b { color: var(--ink-primary); }
+
+  /* mirror-trade comparison */
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .compare-card { border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; }
+  .compare-card.win { background: var(--good-wash); border-color: rgba(31,122,77,0.22); }
+  .compare-card.lose { background: var(--bad-wash); border-color: rgba(164,67,58,0.2); }
+  .compare-card .ctitle { font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 4px; }
+  .compare-card.win .ctitle { color: var(--good); }
+  .compare-card.lose .ctitle { color: var(--bad); }
+  .compare-card .csub { font-size: 12.5px; color: var(--ink-muted); margin-bottom: 16px; }
+  .compare-card .cheadline { font-family: "IBM Plex Mono", monospace; font-size: 28px; font-weight: 600; margin-bottom: 16px; font-variant-numeric: tabular-nums; }
+  .compare-card.win .cheadline { color: var(--good); }
+  .compare-card.lose .cheadline { color: var(--bad); }
+  .compare-row { display: flex; justify-content: space-between; align-items: baseline; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+  .compare-row:last-child { border-bottom: none; }
+  .compare-row .k { color: var(--ink-secondary); }
+  .compare-row .v { font-family: "IBM Plex Mono", monospace; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink-primary); }
+  .mirror-note {
+    margin-top: 18px; padding: 14px 16px; background: var(--page-bg); border-radius: 10px;
+    font-size: 13.5px; color: var(--ink-secondary); line-height: 1.6;
+  }
+  .mirror-note b { color: var(--ink-primary); }
+
+  /* threshold chart */
+  .legend { display: flex; gap: 22px; margin: 4px 0 4px; font-size: 12.5px; color: var(--ink-secondary); flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .swatch.line { height: 2px; width: 16px; border-radius: 1px; }
+  .chart-block { position: relative; margin-top: 14px; }
+  .chart-block svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .axis-label { font-family: "IBM Plex Mono", monospace; font-size: 10.5px; fill: var(--ink-muted); }
+  .grid-line { stroke: var(--gridline); stroke-width: 1; }
+  .panel-title-svg { font-family: "Public Sans", sans-serif; font-size: 11.5px; font-weight: 600; fill: var(--ink-secondary); letter-spacing: 0.02em; }
+
+  .tooltip {
+    position: fixed; pointer-events: none; z-index: 40; opacity: 0; transition: opacity 0.1s ease;
+    background: var(--surface-raised); border: 1px solid var(--border-strong); border-radius: 8px;
+    padding: 9px 12px; font-size: 12.5px; box-shadow: var(--shadow); max-width: 240px;
+    font-family: "IBM Plex Mono", monospace; color: var(--ink-primary); line-height: 1.6;
+  }
+  .tooltip .t-head { font-family: "Public Sans", sans-serif; font-weight: 600; color: var(--ink-secondary); font-size: 11px; margin-bottom: 3px; }
+  .tooltip .t-row { display: flex; justify-content: space-between; gap: 14px; }
+  .tooltip .t-row .k { color: var(--ink-muted); }
+
+  /* data table */
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; font-family: "IBM Plex Mono", monospace; }
+  .table-scroll { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); margin-top: 18px; }
+  table.data-table th, table.data-table td { padding: 10px 14px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  table.data-table th:first-child, table.data-table td:first-child { text-align: left; }
+  table.data-table thead th {
+    background: var(--page-bg); color: var(--ink-muted); font-weight: 600; font-size: 10.5px;
+    letter-spacing: 0.04em; text-transform: uppercase; border-bottom: 1px solid var(--border-strong);
+    font-family: "Public Sans", sans-serif;
+  }
+  table.data-table tbody tr { border-bottom: 1px solid var(--border); }
+  table.data-table tbody tr:last-child { border-bottom: none; }
+
+  /* data integrity callout */
+  .integrity-banner {
+    display: flex; gap: 14px; align-items: flex-start; background: var(--info-wash);
+    border: 1px solid rgba(106,79,160,0.24); border-radius: 12px; padding: 18px 20px; margin-bottom: 22px;
+  }
+  .integrity-banner .mark {
+    font-family: "IBM Plex Mono", monospace; font-weight: 700; font-size: 12px; color: var(--info);
+    text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0; padding-top: 1px; white-space: nowrap;
+  }
+  .integrity-banner p { margin: 0; font-size: 13.5px; line-height: 1.65; color: var(--ink-secondary); }
+  .integrity-banner p + p { margin-top: 10px; }
+  .integrity-banner b { color: var(--ink-primary); }
+  .integrity-banner code {
+    font-family: "IBM Plex Mono", monospace; font-size: 12px; background: var(--page-bg);
+    padding: 1px 5px; border-radius: 4px; color: var(--ink-secondary);
+  }
+
+  footer {
+    margin-top: 52px; padding-top: 24px; border-top: 1px solid var(--border);
+    font-size: 13px; line-height: 1.7; color: var(--ink-muted);
+  }
+  footer p { margin: 0 0 12px; max-width: 70ch; }
+  footer code { font-family: "IBM Plex Mono", monospace; font-size: 12px; background: var(--surface-raised); padding: 1px 5px; border-radius: 4px; color: var(--ink-secondary); }
+
+  @media (max-width: 720px) {
+    .compare-grid { grid-template-columns: 1fr; }
+    .panel { padding: 22px 18px 20px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <p class="eyebrow">Polymarket Final&#8209;1% &middot; Favorite&#8209;Longshot Bias</p>
+  <h1>Short the longshot. Never buy it.</h1>
+  <p class="dek">
+    Every trade in this backtest population sits at a market's extreme: one side priced near $1, the other near $0.
+    Betting <b>against</b> the near&#8209;certain longshot (buying the ~99%+ complement) and betting
+    <b>on</b> it (buying the ~1%&#8209;or&#8209;under token directly) are exact mirror images of the same
+    3,364&#8209;trade population. Tested both, at flat position sizing, across the full 70&ndash;99.9% probability
+    range &mdash; and audited the sampling pipeline for the bias/data&#8209;mining risk any result this clean should
+    raise.
+  </p>
+  <div class="meta-row">
+    <span><b>Mar 2023</b> &ndash; <b>Aug 2026</b></span>
+    <span><b>10</b> thresholds tested, 70%&ndash;99.9%</span>
+    <span>flat 1%&#8209;of&#8209;equity sizing, no Kelly edge filter</span>
+  </div>
+
+  <!-- ===== MIRROR TRADE COMPARISON ===== -->
+  <section class="panel">
+    <h2>The same market, bet two ways</h2>
+    <p class="panel-note">Both columns use the identical 3,095&#8209;trade population (markets where one side
+      crossed $0.99+, held to resolution) and identical flat 1%&#8209;of&#8209;equity position sizing. The only
+      difference is which side of the market gets bought.</p>
+    <div class="compare-grid">
+      <div class="compare-card win">
+        <div class="ctitle">Short the longshot</div>
+        <div class="csub">buy the ~99%+ complement</div>
+        <div class="cheadline">+9.93%</div>
+        <div class="compare-row"><span class="k">$10,000 &rarr;</span><span class="v">$10,993.28</span></div>
+        <div class="compare-row"><span class="k">Trades taken</span><span class="v">3,093</span></div>
+        <div class="compare-row"><span class="k">Win rate</span><span class="v">99.90%</span></div>
+        <div class="compare-row"><span class="k">Max drawdown</span><span class="v">0.99%</span></div>
+        <div class="compare-row"><span class="k">Sharpe</span><span class="v">2.82</span></div>
+      </div>
+      <div class="compare-card lose">
+        <div class="ctitle">Buy the longshot</div>
+        <div class="csub">buy the ~1%&#8209;or&#8209;under token directly</div>
+        <div class="cheadline">&minus;82.05%</div>
+        <div class="compare-row"><span class="k">$100 fixed &times; 3,095</span><span class="v">&minus;$253,944 net</span></div>
+        <div class="compare-row"><span class="k">Trades taken</span><span class="v">3,095</span></div>
+        <div class="compare-row"><span class="k">Win rate</span><span class="v">0.097%</span></div>
+        <div class="compare-row"><span class="k">Breakeven win rate needed</span><span class="v">0.471%</span></div>
+        <div class="compare-row"><span class="k">Under compounding sizing</span><span class="v">$10,000 &rarr; $0</span></div>
+      </div>
+    </div>
+    <div class="mirror-note">
+      Buying the longshot needed roughly <b>1 win in 212</b> to break even; it realized <b>1 in 1,032</b> &mdash;
+      three wins total, all genuine tail events (a surprise SNL cameo, a fast crypto spike, an unusual earthquake
+      cluster). Under any compounding position size the strategy is ruinous: 586 sequential flat&#8209;1% bets
+      compound losses to zero before the next win arrives. This is favorite&#8209;longshot bias, directly measured
+      rather than assumed.
+    </div>
+  </section>
+
+  <!-- ===== THRESHOLD SENSITIVITY ===== -->
+  <section class="panel">
+    <h2>Does the edge hold at less extreme prices?</h2>
+    <p class="panel-note">Shorting only the most extreme longshots (sub&#8209;1%) is the tested Final&#8209;1%
+      population. This re&#8209;runs the identical short trade at 10 thresholds from 70% to 99.9% complement price,
+      against one internally&#8209;consistent unbiased stratified sample of the full resolved&#8209;market census
+      (see the data&#8209;integrity note below for why "one consistent sample" needed real work to guarantee).</p>
+    <div class="legend">
+      <span><span class="swatch line" style="background:var(--series-primary)"></span>CAGR, flat 1% sizing</span>
+      <span><span class="swatch" style="background:var(--series-secondary)"></span>Flip rate (95% Wilson CI)</span>
+    </div>
+    <div class="chart-block" id="chart-thr"></div>
+    <div class="table-scroll">
+      <table class="data-table" id="table-thr"></table>
+    </div>
+  </section>
+
+  <!-- ===== DATA INTEGRITY ===== -->
+  <section class="panel">
+    <h2>Checking this result for bias and data mining</h2>
+    <div class="integrity-banner">
+      <span class="mark">Bug found &amp; fixed</span>
+      <p>A direct check turned up a real reproducibility bug, not just reassurance: a first attempt at the
+        threshold sweep above shared only <b>~1%</b> of its sampled markets with a batch run a day earlier, despite
+        both using the documented fixed seed. Root cause was two compounding issues in
+        <code>stratified_sample_markets</code> &mdash; a non&#8209;deterministic dedup order, and one random-number
+        stream shared sequentially across every market category, so a change to any single category's size (new
+        markets resolving elsewhere) silently desynced every other category's draw.</p>
+      <p>Fixed with a stable sort before sampling and a per&#8209;category deterministic seed with shuffle&#8209;
+        then&#8209;slice selection, verified with a synthetic before/after&#8209;growth test and a permanent
+        regression test. The chart and table above are from the corrected, single&#8209;run sweep. This does not
+        affect the mirror&#8209;trade comparison, the core Final&#8209;1% dataset, or any other result built on it
+        earlier in this project &mdash; each of those is one internally self&#8209;consistent draw; only
+        cross&#8209;run comparability was broken.</p>
+    </div>
+    <p class="panel-note" style="margin-bottom:12px;"><b>Other checks run:</b></p>
+    <div class="mirror-note" style="margin-top:0;">
+      <b>No cherry&#8209;picking.</b> All 10 thresholds tested are reported above; none were dropped.<br>
+      <b>No look&#8209;ahead.</b> The crossing signal only ever sees past prices; nothing about future resolution
+      leaks into entry timing.<br>
+      <b>Non&#8209;independence, acknowledged.</b> The threshold buckets overlap &mdash; a market that reaches 99%
+      typically passed through 90% and 95% on the way &mdash; so treat this as one coherent picture across a
+      spectrum, not ten independent confirmations.<br>
+      <b>Small&#8209;sample fragility, acknowledged.</b> The tightest thresholds (99%+) rest on 0&ndash;4 flips;
+      their exact dollar figures carry real estimation error even though the qualitative pattern (flip rate falling
+      smoothly toward zero) is well supported by the hundreds of flips at looser thresholds.
+    </div>
+  </section>
+
+  <footer>
+    <p><b style="color:var(--ink-secondary)">Reading this correctly.</b> This is a historical backtest on resolved
+      Polymarket markets, not a live track record. Fill prices are the last observed CLOB snapshot before entry, not
+      a guaranteed executable quote &mdash; the same limitation as every other backtest in this project.</p>
+    <p>Source: <code>scripts/run_flat_stake_backtest.py</code>, <code>scripts/run_longshot_buy_backtest.py</code>,
+      <code>scripts/run_threshold_sweep.py</code>, and <code>scripts/run_threshold_sensitivity_summary.py</code>
+      over <code>results/polymarket_final_pct/trades_maker.csv</code> and the corrected
+      <code>trades_maker_thr*_v2.csv</code> threshold files.</p>
+  </footer>
+
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+const THRESHOLDS = [{"threshold":0.7,"n_trades":3819,"n_flips":478,"flip_rate_pct":12.5164,"wilson_95ci_pct":[11.5044,13.6037],"clopper_pearson_95ci_pct":[11.4828,13.6077],"flat1pct_final_equity":35122.37,"flat1pct_total_return_pct":251.22,"flat1pct_cagr_pct":44.44,"flat1pct_max_drawdown_pct":9.45,"flat1pct_sharpe":3.0},{"threshold":0.8,"n_trades":3498,"n_flips":207,"flip_rate_pct":5.9177,"wilson_95ci_pct":[5.183,6.749],"clopper_pearson_95ci_pct":[5.1586,6.7514],"flat1pct_final_equity":28328.71,"flat1pct_total_return_pct":183.29,"flat1pct_cagr_pct":35.63,"flat1pct_max_drawdown_pct":5.86,"flat1pct_sharpe":3.73},{"threshold":0.9,"n_trades":3327,"n_flips":74,"flip_rate_pct":2.2242,"wilson_95ci_pct":[1.7755,2.7832],"clopper_pearson_95ci_pct":[1.7504,2.7844],"flat1pct_final_equity":17733.68,"flat1pct_total_return_pct":77.34,"flat1pct_cagr_pct":18.27,"flat1pct_max_drawdown_pct":4.31,"flat1pct_sharpe":3.56},{"threshold":0.95,"n_trades":3224,"n_flips":25,"flip_rate_pct":0.7754,"wilson_95ci_pct":[0.5258,1.1422],"clopper_pearson_95ci_pct":[0.5024,1.1426],"flat1pct_final_equity":13776.87,"flat1pct_total_return_pct":37.77,"flat1pct_cagr_pct":9.85,"flat1pct_max_drawdown_pct":1.99,"flat1pct_sharpe":3.28},{"threshold":0.97,"n_trades":3189,"n_flips":14,"flip_rate_pct":0.439,"wilson_95ci_pct":[0.2617,0.7356],"clopper_pearson_95ci_pct":[0.2402,0.7355],"flat1pct_final_equity":12085.44,"flat1pct_total_return_pct":20.85,"flat1pct_cagr_pct":5.71,"flat1pct_max_drawdown_pct":2.25,"flat1pct_sharpe":2.72},{"threshold":0.98,"n_trades":3146,"n_flips":6,"flip_rate_pct":0.1907,"wilson_95ci_pct":[0.0874,0.4155],"clopper_pearson_95ci_pct":[0.07,0.4146],"flat1pct_final_equity":11829.42,"flat1pct_total_return_pct":18.29,"flat1pct_cagr_pct":5.05,"flat1pct_max_drawdown_pct":0.93,"flat1pct_sharpe":3.94},{"threshold":0.985,"n_trades":3129,"n_flips":5,"flip_rate_pct":0.1598,"wilson_95ci_pct":[0.0683,0.3735],"clopper_pearson_95ci_pct":[0.0519,0.3725],"flat1pct_final_equity":11549.88,"flat1pct_total_return_pct":15.5,"flat1pct_cagr_pct":4.31,"flat1pct_max_drawdown_pct":0.94,"flat1pct_sharpe":4.28},{"threshold":0.99,"n_trades":3073,"n_flips":4,"flip_rate_pct":0.1302,"wilson_95ci_pct":[0.0506,0.3342],"clopper_pearson_95ci_pct":[0.0355,0.3329],"flat1pct_final_equity":10947.18,"flat1pct_total_return_pct":9.47,"flat1pct_cagr_pct":2.69,"flat1pct_max_drawdown_pct":0.97,"flat1pct_sharpe":2.73},{"threshold":0.995,"n_trades":3027,"n_flips":3,"flip_rate_pct":0.0991,"wilson_95ci_pct":[0.0337,0.291],"clopper_pearson_95ci_pct":[0.0204,0.2894],"flat1pct_final_equity":10719.64,"flat1pct_total_return_pct":7.2,"flat1pct_cagr_pct":2.06,"flat1pct_max_drawdown_pct":0.96,"flat1pct_sharpe":2.65},{"threshold":0.999,"n_trades":2693,"n_flips":0,"flip_rate_pct":0.0,"wilson_95ci_pct":[-0.0,0.1424],"clopper_pearson_95ci_pct":[0.0,0.1369],"flat1pct_final_equity":10121.7,"flat1pct_total_return_pct":1.22,"flat1pct_cagr_pct":0.36,"flat1pct_max_drawdown_pct":0.0,"flat1pct_sharpe":11.45}];
+
+const fmtMoney = v => '$' + v.toLocaleString('en-US', {maximumFractionDigits:0});
+const tooltip = document.getElementById('tooltip');
+
+function showTip(evt, html) {
+  tooltip.innerHTML = html;
+  tooltip.style.opacity = 1;
+  const pad = 14;
+  let left = evt.clientX + pad, top = evt.clientY + pad;
+  if (left + 240 > window.innerWidth) left = evt.clientX - 240 - pad;
+  if (top + 140 > window.innerHeight) top = evt.clientY - 140 - pad;
+  tooltip.style.left = left + 'px';
+  tooltip.style.top = top + 'px';
+}
+function hideTip() { tooltip.style.opacity = 0; }
+
+function renderThresholdChart(containerId, data) {
+  const W = 960, marginL = 54, marginR = 54, marginT = 22, marginB = 26;
+  const plotW = W - marginL - marginR;
+  const lineH = 190, gap = 8, barH = 130;
+  const topPad = 20;
+  const totalH = topPad + lineH + gap + barH + marginB + 10;
+
+  const n = data.length;
+  const stepX = plotW / (n - 1);
+  const xAt = i => marginL + i * stepX;
+
+  const cagrMax = Math.max(...data.map(d => d.flat1pct_cagr_pct)) * 1.15;
+  const yLine = v => topPad + lineH - (v / cagrMax) * lineH;
+
+  const flipMax = Math.max(...data.map(d => d.wilson_95ci_pct[1])) * 1.08;
+  const barTop = topPad + lineH + gap;
+  const yBar = v => barTop + barH - (v / flipMax) * barH;
+
+  let svg = `<svg viewBox="0 0 ${W} ${totalH}" role="img" aria-label="CAGR and flip rate across entry thresholds">`;
+
+  const cagrTicks = 4;
+  for (let t = 0; t <= cagrTicks; t++) {
+    const val = cagrMax * t / cagrTicks;
+    const y = yLine(val);
+    svg += `<line class="grid-line" x1="${marginL}" x2="${W-marginR}" y1="${y}" y2="${y}"/>`;
+    svg += `<text class="axis-label" x="${marginL-8}" y="${y+3}" text-anchor="end">${val.toFixed(0)}%</text>`;
+  }
+  svg += `<text class="panel-title-svg" x="${marginL}" y="${topPad-7}">CAGR (FLAT 1% SIZING)</text>`;
+
+  let pathLine = data.map((d,i) => (i===0?'M':'L') + xAt(i) + ' ' + yLine(d.flat1pct_cagr_pct)).join(' ');
+  let area = `M${xAt(0)} ${yLine(0)} L` + data.map((d,i) => `${xAt(i)} ${yLine(d.flat1pct_cagr_pct)}`).join(' L') + ` L${xAt(n-1)} ${yLine(0)} Z`;
+  svg += `<path d="${area}" fill="var(--series-primary-wash)" stroke="none"/>`;
+  svg += `<path d="${pathLine}" fill="none" stroke="var(--series-primary)" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>`;
+  data.forEach((d, i) => {
+    const x = xAt(i), y = yLine(d.flat1pct_cagr_pct);
+    svg += `<circle class="pt" data-i="${i}" cx="${x}" cy="${y}" r="4" fill="var(--series-primary)" stroke="var(--surface-raised)" stroke-width="2" style="cursor:pointer"/>`;
+  });
+
+  svg += `<text class="panel-title-svg" x="${marginL}" y="${barTop-7}">FLIP RATE, 95% WILSON CI</text>`;
+  const flipTicks = 3;
+  for (let t = 0; t <= flipTicks; t++) {
+    const val = flipMax * t / flipTicks;
+    const y = yBar(val);
+    svg += `<line class="grid-line" x1="${marginL}" x2="${W-marginR}" y1="${y}" y2="${y}"/>`;
+    svg += `<text class="axis-label" x="${marginL-8}" y="${y+3}" text-anchor="end">${val.toFixed(1)}%</text>`;
+  }
+  const barW = Math.min(30, stepX * 0.42);
+  data.forEach((d, i) => {
+    const x = xAt(i);
+    const [ciLo, ciHi] = d.wilson_95ci_pct;
+    const yTop = yBar(d.flip_rate_pct), yBase = barTop + barH;
+    svg += `<rect class="pt" data-i="${i}" x="${x-barW/2}" y="${yTop}" width="${barW}" height="${Math.max(yBase-yTop,1)}" rx="3" fill="var(--series-secondary)" opacity="0.82" style="cursor:pointer"/>`;
+    const yCiLo = yBar(Math.max(ciLo,0)), yCiHi = yBar(ciHi);
+    svg += `<line x1="${x}" x2="${x}" y1="${yCiHi}" y2="${yCiLo}" stroke="var(--ink-secondary)" stroke-width="1.3"/>`;
+    svg += `<line x1="${x-4}" x2="${x+4}" y1="${yCiHi}" y2="${yCiHi}" stroke="var(--ink-secondary)" stroke-width="1.3"/>`;
+    svg += `<line x1="${x-4}" x2="${x+4}" y1="${yCiLo}" y2="${yCiLo}" stroke="var(--ink-secondary)" stroke-width="1.3"/>`;
+  });
+
+  const xAxisY = barTop + barH + marginB - 6;
+  svg += `<line x1="${marginL}" x2="${W-marginR}" y1="${barTop+barH}" y2="${barTop+barH}" stroke="var(--border-strong)"/>`;
+  data.forEach((d, i) => {
+    svg += `<text class="axis-label" x="${xAt(i)}" y="${xAxisY}" text-anchor="middle">${(d.threshold*100).toFixed(1)}%</text>`;
+  });
+
+  svg += `</svg>`;
+  document.getElementById(containerId).innerHTML = svg;
+
+  document.getElementById(containerId).querySelectorAll('.pt').forEach(el => {
+    const d = data[+el.dataset.i];
+    el.addEventListener('mouseenter', e => showTip(e, `<div class="t-head">${(d.threshold*100).toFixed(1)}% threshold</div>
+      <div class="t-row"><span class="k">Trades</span><span>${d.n_trades.toLocaleString()}</span></div>
+      <div class="t-row"><span class="k">Flips</span><span>${d.n_flips}</span></div>
+      <div class="t-row"><span class="k">Flip rate</span><span>${d.flip_rate_pct.toFixed(3)}%</span></div>
+      <div class="t-row"><span class="k">95% CI</span><span>[${d.wilson_95ci_pct[0].toFixed(2)}, ${d.wilson_95ci_pct[1].toFixed(2)}]</span></div>
+      <div class="t-row"><span class="k">CAGR</span><span>${d.flat1pct_cagr_pct.toFixed(2)}%</span></div>
+      <div class="t-row"><span class="k">Final equity</span><span>${fmtMoney(d.flat1pct_final_equity)}</span></div>
+      <div class="t-row"><span class="k">Sharpe</span><span>${d.flat1pct_sharpe}</span></div>`));
+    el.addEventListener('mousemove', e => showTip(e, tooltip.innerHTML));
+    el.addEventListener('mouseleave', hideTip);
+  });
+}
+
+function renderThresholdTable() {
+  const rows = THRESHOLDS.map(d => `<tr>
+    <td>${(d.threshold*100).toFixed(1)}%</td>
+    <td>${d.n_trades.toLocaleString()}</td>
+    <td>${d.n_flips}</td>
+    <td>${d.flip_rate_pct.toFixed(3)}%</td>
+    <td>[${d.wilson_95ci_pct[0].toFixed(2)}, ${d.wilson_95ci_pct[1].toFixed(2)}]</td>
+    <td>${fmtMoney(d.flat1pct_final_equity)}</td>
+    <td>${d.flat1pct_cagr_pct.toFixed(2)}%</td>
+    <td>${d.flat1pct_max_drawdown_pct.toFixed(2)}%</td>
+    <td>${d.flat1pct_sharpe}</td>
+  </tr>`).join('');
+  document.getElementById('table-thr').innerHTML = `
+    <thead><tr>
+      <th>Threshold</th><th>Trades</th><th>Flips</th><th>Flip rate</th><th>95% Wilson CI</th>
+      <th>Final equity</th><th>CAGR</th><th>Max DD</th><th>Sharpe</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>`;
+}
+
+renderThresholdChart('chart-thr', THRESHOLDS);
+renderThresholdTable();
+</script>
