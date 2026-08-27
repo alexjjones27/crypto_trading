@@ -39,10 +39,11 @@ def liquidity_tier(shares_per_min: float) -> str:
     return "low"
 
 
-def main():
-    maker_trades = load("trades_maker.csv")
+def main(input_file="trades_maker.csv", out_suffix=""):
+    maker_trades = load(input_file)
     tradeable = [r for r in maker_trades if not r["excluded"]]
-    print(f"{len(tradeable)} tradeable trades; estimating real taker slippage from cached trade tapes ...")
+    print(f"{len(tradeable)} tradeable trades from {input_file}; "
+          f"estimating real taker slippage from cached trade tapes ...")
 
     rows = []
     n_no_data = 0
@@ -106,10 +107,8 @@ def main():
         r2["entry_price"] = adj_price
         adjusted.append(r2)
 
-    taker_trades = load("trades_taker.csv")  # for the fee schedule already applied there
-    fee_by_key = {(t["market_id"], t["entry_time"]): t["fee_frac"] for t in taker_trades}
     for r2 in adjusted:
-        r2["fee_frac"] = fee_by_key.get((r2["market_id"], r2["entry_time"]), r2["fee_frac"])
+        r2["fee_frac"] = pmf.taker_fee_frac_of_notional(r2["entry_price"], r2["category"])
 
     baseline_kelly = run_sim([dict(r) for r in maker_trades], fraction=0.25)
     slippage_kelly = run_sim([dict(r) for r in adjusted], fraction=0.25)
@@ -142,11 +141,16 @@ def main():
         "kelly_equity_curve_baseline": baseline_kelly["daily_series"],
         "kelly_equity_curve_slippage": slippage_kelly["daily_series"],
     }
-    out_path = os.path.join(DATA_DIR, "slippage_model_results.json")
+    out_path = os.path.join(DATA_DIR, f"slippage_model_results{out_suffix}.json")
     with open(out_path, "w") as f:
         json.dump(summary, f, indent=2, default=str)
     print(f"\nsaved {out_path}")
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    p = argparse.ArgumentParser()
+    p.add_argument("--file", type=str, default="trades_maker.csv")
+    p.add_argument("--suffix", type=str, default="")
+    args = p.parse_args()
+    main(args.file, args.suffix)
