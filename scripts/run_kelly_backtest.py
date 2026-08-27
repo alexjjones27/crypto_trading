@@ -16,6 +16,11 @@ WEATHER_RE = re.compile(r'highest temperature.*(be between|be \d)', re.I)
 def load(fn):
     with open(os.path.join(DATA_DIR, fn), newline='', encoding='utf-8') as f:
         rows = list(csv.DictReader(f))
+    # A rare data quirk in the lower-threshold sweep files: one market has
+    # `won` populated but an empty resolution_time (endDate parsing miss
+    # upstream). Dropped defensively rather than crashing -- trades_maker.csv
+    # itself has zero such rows, so this is a no-op there.
+    rows = [r for r in rows if r.get('entry_time') and r.get('resolution_time')]
     for r in rows:
         r['entry_dt'] = parse(r['entry_time'])
         r['resolve_dt'] = parse(r['resolution_time'])
