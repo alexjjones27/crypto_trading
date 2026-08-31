@@ -19,3 +19,14 @@ data/football_data/
 # tennis-data.co.uk odds cache (~45 files): same deal, re-fetch via
 # scripts/download_tennis_data.py.
 data/tennis_data/
+
+# Secrets: this repo is public on GitHub. Never commit private keys, API
+# keys/secrets/passphrases, or wallet material under any name/extension.
+.env
+.env.*
+!.env.example
+*secret*
+*private_key*
+*.pem
+*.key
+polymarket_creds*
