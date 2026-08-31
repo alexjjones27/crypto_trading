@@ -15,6 +15,28 @@ Adapted from scan_live_signals.py (the 99% version). Differences:
     ~0-0.2%, and reusing the 99% prior here would badly understate risk.
   - BANKROLL defaults to whatever you pass on the command line (a live test
     account is likely tiny; the 99% script's $1,000 default doesn't apply).
+
+Two-pass design (added after live testing surfaced bad signals the naive
+single-pass version couldn't distinguish from good ones):
+  Pass 1 (cheap): scan every active market's last 3 days of price history
+    for "currently qualifying" candidates -- fast, but the 3-day window
+    means a market that crossed threshold long ago, spiked much higher,
+    and is now falling back through it looks identical to a genuine fresh
+    signal. It also can't tell a market that's been range-bound near
+    threshold for months from one that just got there.
+  Pass 2 (expensive, top candidates only): for each pass-1 candidate with
+    positive margin, pull up to 15 days of full price history and find the
+    TRUE first crossing (no lookahead, same detect_crossing() the backtest
+    itself uses). Only keep it if that true crossing is recent (<=96h ago)
+    AND the window shows price genuinely below threshold before it -- this
+    is what actually distinguishes "just became a favorite" from "has been
+    hovering here for months" or "cratering back down from a spike."  Also
+    re-fetches the real live order book (best ask, actual depth, spread)
+    rather than trusting the approximate quote, and recomputes margin off
+    that real ask price -- a market can look edge-positive on Gamma's
+    approximate price and be flat or negative once you price the real
+    spread. Same-event duplicates (multi-outcome elections etc, grouped by
+    negRiskMarketID) are collapsed to the single best-margin leg.
 """
 import json
 import sys
@@ -129,6 +151,60 @@ def check_market(market: dict) -> dict | None:
     return None
 
 
+MAX_CROSSING_AGE_HOURS = 96
+VERIFY_LOOKBACK_DAYS = 15
+MAX_VERIFY_CANDIDATES = 80  # cap the expensive pass-2 fetch volume
+
+
+def verify_candidate(hit: dict) -> dict | None:
+    """Pass 2: full-history true-crossing check + real order book. Returns
+    None if the candidate fails freshness (stale/already-above-at-window-open
+    or crossing too old) or has no live ask at all."""
+    try:
+        m = pmf._get(pmf.GAMMA_BASE, f"/markets/{hit['market_id']}", {})
+        token_ids = pmf._safe_json_list(m.get("clobTokenIds"))
+        outcomes = pmf._safe_json_list(m.get("outcomes"))
+        idx = outcomes.index(hit["outcome"])
+        tok = token_ids[idx]
+    except Exception:
+        return None
+
+    now_s = int(time.time())
+    df, _ = pmf.fetch_token_lifetime_prices(tok, now_s - VERIFY_LOOKBACK_DAYS * 86400, now_s)
+    if df.empty:
+        return None
+
+    starts_above = bool(df["p"].iloc[0] >= THRESHOLD)
+    true_hit = pmf.detect_crossing(df, threshold=THRESHOLD, n_consecutive=N_CONSECUTIVE)
+    if true_hit is None:
+        return None
+    age_hours = (now_s - true_hit["entry_time_s"]) / 3600
+    if starts_above or age_hours > MAX_CROSSING_AGE_HOURS:
+        return None  # stale: either already qualifying 15 days ago, or crossed too long ago to trust
+
+    try:
+        book = pmf._get(pmf.CLOB_BASE, "/book", {"token_id": tok})
+    except Exception:
+        return None
+    asks = sorted(book.get("asks") or [], key=lambda a: float(a["price"]))
+    bids = sorted(book.get("bids") or [], key=lambda b: -float(b["price"]))
+    if not asks:
+        return None
+    best_ask = float(asks[0]["price"])
+    ask_depth = float(asks[0]["size"])
+    spread = best_ask - float(bids[0]["price"]) if bids else None
+
+    sizing = kelly_size(hit["report_bucket"], best_ask, BANKROLL)
+    if sizing["margin"] <= 0:
+        return None  # edge evaporates once priced off the real ask, not the approximate quote
+
+    return {
+        **hit, **sizing, "token_id": tok, "real_best_ask": best_ask, "real_ask_depth": ask_depth,
+        "real_spread": spread, "true_crossing_age_hours": round(age_hours, 1),
+        "neg_risk_market_id": m.get("negRiskMarketID"),
+    }
+
+
 def kelly_size(bucket: str, price: float, bankroll: float, fraction: float = 0.25) -> dict:
     b = (1.0 - price) / price  # maker fill, $0 fee
     L = 1.0
@@ -185,35 +261,67 @@ def main():
             if (i + 1) % 500 == 0:
                 print(f"  scanned {i+1}/{len(markets)} ...", flush=True)
 
-    print(f"\n{len(hits)} markets currently meet the ${THRESHOLD:.2f}/3-consecutive-snapshot entry criteria\n")
+    print(f"\n{len(hits)} markets currently meet the ${THRESHOLD:.2f}/3-consecutive-snapshot entry criteria "
+          f"(pass 1, approximate -- not yet verified)\n")
 
-    rows = []
+    # Pass 1 rows: cheap approximate margin, used only to rank/select who's worth
+    # the expensive pass-2 verification below.
+    pass1 = []
     for h in hits:
         if h["excluded"]:
             continue
-        sizing = kelly_size(h["report_bucket"], h["current_price"], BANKROLL)
-        rows.append({**h, **sizing})
+        approx = kelly_size(h["report_bucket"], h["current_price"], BANKROLL)
+        if approx["margin"] <= 0.03:
+            continue
+        pass1.append({**h, "_approx_margin": approx["margin"]})
+    pass1.sort(key=lambda r: r["_approx_margin"], reverse=True)
+    to_verify = pass1[:MAX_VERIFY_CANDIDATES]
 
-    allocated = allocate_portfolio(rows, BANKROLL)
+    print(f"Verifying {len(to_verify)} candidates against full price history + real order book "
+          f"(pass 2 -- this is what actually filters out stale/spike-reversal signals) ...")
+    verified = []
+    with ThreadPoolExecutor(max_workers=10) as pool:
+        futures = {pool.submit(verify_candidate, h): h for h in to_verify}
+        for fut in as_completed(futures):
+            try:
+                r = fut.result()
+            except Exception:
+                r = None
+            if r:
+                verified.append(r)
 
-    print(f"{len(allocated)} tradeable after exact-score/weather exclusion. "
+    # Collapse same-event duplicates (e.g. every candidate in a multi-outcome
+    # election) to the single best-margin leg.
+    by_event: dict[str, dict] = {}
+    standalone = []
+    for r in verified:
+        key = r.get("neg_risk_market_id")
+        if not key:
+            standalone.append(r)
+            continue
+        if key not in by_event or r["margin"] > by_event[key]["margin"]:
+            by_event[key] = r
+    deduped = standalone + list(by_event.values())
+
+    allocated = allocate_portfolio(deduped, BANKROLL)
+
+    print(f"\n{len(verified)} passed verification, {len(deduped)} after collapsing same-event duplicates. "
           f"Portfolio-allocated at ${BANKROLL:.2f} bankroll (50% aggregate cap, 25% per-category cap, "
-          f"3% per-trade cap, capped further by live ask depth where available):\n")
+          f"3% per-trade cap, capped further by real live ask depth):\n")
     total_deployed = 0.0
     n_funded = 0
-    for r in allocated:
+    for r in sorted(allocated, key=lambda r: r["margin"], reverse=True):
         if r["portfolio_position_size"] <= 0:
             continue
         n_funded += 1
         total_deployed += r["portfolio_position_size"]
-        depth_note = (f"${r['live_ask_depth_notional']:.0f} live depth"
-                      if r["live_ask_depth_notional"] is not None else "no book data")
-        below_min = "  [likely below Polymarket's min order size -- check the UI]" if r["portfolio_position_size"] < 1.0 else ""
-        print(f"- {r['question'][:65]!r} [{r['outcome']}] @ ${r['current_price']:.4f}  ({r['report_bucket']})\n"
-              f"    Kelly-implied position: ${r['portfolio_position_size']:.4f}  "
-              f"(q={r['flip_belief_q']*100:.2f}%, margin={r['margin']*100:.2f}%, {depth_note}){below_min}")
+        below_min = "  [below Polymarket's min order size -- check the UI]" if r["portfolio_position_size"] < 1.0 else ""
+        print(f"- {r['question'][:65]!r} [{r['outcome']}] real ask ${r['real_best_ask']:.3f}  "
+              f"({r['report_bucket']}, crossed {r['true_crossing_age_hours']:.1f}h ago)\n"
+              f"    position: ${r['portfolio_position_size']:.2f}  margin={r['margin']*100:.1f}%  "
+              f"spread={r['real_spread']*100:.1f}c  depth=${r['real_ask_depth']:.0f}{below_min}")
 
-    print(f"\n{n_funded} positions funded, ${total_deployed:.4f} of ${BANKROLL:.2f} deployed "
+    print(f"\n{n_funded} positions funded, ${total_deployed:.2f} of ${BANKROLL:.2f} deployed "
           f"({total_deployed/BANKROLL*100:.1f}% of bankroll)")
 
     out_path = Path(pmf.RESULTS_DIR) / "live_signal_scan_70.json"
